@@ -1,13 +1,14 @@
 import {
   CATEGORIES, classifyProduct, dominantProductColor, planProduct, createRecord, normalizeCategory
 } from './engine.js';
+import { getCaptureProfile, captureProgress } from './capture-profiles.js';
 
-const BUILD = '0.5.0';
+const BUILD = '0.5.1';
 const $ = id => document.getElementById(id);
 const state = {
   files: [], queue: [], classificationSource: 'unresolved', classification: null,
   viewer: null, viewerLoading: null, model: null, imageRequest: 0, analysisRequest: 0,
-  lastBuildKey: null, demo: false
+  lastBuildKey: null, demo: false, confirmedParts: {}, partsRenderedCategory: null
 };
 const info = (message, kind = 'info') => {
   const el = $('analysis-status');
@@ -35,6 +36,7 @@ function setCategory(category, method = 'manual', classification = null) {
   state.classificationSource = method;
   state.classification = classification;
   $('measurement').value = '';
+  state.partsRenderedCategory = null;
   updateSizeInfo();
   resetPreview();
   updatePlan();
@@ -85,16 +87,97 @@ function updatePlan() {
   $('export-json').disabled = $('queue-product').disabled;
   $('items-count').textContent = state.queue.length + ' منتجات';
   $('export-queue').disabled = !state.queue.length;
+  updateCaptureRequirements();
+  renderMaterialPartsIfNeeded();
   const signature = ['category','measurement','product-color'].map(k => $(k).value).join('|');
   if (!state.demo && state.lastBuildKey !== signature) $('download-glb').disabled = true;
 }
+function confirmedPartList() {
+  const category = $('category').value;
+  const profile = getCaptureProfile(category);
+  if (!profile) return [];
+  return profile.parts.map((part, index) => {
+    const key = category + ':' + index;
+    const saved = state.confirmedParts[key];
+    return {
+      id: 'part-' + index,
+      label: part.name,
+      type: saved?.motion || part.motion,
+      confirmed: Boolean(saved?.confirmed),
+      source: saved?.confirmed ? 'merchant-confirmed' : 'category-template-suggestion',
+      hint: part.hint || ''
+    };
+  });
+}
+function updateCaptureRequirements() {
+  const category = $('category').value;
+  const profile = getCaptureProfile(category);
+  const hint = $('capture-photo-status');
+  const description = $('capture-photo-details');
+  const link = $('capture-photo-guide');
+  if (!profile) {
+    hint.textContent = 'حدد فئة المنتج لمعرفة عدد وزوايا التصوير المطلوبة';
+    description.textContent = state.files.length + ' صورة تم إضافتها — التصوير يختلف حسب الفئة';
+    link.href = './capture.html';
+    return;
+  }
+  const count = state.files.length;
+  const progress = captureProgress(category, count);
+  hint.textContent = count + ' / ' + profile.verifiedMin +
+    ' صورة للحد المقترح لمراجعة 360° · ' + progress.label;
+  description.textContent = 'تجربة أولية من ' + profile.previewMin + ' صور · الأفضل ' +
+    profile.verifiedTarget + ' صورة مع القياسات وفحص جودة الصور';
+  link.href = './capture.html?category=' + encodeURIComponent(category);
+}
+function renderMaterialPartsIfNeeded() {
+  const category = $('category').value;
+  if (state.partsRenderedCategory === category) return;
+  state.partsRenderedCategory = category;
+  const container = $('material-parts');
+  container.textContent = '';
+  const parts = confirmedPartList();
+  if (!parts.length) {
+    const msg = document.createElement('p');
+    msg.className = 'note'; msg.textContent = 'اختار فئة المنتج لإظهار قائمة الأجزاء المقترحة.';
+    container.append(msg); return;
+  }
+  for (const [index, part] of parts.entries()) {
+    const row = document.createElement('div');row.className = 'material-part';
+    const title = document.createElement('span');title.textContent = part.label;
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'طبيعة حركة ' + part.label);
+    for (const [value, label] of [
+      ['rigid', 'صلب'],['deformable', 'مرن'],['cloth','قماش متحرك'],
+      ['hinged','مفصلة'],['linked','سلسلة / حلقات']
+    ]) {
+      const option = document.createElement('option');
+      option.value = value;option.textContent = label;select.append(option);
+    }
+    select.value = part.type;
+    const approval = document.createElement('label');approval.className = 'part-confirm';
+    const checkbox = document.createElement('input');checkbox.type = 'checkbox';checkbox.checked = part.confirmed;
+    approval.append(checkbox,document.createTextNode('راجعت الخامة'));
+    function savePart() {
+      state.confirmedParts[category + ':' + index] = { motion: select.value, confirmed: checkbox.checked };
+    }
+    select.addEventListener('change',()=>{checkbox.checked = false;savePart();});
+    checkbox.addEventListener('change',savePart);
+    row.append(title,select,approval);container.append(row);
+  }
+}
 function imageObject(file) {
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.decoding = 'async';
-  img.src = url;
-  return img.decode().then(() => ({ file, url, img }))
-    .catch((error) => { URL.revokeObjectURL(url); throw error; });
+  // Retain File handles and object URLs. Decode only the first/current analysis
+  // image instead of keeping 48 full-resolution decoded images in memory.
+  return Promise.resolve({ file, url: URL.createObjectURL(file), img: null });
+}
+async function ensureDecoded(photo) {
+  if (photo.img) return photo.img;
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = photo.url;
+  await image.decode();
+  photo.img = image;
+  return image;
 }
 function renderImages() {
   const strip = $('photo-strip');
@@ -103,7 +186,7 @@ function renderImages() {
     const thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
     const img = document.createElement('img');
-    img.src = photo.url; img.alt = photo.file.name;
+    img.src = photo.url; img.alt = photo.file.name; img.loading = 'lazy';
     const remove = document.createElement('button');
     remove.type = 'button'; remove.textContent = '×'; remove.title = 'حذف الصورة';
     remove.addEventListener('click', () => {
@@ -141,16 +224,21 @@ function extractColor(img) {
   $('color-code').textContent = color;
 }
 async function handleFiles(incoming) {
-  const available = Math.max(0, 8 - state.files.length);
+  const available = Math.max(0, 48 - state.files.length);
   const raw = [...incoming].filter(f => /^image\/(png|jpeg|webp)$/.test(f.type));
   const valid = raw.filter(f => f.size <= 10 * 1024 * 1024).slice(0, available);
-  if (!valid.length) { info('اختار PNG أو JPG أو WEBP، بحد أقصى 8 صور و10MB لكل صورة.', 'error'); return; }
+  if (!valid.length) { info('اختار PNG أو JPG أو WEBP، بحد أقصى 48 صورة و10MB للصورة. اعمل رفع على دفعات.', 'error'); return; }
   const added = await Promise.allSettled(valid.map(imageObject));
   const success = added.filter(x => x.status === 'fulfilled').map(x => x.value);
   state.files.push(...success);
   renderImages();
   if (success.length === 0) { info('لم نتمكن من قراءة الصور، جرّب صورًا أخرى.', 'error'); return; }
-  if (success[0]) extractColor(success[0].img);
+  try {
+    await ensureDecoded(state.files[0]);
+    extractColor(state.files[0].img);
+  } catch {
+    info('أول صورة غير قابلة للتحليل؛ جرّب صورة مختلفة أو استخدم التصنيف اليدوي.', 'error');
+  }
   autoFill(success[0].file.name);
   const fallback = classifyProduct($('product-name').value + ' ' + success[0].file.name);
   if (state.classificationSource !== 'manual' && fallback.category !== 'unknown') {
@@ -188,11 +276,13 @@ async function mobilenetModel() {
 async function analyze() {
   if (!state.files.length) { info('ارفع صورة المنتج الأول.', 'error'); return; }
   const request = ++state.analysisRequest;
-  const image = state.files[0].img;
-  const label = $('product-name').value + ' ' + state.files[0].file.name;
+  const selectedPhoto = state.files[0];
+  const label = $('product-name').value + ' ' + selectedPhoto.file.name;
   $('analyze').disabled = true;
   info('جاري تحميل نموذج MobileNet على جهازك لأول مرة. ده ممكن ياخد وقت حسب الشبكة...');
   try {
+    const image = await ensureDecoded(selectedPhoto);
+    if (request !== state.analysisRequest) return;
     const model = await mobilenetModel();
     if (request !== state.analysisRequest) return;
     info('جاري تصنيف الصورة محليًا...');
@@ -261,12 +351,30 @@ function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 15000);
 }
 function collect() {
-  return createRecord({
+  const category = $('category').value;
+  const base = createRecord({
     name: $('product-name').value, sku: $('sku').value,
-    category: $('category').value, measurement: $('measurement').value,
+    category, measurement: $('measurement').value,
     photos: state.files.length, categorySource: state.classificationSource,
     color: $('product-color').value
   });
+  const photoStatus = captureProgress(category, state.files.length);
+  const parts = confirmedPartList();
+  // Never mark the SKU as verified just because an image-count threshold is met.
+  return {
+    ...base,
+    photoRequirements: {
+      provided: state.files.length,
+      previewMinimum: photoStatus.previewMinimum,
+      reviewMinimum: photoStatus.verifiedMinimum,
+      target: photoStatus.verifiedTarget,
+      level: photoStatus.level,
+      photoQualityReviewed: false
+    },
+    materialParts: parts,
+    merchantApproved: false,
+    publishStatus: 'needs-merchant-qa'
+  };
 }
 function renderQueue() {
   const node = $('queue'); node.textContent = '';
