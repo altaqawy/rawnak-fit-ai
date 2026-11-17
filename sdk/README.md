@@ -1,4 +1,4 @@
-# RAWNAK FIT Embed SDK — Public Alpha 0.1
+# RAWNAK FIT Embed SDK — Public Alpha 0.1.1
 
 **Runnable store demo (after GitHub Pages deployment):**
 https://altaqawy.github.io/rawnak-fit-ai/demo/
@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-01"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-02"></script>
 
 Then place the component next to your add-to-cart button:
 
@@ -42,7 +42,7 @@ Unknown or unimplemented category labels such as ring, dress, hoodie or earrings
       addToCart(productId, variantId);
     });
 
-The SDK also dispatches rawank-fit:open and rawank-fit:close events (actual event names: RAWNAK below).
+The SDK also dispatches rawnak-fit:open and rawnak-fit:close events (actual event names: RAWNAK below).
 
 Actual event names:
 - rawnak-fit:open
