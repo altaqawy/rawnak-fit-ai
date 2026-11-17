@@ -28,7 +28,9 @@ jobs:
       - name: Check AutoFit Studio JS module syntax
         run: |
           node --check studio/engine.js
+          node --check studio/capture-profiles.js
+          node --check studio/capture.js
           node --check studio/app.js
           node --check studio/viewer.js
       - name: Test AutoFit Studio category and asset router
-        run: node --test studio/tests/engine.test.mjs
+        run: node --test studio/tests/*.test.mjs
