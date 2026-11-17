@@ -158,7 +158,8 @@ async function handleFiles(incoming) {
   } else {
     resetPreview(); updatePlan();
   }
-  info(success.length + ' صورة تمت إضافتها. يمكنك الضغط على تحليل الصورة لتشغيل التصنيف AI.');
+  info(success.length + ' صورة تمت إضافتها. جاري محاولة التصنيف AI تلقائيًا على الجهاز.');
+  void analyze();
   if (added.some(x => x.status === 'rejected')) info('بعض الصور لم يمكن قراءتها. الصور المقبولة ما زالت متاحة.', 'error');
 }
 let mobilenetPromise = null;
@@ -293,7 +294,7 @@ function exportJSON(data, filename) {
 function wireUI() {
   options(); updateSizeInfo(); updatePlan(); renderQueue();
   const input = $('file-input'), zone = $('dropzone');
-  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('click', e => { if (e.target !== input) input.click(); });
   zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
   input.addEventListener('change', async e => { await handleFiles(e.target.files); input.value = ''; });
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
