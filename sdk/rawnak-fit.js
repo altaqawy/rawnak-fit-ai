@@ -90,7 +90,7 @@
       root.replaceChildren();
       const style = document.createElement('style');style.textContent = css;
       const trigger = document.createElement('button');
-      trigger.className='trigger';trigger.part='button';trigger.type='button';
+      trigger.className='trigger';trigger.setAttribute('part','button');trigger.type='button';
       trigger.textContent=(ICONS[this.category] || '✳')+' '+(this.getAttribute('button-text') || 'جرّبه عليك');
       trigger.disabled=!this.enabled;
       trigger.title=this.hasValidCategory?'تجربة AR توضيحية وليست قياسًا دقيقًا':'المحرك ده لسه غير متاح في نسخة التجربة';
@@ -104,7 +104,7 @@
       this.prevFocus=document.activeElement;
       this.isOpen=true;
       const mask = document.createElement('div');
-      mask.className='overlay';mask.part='overlay';
+      mask.className='overlay';mask.setAttribute('part','overlay');
       const dialog = document.createElement('div');dialog.className='dialog';
       dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');
       dialog.setAttribute('aria-label','تجربة '+this.productName);
