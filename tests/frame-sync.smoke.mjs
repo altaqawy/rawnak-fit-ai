@@ -66,12 +66,13 @@ const mockStream = { getTracks() { return [track]; }, getVideoTracks() { return 
 const sandbox = {
   document: { querySelector: select, createElement: (type) => new MockElement(type) },
   navigator: { mediaDevices: { getUserMedia: async () => mockStream } },
-  window: { isSecureContext: true, devicePixelRatio: 1, addEventListener() {} },
+  window: { isSecureContext: true, devicePixelRatio: 1, location: { search: '' }, addEventListener() {} },
   performance: { now: () => 555 },
   devicePixelRatio: 1,
   requestAnimationFrame: () => 1,
   cancelAnimationFrame: () => {},
-  console
+  console,
+  URLSearchParams
 };
 runInNewContext(instrumented, sandbox);
 const app = sandbox.__fitHarness;
