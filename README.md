@@ -67,3 +67,19 @@ The user supplied a camera-only diagnostic: secure context `true`, camera track 
 Updated the app to prefer the [official MediaPipe ESM bundle](https://developers.google.com/edge/mediapipe/solutions/setup_web) at `@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs`, matching WASM version, with unpkg fallback and detailed error reporting. Also corrected FaceLandmarker result access from `result.landmarks` to `result.faceLandmarks`.
 
 If tracking still fails, open **[model diagnostics](diagnostics/tracking.html)** on GitHub Pages, click the model buttons, and copy the report. The webcam stays live on AI failure. Real-device tracking success still requires confirmation.
+
+## Alpha 0.4 — Synchronized Live Mirror
+
+**Why:** The browser camera can render at ~40–60 FPS while the previous model only ran at ~10 inferences/second (95 ms throttle). That means overlays lagged behind current video frames.
+
+**New selectable modes:**
+
+- **Synchronized with AI (default):** Take a canvas snapshot of a camera frame, run the currently chosen landmark model **on the snapshot**, then compose the snapshot and that exact frame's landmark overlay in one output canvas. If model loading fails or no analyzed frame is available, show the raw camera preview. The source webcam remains local and open. Target inference interval is 45 ms, but actual FPS depends on hardware/model speed. Drops frames rather than building a backlog.
+- **Fast live preview:** Show the camera video at its native speed and update overlays as inference finishes. Its target interval is 65 ms; landmarks use a faster smoothing coefficient to reduce delay.
+
+**Important:** Synchronized mode matches the input camera image with its corresponding model output, but it **does not** guarantee 100% accurate landmark placement, fit, photorealistic material appearance, or fluid 60 FPS AR. Processing still runs synchronously on the browser's main thread. Improvements requiring workers and 3D cloth simulation are separate milestones. Nothing is sent to a generative AI endpoint for per-frame processing.
+
+**Verify deployment:** The header should show `ALPHA 0.4 · FRAME SYNC`, and telemetry should show `JS 2026.11.17.040` plus distinct `Synced FPS` and `AI Hz` counters. If this build label isn't visible, allow Pages deployment to finish and hard-reload.
+
+**Smoke tests:** `node tests/static-check.mjs` and `node tests/frame-sync.smoke.mjs`. The second uses a mocked camera and model; **real-device quality and latency remain unverified**.
+
