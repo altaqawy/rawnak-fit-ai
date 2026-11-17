@@ -128,11 +128,16 @@ export class ParametricViewer {
     loop();
   }
 
-  setProduct(category, size, color) {
+  clear() {
     if (this.group) {
       this.scene.remove(this.group);
       disposeObject(this.group);
+      this.group = null;
     }
+  }
+
+  setProduct(category, size, color) {
+    this.clear();
     this.group = buildParametricGeometry(category, size, color);
     this.scene.add(this.group);
     const bounds = new THREE.Box3().setFromObject(this.group);
@@ -160,7 +165,7 @@ export class ParametricViewer {
     cancelAnimationFrame(this.frame);
     this.observer.disconnect();
     this.controls.dispose();
-    if (this.group) disposeObject(this.group);
+    this.clear();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
