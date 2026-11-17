@@ -97,7 +97,7 @@ function confirmedPartList() {
   const profile = getCaptureProfile(category);
   if (!profile) return [];
   return profile.parts.map((part, index) => {
-    const key = category + ':' + index;
+    const key = String($('sku').value || 'unassigned').trim() + ':' + category + ':' + index;
     const saved = state.confirmedParts[key];
     return {
       id: 'part-' + index,
@@ -158,7 +158,7 @@ function renderMaterialPartsIfNeeded() {
     const checkbox = document.createElement('input');checkbox.type = 'checkbox';checkbox.checked = part.confirmed;
     approval.append(checkbox,document.createTextNode('راجعت الخامة'));
     function savePart() {
-      state.confirmedParts[category + ':' + index] = { motion: select.value, confirmed: checkbox.checked };
+      state.confirmedParts[String($('sku').value || 'unassigned').trim() + ':' + category + ':' + index] = { motion: select.value, confirmed: checkbox.checked };
     }
     select.addEventListener('change',()=>{checkbox.checked = false;savePart();});
     checkbox.addEventListener('change',savePart);
@@ -193,6 +193,8 @@ function renderImages() {
       const index = state.files.indexOf(photo);
       if (index < 0) return;
       state.files.splice(index, 1);
+      state.confirmedParts = {};
+      state.partsRenderedCategory = null;
       URL.revokeObjectURL(photo.url);
       state.analysisRequest++;
       renderImages();
@@ -231,6 +233,8 @@ async function handleFiles(incoming) {
   const added = await Promise.allSettled(valid.map(imageObject));
   const success = added.filter(x => x.status === 'fulfilled').map(x => x.value);
   state.files.push(...success);
+  state.confirmedParts = {};
+  state.partsRenderedCategory = null;
   renderImages();
   if (success.length === 0) { info('لم نتمكن من قراءة الصور، جرّب صورًا أخرى.', 'error'); return; }
   try {
@@ -415,6 +419,7 @@ function wireUI() {
   for (const id of ['measurement', 'product-color', 'sku', 'product-name']) {
     $(id).addEventListener('input', () => {
       if (id === 'product-color') $('color-code').textContent = $('product-color').value;
+      if (id === 'sku') state.partsRenderedCategory = null;
       if (id === 'measurement' || id === 'product-color') resetPreview();
       updatePlan();
     });
