@@ -22,3 +22,10 @@
 .mode-button.active strong{color:#d8f7b4}
 .mode-button:focus-visible{outline:2px solid #c6ed99;outline-offset:2px}
 @media(max-width:520px){.mode-selector{padding:11px 12px 0}.mode-button{padding:10px}.mode-button strong{font-size:11px}.mode-button small{font-size:9px}}
+
+
+/* Merchant preparation workspace is separate from the webcam AR mirror. */
+.nav-actions{display:flex;align-items:center;gap:12px}
+.studio-link{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#23452d;border:1px solid #d0eaa755;border-radius:11px;color:#c9efa6;font:700 12px 'DM Sans',sans-serif;white-space:nowrap}
+.studio-link:hover{background:#325e3c;color:#e5ffd0}
+@media(max-width:480px){.nav-actions{gap:7px}.studio-link{padding:9px 10px;font-size:10px}}
