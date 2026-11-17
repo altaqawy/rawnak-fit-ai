@@ -1,6 +1,6 @@
 (function sdkModule(){
   'use strict';
-  const VERSION = '0.1.0';
+  const VERSION = '0.1.1';
   const ROOT = new URL('../', document.currentScript?.src || location.href);
   const SUPPORTED = Object.freeze({
     watch: 'watch', bangle: 'bracelet', bracelet: 'bracelet',
