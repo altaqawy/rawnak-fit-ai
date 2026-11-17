@@ -12,7 +12,7 @@
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <span class="version">ALPHA 0.3 · LIVE AR</span>
+    <span class="version">ALPHA 0.3.1 · TRACKING FIX</span>
   </header>
   <main>
     <section class="hero"><div class="eyebrow">◉ REAL-TIME VIRTUAL TRY-ON</div><h1>شوفها عليك <em>لايف</em></h1><p>افتح الكاميرا، جرّب القطعة، واتحرك براحتك. حتى لو تعطل نموذج التتبع، الكاميرا هتفضل شغالة.</p></section>
@@ -31,12 +31,20 @@
           <button id="capture" class="btn accent" type="button" disabled>حفظ لقطة</button>
         </div>
         <div class="telemetry"><span id="fps">FPS —</span><span id="tracking-status">Tracking idle</span><span>LOCAL-FIRST</span></div>
+        <details id="tracking-debug" class="tracking-debug hidden">
+          <summary>تفاصيل الخطأ في MediaPipe</summary>
+          <p>لو التتبع فشل بعد التعديل، انسخ التقرير وابعته من غير ما تحتاج تصور نفسك.</p>
+          <pre id="debug-output" tabindex="0" aria-label="تقرير خطأ التتبع"></pre>
+          <button id="copy-debug" class="btn ghost" type="button">نسخ التقرير</button>
+          <a href="./diagnostics/tracking.html" target="_blank" rel="noopener">اختبار محرك AI بدون كاميرا ↗</a>
+        </details>
       </article>
       <aside class="catalog-panel">
         <div class="catalog-title"><span class="eyebrow">TRY SOMETHING ON</span><h2>اختار القطعة</h2><p>تبديل المنتج مش هيقفل الكاميرا</p></div>
         <div id="products" class="products" role="group" aria-label="المنتجات التجريبية"></div>
         <div class="disclaimer"><strong>تنبيه الجودة</strong><p>الرسومات الحالية للتوضيح التقني فقط. دقة المقاسات وحركة القماش والإكسسوارات ثلاثية الأبعاد مراحل لاحقة.</p></div>
         <a class="diagnostic-link" href="./diagnostics/camera-only.html" target="_blank" rel="noopener">اختبار الكاميرا فقط بدون AI ↗</a>
+        <a class="diagnostic-link" href="./diagnostics/tracking.html" target="_blank" rel="noopener">اختبار تحميل نموذج التتبع بدون كاميرا ↗</a>
       </aside>
     </section>
     <section class="footnotes"><span>✓ لا تحتاج توكنز توليد لكل فريم</span><span>✓ فيديو مباشر حتى لو النموذج فشل</span><span>✓ كمبيوتر وموبايل</span></section>
