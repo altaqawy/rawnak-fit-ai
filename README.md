@@ -98,3 +98,19 @@ Merchant product onboarding runs in a **separate** `/studio/` route, leaving the
 
 No per-frame generative AI credits are consumed. For exact SKU geometry, future generation and merchant verification are required.
 
+
+
+## First merchant integration (public SDK demo)
+
+- [Interactive storefront SDK demo](https://altaqawy.github.io/rawnak-fit-ai/demo/)
+- [SDK installation and limitations](sdk/README.md)
+- [Web Component source](sdk/rawnak-fit.js)
+- [Next.js/React example wrapper](sdk/react/RawnakTryOnButton.tsx)
+
+The public widget selects a category and opens the existing on-device live camera renderer inside a camera-enabled iframe, with a separate-page fallback and an add-to-cart event the host store can handle. **This does not connect exact merchant GLB assets**, authenticate tenant IDs or authorize private store products. The current preview is illustrative 2D AR.
+
+Do not paste the future production endpoint documented in the architecture into sites yet. For actual commercial integration, build a secure SKU/variant manifest, merchant domain allowlists and a verified asset approval pipeline.
+
+### QA caveat
+
+GitHub Actions job runs have sometimes reported failure with runner ID 0 and no executed steps, so a failed red badge is **not enough to infer that the code test failed**. The browser/iframe camera still requires validation on real desktop and mobile devices. See [SDK test](tests/sdk.smoke.mjs).
