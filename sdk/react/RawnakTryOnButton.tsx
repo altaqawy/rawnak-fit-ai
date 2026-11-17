@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 const DEFAULT_SDK =
-  "https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-01";
+  "https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-02";
 
 export type FitCategory =
   | "watch" | "bangle" | "bracelet" | "glasses"
