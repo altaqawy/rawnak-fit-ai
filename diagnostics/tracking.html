@@ -62,7 +62,7 @@ async function importVision(){
    info('PASS: ESM bundle exports found');
    info('Initialize WASM from '+source.base+'/wasm');
    const wasm=await mod.FilesetResolver.forVisionTasks(source.base+'/wasm');
-   info('PASS: WASM fileset resolved');
+   info('PASS: WASM file paths resolved (runtime initialization is checked when a model is created)');
    vision={mod,wasm,cdn:source.name};
    return vision;
   }catch(error){info('FAILED '+source.name+': '+(error?.name||'Error')+' '+(error?.message||error))}
@@ -72,7 +72,7 @@ async function importVision(){
 buttons[0].addEventListener('click',async()=>{
  if(busy)return;
  renderButtons(true);state('جاري اختبار المكتبة...');
- try{const x=await importVision();state('المكتبة وWASM جاهزين من '+x.cdn,true)}
+ try{const x=await importVision();state('المكتبة ومسارات WASM جاهزة من '+x.cdn+' — اختبر نموذجًا للتحقق من التهيئة',true)}
  catch(error){info('FINAL ERROR '+error.message);state('فشل تحميل المكتبة، انسخ التقرير',false)}
  finally{renderButtons(false)}
 });
