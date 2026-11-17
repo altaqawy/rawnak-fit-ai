@@ -29,7 +29,7 @@
     selected: items[0], engine: 'idle', models: {}, loading: {},
     vision: null, visionLoading: null, raf: 0, landmarks: null,
     fps: 0, frameCount: 0, lastFps: 0, lastInference: 0, detected: false,
-    mirror: true, diagnostic: '', lastType: null, lastPoints: null
+    mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null
   };
 
   const showError = (message) => {
@@ -40,6 +40,29 @@
     errorBox.textContent = '';
     errorBox.classList.add('hidden');
   };
+  const stageLabels = {
+    library: 'جاري تحميل مكتبة MediaPipe',
+    wasm: 'جاري تهيئة WebAssembly',
+    model: 'جاري تحميل نموذج التتبع'
+  };
+  function recordTrackingError(error, stage, type) {
+    const message = error?.message || String(error);
+    state.diagnostic = [
+      'RAWNAK FIT AI — tracking error',
+      'Stage: ' + stage,
+      'Tracker: ' + type,
+      'MediaPipe version: 0.10.21',
+      'Error: ' + (error?.name || 'Error') + ' — ' + message,
+      'UTC: ' + new Date().toISOString(),
+      'Camera still live: ' + Boolean(state.stream)
+    ].join('\n');
+    const area = $('#debug-output');
+    const panel = $('#tracking-debug');
+    if (area && panel) {
+      area.textContent = state.diagnostic;
+      panel.classList.remove('hidden');
+    }
+  }
   const drawCatalog = () => {
     productsNode.textContent = '';
     for (const item of items) {
@@ -86,7 +109,7 @@
     indicator.style.color = live ? '#c8ee9b' : '#a5bdac';
     if (live) {
       trackChip.textContent = state.engine === 'loading'
-        ? 'الكاميرا مستمرة · جاري تحميل نموذج التتبع'
+        ? 'الكاميرا مستمرة · ' + (stageLabels[state.loadingStage] || 'جاري تجهيز التتبع')
         : state.engine === 'error'
           ? 'الكاميرا مستمرة · نموذج التتبع غير متاح'
           : state.detected ? '✓ تم تتبع الجسم' : 'اظهر الجزء المطلوب من جسمك';
@@ -103,14 +126,38 @@
     hand: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
   };
 
+  const MEDIAPIPE_VERSION = '0.10.21';
+  const mediaPipeSources = [
+    { name: 'jsDelivr', base: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MEDIAPIPE_VERSION },
+    { name: 'unpkg', base: 'https://unpkg.com/@mediapipe/tasks-vision@' + MEDIAPIPE_VERSION }
+  ];
   async function getVision() {
     if (!state.visionLoading) {
       state.visionLoading = (async () => {
-        const mod = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm');
-        const wasm = await mod.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-        return { mod, wasm };
+        const failures = [];
+        for (const source of mediaPipeSources) {
+          try {
+            state.loadingStage = 'library';
+            updateUI();
+            // Official MediaPipe web setup uses vision_bundle.mjs, not jsDelivr's +esm endpoint.
+            const mod = await import(source.base + '/vision_bundle.mjs');
+            if (!mod.FilesetResolver || !mod.HandLandmarker || !mod.FaceLandmarker || !mod.PoseLandmarker) {
+              throw new Error('MediaPipe ESM exports are missing');
+            }
+            state.loadingStage = 'wasm';
+            updateUI();
+            const wasm = await mod.FilesetResolver.forVisionTasks(source.base + '/wasm');
+            console.info('[RAWNAK FIT] MediaPipe ready from ' + source.name + ' (' + MEDIAPIPE_VERSION + ')');
+            return { mod, wasm };
+          } catch (error) {
+            const reason = error?.message || String(error);
+            failures.push(source.name + ': ' + reason);
+            console.warn('[RAWNAK FIT] MediaPipe source failed:', source.name, error);
+          }
+        }
+        throw new Error('تعذر تحميل MediaPipe من المصدرين. ' + failures.join(' | '));
       })().catch((error) => {
-        state.visionLoading = null;
+        state.visionLoading = null; // allow a retry without reopening the camera
         throw error;
       });
     }
@@ -124,6 +171,7 @@
     state.detected = false;
     state.landmarks = null;
     state.engine = 'loading';
+    state.loadingStage = state.visionLoading ? 'model' : 'library';
     clearError();
     updateUI();
     if (state.models[type]) {
@@ -134,6 +182,8 @@
     if (!state.loading[type]) {
       state.loading[type] = (async () => {
         const { mod, wasm } = await getVision();
+        state.loadingStage = 'model';
+        updateUI();
         const common = { baseOptions: { modelAssetPath: modelURLs[type], delegate: 'CPU' }, runningMode: 'VIDEO' };
         const klass = type === 'pose' ? mod.PoseLandmarker : type === 'face' ? mod.FaceLandmarker : mod.HandLandmarker;
         const options = type === 'pose' ? { ...common, numPoses: 1 }
@@ -160,7 +210,8 @@
       console.error('[RAWNAK FIT] Tracking model error; camera is still running.', error);
       if (request === state.engineRequest && epoch === state.epoch) {
         state.engine = 'error';
-        showError('الكاميرا شغالة، لكن تعذر تحميل التتبع. راجع الاتصال بالإنترنت أو مانع الإعلانات واضغط «إعادة التتبع».');
+        recordTrackingError(error, state.loadingStage, type);
+        showError('الكاميرا شغالة، لكن التتبع فشل. اضغط «تفاصيل الخطأ» أسفل الفيديو لمعرفة السبب أو جرّب إعادة التتبع.');
       }
     }
     updateUI();
@@ -188,6 +239,7 @@
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     state.starting = false;
     state.engine = 'idle';
+    state.loadingStage = 'idle';
     state.landmarks = null;
     state.lastPoints = null;
     state.fps = 0;
@@ -286,7 +338,7 @@
     state.lastInference = frameTime;
     try {
       const result = model.detectForVideo(video, frameTime);
-      const raw = result.landmarks?.[0] || null;
+      const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
       state.landmarks = smoothing(type, raw);
       state.detected = !!state.landmarks;
     } catch (error) {
@@ -294,7 +346,8 @@
       state.engine = 'error';
       state.detected = false;
       state.landmarks = null;
-      showError('تعطّل التتبع على هذا الجهاز، لكن الفيديو مستمر. جرّب إعادة التتبع.');
+      recordTrackingError(error, 'inference', type);
+      showError('تعطّل تحليل الفيديو، لكن الكاميرا مستمرة. افتح «تفاصيل الخطأ» ثم جرّب إعادة التتبع.');
     }
   }
 
@@ -485,6 +538,15 @@
   cameraToggle.addEventListener('click', () => { if (state.stream || state.starting) stopCamera(); else void startCamera(); });
   retryButton.addEventListener('click', () => { if (state.stream) { state.engine = 'idle'; void loadEngine(state.selected.engine); } });
   captureButton.addEventListener('click', saveSnapshot);
+  $('#copy-debug')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(state.diagnostic);
+      $('#copy-debug').textContent = 'تم نسخ التقرير';
+    } catch {
+      $('#debug-output')?.focus();
+      $('#debug-output')?.select?.();
+    }
+  });
   $('#mirror-toggle').addEventListener('click', () => {
     state.mirror = !state.mirror;
     layers.classList.toggle('flipped', state.mirror);
