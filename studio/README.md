@@ -69,3 +69,18 @@ Static site and local Three.js geometry require no per-image-generation API fees
 - No image uploaded by application.
 - Actual 3D preview and GLB export need browser/device acceptance testing.
 - Avoid false claims about exact geometry, sizing or 360° authenticity.
+
+## Capture Guide v1 / Material Motion (2026-11-18)
+
+[Open the merchant photography guide](capture.html), with a category selector, photo counts, sample shot breakdown, actual measurement requirements, and suggested part movement types.
+
+**Configured in code:** [capture-profiles.js](capture-profiles.js) and tested in [capture.test.mjs](tests/capture.test.mjs). The Studio UI now shows the proposed number of photos per selected product type. Max upload changed from 8 to 48 photos per product, handled in batches; **only the first classification image is decoded eagerly**. This is a browser-only prototype. Bulk raw image processing and server storage are not connected.
+
+Capture tiers:
+- `preview` — enough evidence to experiment with a template. This does **not** confer authentic full 360 geometry.
+- `reviewable` — meets the category's **photo count** threshold. Quality, angles, measurements, materials, rigging, manual approval and reconstruction engine still need validation.
+- `merchant-verified` — planned **future** status only; not automatically granted by the frontend, and cannot be inferred solely from number of photos.
+
+Material part suggestions in the Studio are **category templates**, not segmentation by AI. The merchant can change a part to rigid/deformable/cloth/hinged/linked and tick that they reviewed it. The exported product metadata records whether each part was confirmed, and explicitly preserves `merchantApproved: false`, `publishStatus: needs-merchant-qa`.
+
+**Next:** add real per-image automatic angle coverage and blur/duplicate quality tests, backend multi-tenant storage, validated segmentation, an asset preparation queue and renderer-ready GLB + physical attributes. The live widget integration is only a spec so far; see [multi-store API architecture](../docs/INTEGRATION_ARCHITECTURE_V1.md). 
