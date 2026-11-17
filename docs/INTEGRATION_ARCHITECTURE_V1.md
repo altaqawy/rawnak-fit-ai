@@ -1,6 +1,6 @@
 # RAWNAK FIT Integration Contract v1 — Multi-Tenant Merchant SDK
 
-Status: **Architecture contract + implementation plan.** The production API, merchant authentication, public SDK and catalog-to-camera link are **not yet deployed**. The running \`/studio/\` page only produces demo geometry and JSON.
+Status: **Partial proof of concept.** A public/demo Web Component SDK, demo merchant store and URL-based category selection are now implemented on GitHub Pages. Secure merchant authentication, asset manifests, approved SKU models and production SaaS are **NOT deployed**. See [active SDK](../sdk/README.md).
 
 ## Product architecture
 
@@ -11,7 +11,13 @@ One multi-tenant service for multiple RAWNAK sites/merchant platforms:
 - **Try-On Runtime**: camera + tracked face/hand/body + category engines: rigid objects (watches/rings/glasses), articulated jewelry, shoe/handbag attachment, deformable garments with drape simulation.
 - **Widget SDK**: a short integration snippet that adds "جرّبه عليك" to any supported product card, launching a modal or hosted full-screen fallback. Shopify uses Theme App Extension; React/Next.js use a component wrapper; generic HTML uses Web Component.
 
-## Proposed merchant embed (NOT active until SDK is built)
+## Runnable public demo SDK (already implemented)
+
+The first Web Component is published in this repository at [sdk/rawnak-fit.js](../sdk/rawnak-fit.js) with a live sample store at [demo/](../demo/). The merchant passes category and product ID to a hosted iframe of the **existing schematic 2D AR mirror**, with a fallback to open in a new tab and a host-side add-to-cart event. This is a public test only: the SKU ID is not authenticated or resolved to approved GLB assets.
+
+See [actual integration code and caveats](../sdk/README.md). The secure multi-tenant manifest API described below is a future deployment target.
+
+## Future production merchant embed (NOT yet active)
 
 \`\`\`html
 <script defer src="https://cdn.rawnakgroup.com/fit/v1/widget.js"></script>
@@ -120,9 +126,9 @@ Photo material appearance (PBR base color, normal/roughness/metallic/transmissio
 
 ## Release gates
 
-**Stage 1 (current):** local capture guides and studio templates. **Stage 2:** secure asset API + catalog + SDK; **Stage 3:** first merchant SKU with verified 3D wrist watch, then garment cloth; **Stage 4:** multi-merchant distribution, Shopify app and integration with all RAWNAK stores.
+**Stage 1 (implemented prototype):** local capture guides, studio templates, public demo SDK and store page. **Stage 2:** secure asset API + merchant catalog + authenticated SDK; **Stage 3:** first merchant SKU with verified 3D wrist watch, then garment cloth; **Stage 4:** multi-merchant distribution, Shopify app and integration with all RAWNAK stores.
 
-**No storefront integration is active from this document alone.** The snippet is a stable design target; do not paste into production until \`widget.js\` exists, domains are authorized and the product manifest API responds with verified assets.
+**A public demonstration of storefront integration is active**, but the future production CDN snippet in this architecture document is NOT an existing deploy. Do not use the demo SDK for commercial product claims or private assets until merchant domains, product manifests and approved 3D are secured and verified.
 
 References:
 - https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
