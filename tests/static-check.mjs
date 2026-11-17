@@ -29,4 +29,10 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
+assert.ok(html.includes('ALPHA 0.3.2'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261117-alpha032"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261117-alpha032"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
+assert.ok(app.includes("const BUILD_ID = '2026.11.17.032'"), 'runtime identifies compiled source');
+assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');
