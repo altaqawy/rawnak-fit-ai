@@ -34,3 +34,10 @@ jobs:
           node --check studio/viewer.js
       - name: Test AutoFit Studio category and asset router
         run: node --test studio/tests/*.test.mjs
+      - name: Check SDK script syntax
+        run: |
+          node --check sdk/rawnak-fit.js
+          node --check tests/sdk.smoke.mjs
+      - name: Simulate merchant embedding
+        run: node tests/sdk.smoke.mjs
+
