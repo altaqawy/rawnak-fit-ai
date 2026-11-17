@@ -46,3 +46,12 @@ Load `/rawnak-fit-ai/diagnostics/camera-only.html` on GitHub Pages, or `/diagnos
 - https://github.com/google-ai-edge/mediapipe/issues/5718
 - https://github.com/google-ai-edge/mediapipe/issues/5618
 - https://docs.lensstudio.com/develop/capabilities/ar/try-on/garment-transfer
+
+## 2026-11-17 — camera confirmed; tracker failed
+
+- Camera-only diagnostics on Edge 157 (Windows): secure context true, track live, resolution 640×480 at 30 fps.
+- Main live mirror still showed model loading failure. 60 FPS on screen was render FPS, *not* landmark inference rate.
+- Replaced CDN import `0.10.22/+esm` with official `0.10.21/vision_bundle.mjs` and matched WASM version, plus unpkg fallback. Reason: documented jsDelivr version availability issues; device runtime root cause needs new log after deployment.
+- Corrected FaceLandmarker results to `result.faceLandmarks`.
+- Added [tracking model checks](../diagnostics/tracking.html) and copyable error details under camera. This can isolate ESM vs WASM vs model failures without opening the camera.
+- **Next:** validate on user's browser, identify any remaining errors from copied report. Never close a working webcam solely because a model fails.
