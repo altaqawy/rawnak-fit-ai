@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAWNAK FIT AI — Tracking Diagnostics</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#e9f3e6;background:#102219}
+*{box-sizing:border-box}body{max-width:760px;padding:28px 16px;margin:0 auto}
+h1{font-size:clamp(22px,4vw,34px);margin:0 0 10px}p{line-height:1.9;color:#bad1c0}
+button,a{font:inherit;border-radius:9px;padding:11px 14px;margin:6px 0;display:inline-block}
+button{cursor:pointer;border:0;background:#bee89a;color:#102119;font-weight:700}
+button:disabled{opacity:.45;cursor:wait}
+a{color:#cae99e}.card{background:#1d3528;padding:18px;border:1px solid #bde89d30;border-radius:17px}
+pre{background:#0a1711;padding:18px;border-radius:12px;font:12px/1.7 monospace;direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+small{color:#c8cda6}.status{padding:12px 15px;margin:16px 0;border-radius:10px;background:#293d2d}
+</style></head>
+<body>
+<p>RAWNAK FIT AI / DIAGNOSTICS</p>
+<h1>اختبار محرك MediaPipe بدون كاميرا</h1>
+<p>ده اختبار لتحميل مكتبة MediaPipe وملفات WebAssembly والنماذج فقط، من غير طلب إذن كاميرا ومن غير إرسال أي صورة. بنختبر كل جزء ونكتب سبب الفشل بالتفصيل.</p>
+<div class="card">
+<div><button id="test-import">1 — اختبار مكتبة AI وWASM</button></div>
+<div><button id="test-hand" disabled>2 — اختبار نموذج الساعة واليد</button> <button id="test-pose" disabled>اختبار الملابس والجسم</button> <button id="test-face" disabled>اختبار النظارة والوجه</button></div>
+<div class="status" id="status" aria-live="polite">لم يبدأ الاختبار</div>
+<pre id="log" aria-label="تشخيص تحميل الموديل">RAWNAK FIT AI — tracking diagnostic
+Version: 0.10.21</pre>
+<button id="copy">نسخ التقرير</button>
+<a href="../">العودة للمراية</a>
+</div>
+<p><small>لو ظهر فشل، انسخ التقرير وابعته هنا. لو نجح الاختبار ولسه مفيش تتبع في المراية، هنراجع مرحلة الاستدلال وعرض النقاط داخل الكاميرا.</small></p>
+<script type="module">
+const VERSION='0.10.21';
+const sources=[
+ {name:'jsDelivr',base:'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+VERSION},
+ {name:'unpkg',base:'https://unpkg.com/@mediapipe/tasks-vision@'+VERSION}
+];
+const urls={
+ hand:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+ pose:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+ face:'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'
+};
+const log=document.querySelector('#log');
+const status=document.querySelector('#status');
+const buttons=['#test-import','#test-hand','#test-pose','#test-face'].map(x=>document.querySelector(x));
+let vision=null, busy=false;
+const stamp=()=>new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
+function info(message) { log.textContent+='\n'+stamp()+' '+message; }
+function state(message,ok){status.textContent=message;status.style.color=ok===true?'#b8e99e':ok===false?'#ffc3a8':'#f7e7b6';}
+function renderButtons(loading) {
+  busy=loading;
+  buttons[0].disabled=loading;
+  for(const b of buttons.slice(1))b.disabled=loading||!vision;
+}
+async function importVision(){
+ if(vision)return vision;
+ for(const source of sources){
+  try{
+   info('Import '+source.name+': '+source.base+'/vision_bundle.mjs');
+   const mod=await import(source.base+'/vision_bundle.mjs');
+   if(!mod.FilesetResolver||!mod.HandLandmarker||!mod.PoseLandmarker||!mod.FaceLandmarker)throw Error('Exports missing in ESM bundle');
+   info('PASS: ESM bundle exports found');
+   info('Initialize WASM from '+source.base+'/wasm');
+   const wasm=await mod.FilesetResolver.forVisionTasks(source.base+'/wasm');
+   info('PASS: WASM fileset resolved');
+   vision={mod,wasm,cdn:source.name};
+   return vision;
+  }catch(error){info('FAILED '+source.name+': '+(error?.name||'Error')+' '+(error?.message||error))}
+ }
+ throw Error('Both CDN sources failed. Check browser console Network tab for 404/CORS/blocked WASM.');
+}
+buttons[0].addEventListener('click',async()=>{
+ if(busy)return;
+ renderButtons(true);state('جاري اختبار المكتبة...');
+ try{const x=await importVision();state('المكتبة وWASM جاهزين من '+x.cdn,true)}
+ catch(error){info('FINAL ERROR '+error.message);state('فشل تحميل المكتبة، انسخ التقرير',false)}
+ finally{renderButtons(false)}
+});
+for(const type of ['hand','pose','face']){
+ document.querySelector('#test-'+type).addEventListener('click',async()=>{
+  if(busy)return;
+  renderButtons(true);state('جاري تحميل نموذج '+type+'...');
+  let model=null;
+  try{
+   const {mod,wasm}=await importVision();
+   const Class={hand:mod.HandLandmarker,pose:mod.PoseLandmarker,face:mod.FaceLandmarker}[type];
+   const setting={hand:{numHands:1},pose:{numPoses:1},face:{numFaces:1}}[type];
+   info('Model URL: '+urls[type]);
+   model=await Class.createFromOptions(wasm,{baseOptions:{modelAssetPath:urls[type],delegate:'CPU'},runningMode:'VIDEO',...setting});
+   info('PASS: '+type+' model initialized');
+   state('نموذج '+type+' جاهز. اختبره الآن في المراية',true);
+  }catch(error){
+   info('MODEL FAILED '+type+': '+(error?.name||'Error')+' '+(error?.message||error));
+   state('فشل نموذج '+type+'، انسخ التقرير',false);
+  }finally{
+   if(model){try{model.close()}catch(e){info('Close warning '+String(e))}}
+   renderButtons(false);
+  }
+ });
+}
+document.querySelector('#copy').addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(log.textContent);document.querySelector('#copy').textContent='تم النسخ ✓'}
+ catch{const r=document.createRange();r.selectNodeContents(log);window.getSelection().removeAllRanges();window.getSelection().addRange(r);info('Clipboard unavailable, select the log manually')}
+});
+</script>
+</body></html>
