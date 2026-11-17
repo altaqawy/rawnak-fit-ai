@@ -494,7 +494,8 @@
     if (!wrist || !middle) return;
     const dist = Math.max(16, Math.hypot(wrist.x - middle.x, wrist.y - middle.y));
     ctx.save();
-    ctx.translate(wrist.x, wrist.y);
+    // Wrist accessory sits just behind the base of the palm, toward the forearm.
+    ctx.translate(wrist.x - (middle.x - wrist.x) * 0.16, wrist.y - (middle.y - wrist.y) * 0.16);
     ctx.rotate(Math.atan2(middle.y - wrist.y, middle.x - wrist.x) - Math.PI / 2);
     ctx.lineWidth = Math.max(3, dist * .17);
     ctx.strokeStyle = item.id === 'watch' ? '#3d4c46' : '#e3b664';
@@ -642,13 +643,15 @@
   function saveSnapshot() {
     if (!state.stream || !video.videoWidth || !video.videoHeight) return;
     const result = document.createElement('canvas');
-    result.width = canvas.width || stage.clientWidth;
-    result.height = canvas.height || stage.clientHeight;
+    const synced = state.viewMode === 'sync' && state.syncFrameReady && state.engine === 'ready';
+    const preview = synced ? syncCanvas : canvas;
+    result.width = preview.width || stage.clientWidth;
+    result.height = preview.height || stage.clientHeight;
     const ctx = result.getContext('2d');
     const scale = Math.max(result.width / video.videoWidth, result.height / video.videoHeight);
     const width = video.videoWidth * scale, height = video.videoHeight * scale;
     if (state.mirror) { ctx.translate(result.width, 0); ctx.scale(-1, 1); }
-    if (state.viewMode === 'sync' && state.syncFrameReady && state.engine === 'ready') {
+    if (synced) {
       // Screenshot the exact synchronized image displayed in the mirror.
       ctx.drawImage(syncCanvas, 0, 0, result.width, result.height);
     } else {
