@@ -1,5 +1,6 @@
 (function fitApp() {
   'use strict';
+  const BUILD_ID = '2026.11.17.032';
   const $ = (selector) => document.querySelector(selector);
   const video = $('#camera-video');
   const canvas = $('#ar-canvas');
@@ -28,7 +29,7 @@
     stream: null, starting: false, epoch: 0, engineRequest: 0,
     selected: items[0], engine: 'idle', models: {}, loading: {},
     vision: null, visionLoading: null, raf: 0, landmarks: null,
-    fps: 0, frameCount: 0, lastFps: 0, lastInference: 0, detected: false,
+    fps: 0, frameCount: 0, inferenceFrames: 0, inferenceFPS: 0, lastFps: 0, lastInference: 0, detected: false,
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null
   };
 
@@ -117,7 +118,9 @@
             : (state.selected.engine === 'hand' ? 'اظهر يدك ومعصمك أمام الكاميرا' : state.selected.engine === 'face' ? 'اظهر وجهك أمام الكاميرا' : 'اظهر جسمك أمام الكاميرا');
     }
     $('#tracking-status').textContent = 'Tracking ' + state.engine;
-    $('#fps').textContent = live ? 'Render ' + state.fps + ' FPS' : 'Render FPS —';
+    $('#fps').textContent = live ? 'Render ' + state.fps + ' FPS / AI ' + state.inferenceFPS + ' Hz' : 'Render FPS —';
+    const version = $('#runtime-version');
+    if (version) version.textContent = 'JS ' + BUILD_ID;
     retryButton.disabled = !live || state.engine === 'loading';
   };
 
@@ -245,6 +248,8 @@
     state.landmarks = null;
     state.lastPoints = null;
     state.fps = 0;
+    state.inferenceFPS = 0;
+    state.inferenceFrames = 0;
     state.detected = false;
     clearError();
     updateUI();
@@ -303,6 +308,8 @@
       });
       state.lastFps = performance.now();
       state.frameCount = 0;
+      state.inferenceFrames = 0;
+      state.inferenceFPS = 0;
       state.lastInference = 0;
       updateUI();
       state.raf = requestAnimationFrame(renderLoop);
@@ -340,6 +347,7 @@
     state.lastInference = frameTime;
     try {
       const result = model.detectForVideo(video, frameTime);
+      state.inferenceFrames += 1;
       const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
       state.landmarks = smoothing(type, raw);
       state.detected = !!state.landmarks;
@@ -512,8 +520,11 @@
     drawOverlay();
     state.frameCount++;
     if (now - state.lastFps > 1000) {
-      state.fps = Math.round(state.frameCount * 1000 / Math.max(1, now - state.lastFps));
+      const elapsed = Math.max(1, now - state.lastFps);
+      state.fps = Math.round(state.frameCount * 1000 / elapsed);
+      state.inferenceFPS = Math.round(state.inferenceFrames * 1000 / elapsed);
       state.frameCount = 0;
+      state.inferenceFrames = 0;
       state.lastFps = now;
       updateUI();
     }
