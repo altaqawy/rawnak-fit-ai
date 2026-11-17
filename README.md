@@ -83,3 +83,18 @@ If tracking still fails, open **[model diagnostics](diagnostics/tracking.html)**
 
 **Smoke tests:** `node tests/static-check.mjs` and `node tests/frame-sync.smoke.mjs`. The second uses a mocked camera and model; **real-device quality and latency remain unverified**.
 
+
+## New — RAWNAK AutoFit Studio (merchant pipeline Alpha 0.5)
+
+[Open AutoFit Studio](https://altaqawy.github.io/rawnak-fit-ai/studio/) · [Studio source & limitations](studio/README.md)
+
+Merchant product onboarding runs in a **separate** `/studio/` route, leaving the live camera engine intact.
+
+- Upload multiple product photos; lightweight MobileNet classification runs locally on-device as a **fallible category suggestion**, with filename fallback and manual correction.
+- Extract an approximate color; enter the merchant's real product measurement.
+- Prepare **generic parametric** watch, ring and bangle geometry with Three.js. Rotate in 3D and export GLB or JSON metadata.
+- Other categories (garments, glasses, shoes, bags) are routed to their planned preparation engine and marked **needs-review**; image-to-3D and simulated cloth are *not yet implemented*.
+- No store database / image upload; preparation queue exists in browser memory and exports JSON.
+
+No per-frame generative AI credits are consumed. For exact SKU geometry, future generation and merchant verification are required.
+
