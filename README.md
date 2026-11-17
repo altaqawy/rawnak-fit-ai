@@ -12,6 +12,7 @@ A standalone RAWNAK Tools experiment for a live virtual fitting mirror. Uses bro
 - **Tracking + AR code:** [src/app.js](./src/app.js)
 - **Styles:** [src/styles.css](./src/styles.css)
 - **Camera-only diagnostic:** [diagnostics/camera-only.html](./diagnostics/camera-only.html)
+- **MediaPipe diagnostics (no camera needed):** [diagnostics/tracking.html](./diagnostics/tracking.html)
 - **Troubleshooting:** [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
 - **Roadmap:** [docs/ROADMAP.md](./docs/ROADMAP.md)
 
@@ -41,7 +42,7 @@ Older Alpha 0.1 bound camera startup to `await tracker.ensure(...)`: failing a m
 ## Current features
 
 - Mobile and desktop live browser webcam preview
-- On-demand MediaPipe pose, hand, and face model loading from public CDNs
+- On-demand MediaPipe pose, hand, and face model loading (pinned 0.10.21, official `vision_bundle.mjs` ESM, jsDelivr/unpkg fallback)
 - Illustrative overlays: shirt, jacket, watch, bracelet, glasses, bag, shoes
 - Product selection, mirror toggle, PNG screenshot, retry tracking
 - Independent camera-only diagnostic page
@@ -58,3 +59,11 @@ This prototype doesn't send camera frames to our server. The MediaPipe JS/WASM/m
 ## Development direction
 
 See [roadmap](docs/ROADMAP.md). The `main` branch of **altaqawy/rawnak-fit-ai** is now the source of truth. Future changes should be committed here, not to the original RAWNAK site.
+
+## Tracking incident — November 17, 2026
+
+The user supplied a camera-only diagnostic: secure context `true`, camera track `live`, 640×480 at 30 FPS. The main page showed `Tracking error`. **This confirms webcam permissions and preview work, not that the ML tracker works.** The 60 FPS telemetry in the UI measures rendering frames rather than ML inference.
+
+Updated the app to prefer the [official MediaPipe ESM bundle](https://developers.google.com/edge/mediapipe/solutions/setup_web) at `@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs`, matching WASM version, with unpkg fallback and detailed error reporting. Also corrected FaceLandmarker result access from `result.landmarks` to `result.faceLandmarks`.
+
+If tracking still fails, open **[model diagnostics](diagnostics/tracking.html)** on GitHub Pages, click the model buttons, and copy the report. The webcam stays live on AI failure. Real-device tracking success still requires confirmation.
