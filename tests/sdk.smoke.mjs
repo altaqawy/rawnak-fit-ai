@@ -6,6 +6,8 @@ import {fileURLToPath} from 'node:url';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const sdk=readFileSync(path.resolve(here,'../sdk/rawnak-fit.js'),'utf8');
+assert.ok(sdk.includes("setAttribute('part','button')"), 'shadow parts use writable HTML attribute');
+assert.ok(!sdk.includes("trigger.part='button'") && !sdk.includes("mask.part='overlay'"), 'Element.part is read-only');
 const registry=new Map();
 const documentListeners=new Map();
 const events=[];
