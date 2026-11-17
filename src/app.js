@@ -1,9 +1,14 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.17.032';
+  const BUILD_ID = '2026.11.17.040';
+  const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
+  const LIVE_INTERVAL_MS = 65; // 15 Hz target, avoids overloading slow phones
   const $ = (selector) => document.querySelector(selector);
   const video = $('#camera-video');
   const canvas = $('#ar-canvas');
+  const syncCanvas = $('#sync-canvas');
+  const sampleCanvas = document.createElement('canvas');
+  const sampleContext = sampleCanvas.getContext('2d', { alpha: false });
   const stage = $('#stage');
   const layers = $('#camera-layers');
   const indicator = $('#stream-indicator');
@@ -30,7 +35,8 @@
     selected: items[0], engine: 'idle', models: {}, loading: {},
     vision: null, visionLoading: null, raf: 0, landmarks: null,
     fps: 0, frameCount: 0, inferenceFrames: 0, inferenceFPS: 0, lastFps: 0, lastInference: 0, detected: false,
-    mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null
+    mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
+    viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1
   };
 
   const showError = (message) => {
@@ -90,6 +96,8 @@
         state.lastType = null;
         state.lastPoints = null;
         state.detected = false;
+        state.syncFrameReady = false;
+        state.lastInference = 0;
         drawCatalog();
         if (state.stream) void loadEngine(item.engine);
         updateUI();
@@ -103,6 +111,16 @@
     $('#live-chip').classList.toggle('hidden', !live);
     trackChip.classList.toggle('hidden', !live);
     captureButton.disabled = !live;
+    // Keep showing live preview until a fully processed synchronized frame exists.
+    layers.classList.toggle('synced', live && state.viewMode === 'sync' && state.engine === 'ready' && state.syncFrameReady);
+    const modeFast = $('#mode-fast');
+    const modeSync = $('#mode-sync');
+    if (modeFast && modeSync) {
+      modeFast.classList.toggle('active', state.viewMode === 'fast');
+      modeSync.classList.toggle('active', state.viewMode === 'sync');
+      modeFast.setAttribute('aria-pressed', String(state.viewMode === 'fast'));
+      modeSync.setAttribute('aria-pressed', String(state.viewMode === 'sync'));
+    }
     mainStart.disabled = state.starting;
     mainStart.textContent = state.starting ? 'جاري فتح الكاميرا…' : 'فتح الكاميرا';
     cameraToggle.textContent = live ? 'إيقاف الكاميرا' : state.starting ? 'إلغاء التشغيل' : 'تشغيل الكاميرا';
@@ -118,7 +136,9 @@
             : (state.selected.engine === 'hand' ? 'اظهر يدك ومعصمك أمام الكاميرا' : state.selected.engine === 'face' ? 'اظهر وجهك أمام الكاميرا' : 'اظهر جسمك أمام الكاميرا');
     }
     $('#tracking-status').textContent = 'Tracking ' + state.engine;
-    $('#fps').textContent = live ? 'Render ' + state.fps + ' FPS / AI ' + state.inferenceFPS + ' Hz' : 'Render FPS —';
+    $('#fps').textContent = live ? (state.viewMode === 'sync' ? 'Synced ' : 'Render ') + state.fps + ' FPS / AI ' + state.inferenceFPS + ' Hz' : 'Render FPS —';
+    const processing = $('#processing-time');
+    if (processing) processing.textContent = live && state.engine === 'ready' ? 'Analysis ' + state.processingMs + ' ms' : 'Analysis —';
     const version = $('#runtime-version');
     if (version) version.textContent = 'JS ' + BUILD_ID;
     retryButton.disabled = !live || state.engine === 'loading';
@@ -176,6 +196,7 @@
     state.detected = false;
     state.landmarks = null;
     state.engine = 'loading';
+    state.syncFrameReady = false;
     state.loadingStage = state.visionLoading ? 'model' : 'library';
     clearError();
     updateUI();
@@ -209,6 +230,8 @@
         state.engine = 'ready';
         state.lastInference = 0;
         state.lastPoints = null;
+        state.syncFrameReady = false;
+        state.lastVideoTime = -1;
         clearError();
       }
     } catch (error) {
@@ -242,12 +265,17 @@
     closeModels();
     const ctx = canvas.getContext('2d');
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const syncContext = syncCanvas.getContext('2d');
+    if (syncContext) syncContext.clearRect(0, 0, syncCanvas.width, syncCanvas.height);
     state.starting = false;
     state.engine = 'idle';
     state.loadingStage = 'idle';
     state.landmarks = null;
     state.lastPoints = null;
     state.fps = 0;
+    state.syncFrameReady = false;
+    state.processingMs = 0;
+    state.lastVideoTime = -1;
     state.inferenceFPS = 0;
     state.inferenceFrames = 0;
     state.detected = false;
@@ -310,6 +338,9 @@
       state.frameCount = 0;
       state.inferenceFrames = 0;
       state.inferenceFPS = 0;
+      state.syncFrameReady = false;
+      state.processingMs = 0;
+      state.lastVideoTime = -1;
       state.lastInference = 0;
       updateUI();
       state.raf = requestAnimationFrame(renderLoop);
@@ -334,8 +365,10 @@
       state.lastPoints = coords.map((p) => ({ x: p.x, y: p.y }));
     } else {
       coords.forEach((point, i) => {
-        state.lastPoints[i].x += (point.x - state.lastPoints[i].x) * 0.40;
-        state.lastPoints[i].y += (point.y - state.lastPoints[i].y) * 0.40;
+        // Faster response in both modes; in synchronized mode only tiny jitter is filtered.
+        const alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
+        state.lastPoints[i].x += (point.x - state.lastPoints[i].x) * alpha;
+        state.lastPoints[i].y += (point.y - state.lastPoints[i].y) * alpha;
       });
     }
     return state.lastPoints;
@@ -343,10 +376,12 @@
   function detect(frameTime) {
     const type = state.selected.engine;
     const model = state.models[type];
-    if (!model || state.engine !== 'ready' || video.readyState < 2 || frameTime - state.lastInference < 95) return;
+    if (!model || state.engine !== 'ready' || video.readyState < 2 || frameTime - state.lastInference < LIVE_INTERVAL_MS) return;
     state.lastInference = frameTime;
     try {
+      const t0 = performance.now();
       const result = model.detectForVideo(video, frameTime);
+      state.processingMs = Math.round(performance.now() - t0);
       state.inferenceFrames += 1;
       const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
       state.landmarks = smoothing(type, raw);
@@ -356,6 +391,7 @@
       state.engine = 'error';
       state.detected = false;
       state.landmarks = null;
+      state.syncFrameReady = false;
       recordTrackingError(error, 'inference', type);
       showError('تعطّل تحليل الفيديو، لكن الكاميرا مستمرة. افتح «تفاصيل الخطأ» ثم جرّب إعادة التتبع.');
     }
@@ -500,10 +536,8 @@
       ctx.strokeStyle = '#9aac9b'; ctx.beginPath(); ctx.moveTo(ankle.x - width * .21, ankle.y + height * .12); ctx.lineTo(ankle.x + width * .16, ankle.y + height * .12); ctx.stroke();
     }
   }
-  function drawOverlay() {
-    const canvasInfo = setupCanvas();
-    if (!canvasInfo || !state.detected || !state.landmarks) return;
-    const { ctx, w, h } = canvasInfo;
+  function drawOverlayTo(ctx, w, h) {
+    if (!state.detected || !state.landmarks) return;
     try {
       if (state.selected.id === 'tee' || state.selected.id === 'jacket') drawGarment(ctx, state.landmarks, w, h, state.selected);
       else if (state.selected.id === 'glasses') drawGlasses(ctx, state.landmarks, w, h);
@@ -514,11 +548,86 @@
       console.warn('[RAWNAK FIT] AR overlay skipped this frame', error);
     }
   }
+  function drawOverlay() {
+    const info = setupCanvas();
+    if (info) drawOverlayTo(info.ctx, info.w, info.h);
+  }
+  function setupSyncCanvas() {
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return null;
+    const pixelW = Math.max(1, Math.round(w * ratio));
+    const pixelH = Math.max(1, Math.round(h * ratio));
+    if (syncCanvas.width !== pixelW || syncCanvas.height !== pixelH) {
+      syncCanvas.width = pixelW;
+      syncCanvas.height = pixelH;
+    }
+    const ctx = syncCanvas.getContext('2d', { alpha: false });
+    if (!ctx) return null;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return { ctx, w, h };
+  }
+  // The video frame used as the detector input is also the displayed frame.
+  // This prevents an old landmark result being drawn on a newer camera image.
+  function renderSynchronizedFrame(frameTime) {
+    const type = state.selected.engine;
+    const model = state.models[type];
+    if (!model || state.engine !== 'ready' || video.readyState < 2 ||
+        !video.videoWidth || !video.videoHeight || !sampleContext ||
+        frameTime - state.lastInference < SYNC_INTERVAL_MS) return false;
+    // Avoid recalculating identical camera frames. The camera timestamp is media time.
+    if (video.currentTime === state.lastVideoTime) return false;
+    state.lastVideoTime = video.currentTime;
+    state.lastInference = frameTime;
+    const sourceWidth = video.videoWidth, sourceHeight = video.videoHeight;
+    if (sampleCanvas.width !== sourceWidth || sampleCanvas.height !== sourceHeight) {
+      sampleCanvas.width = sourceWidth;
+      sampleCanvas.height = sourceHeight;
+    }
+    try {
+      sampleContext.drawImage(video, 0, 0, sourceWidth, sourceHeight);
+      const t0 = performance.now();
+      const result = model.detectForVideo(sampleCanvas, frameTime);
+      state.processingMs = Math.round(performance.now() - t0);
+      state.inferenceFrames++;
+      const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
+      state.landmarks = smoothing(type, raw);
+      state.detected = Boolean(state.landmarks);
+      const target = setupSyncCanvas();
+      if (!target) return false;
+      const { ctx, w, h } = target;
+      const scale = Math.max(w / sourceWidth, h / sourceHeight);
+      const displayWidth = sourceWidth * scale;
+      const displayHeight = sourceHeight * scale;
+      // Object-fit cover, exactly matching the coordinates used in project().
+      ctx.drawImage(sampleCanvas, (w - displayWidth) / 2, (h - displayHeight) / 2, displayWidth, displayHeight);
+      drawOverlayTo(ctx, w, h);
+      if (!state.syncFrameReady) {
+        state.syncFrameReady = true;
+        updateUI();
+      }
+      return true;
+    } catch (error) {
+      console.error('[RAWNAK FIT] Synchronized frame processing failed', error);
+      state.engine = 'error';
+      state.syncFrameReady = false;
+      state.detected = false;
+      state.landmarks = null;
+      recordTrackingError(error, 'synchronized-frame', type);
+      showError('تعذرت معالجة الفريم المتزامن. الكاميرا هتفضل شغالة؛ افتح تفاصيل الخطأ أو اختار اللايف السريع.');
+      updateUI(); // shows camera immediately because syncFrameReady is now false
+      return false;
+    }
+  }
   function renderLoop(now) {
     if (!state.stream) return;
-    detect(now);
-    drawOverlay();
-    state.frameCount++;
+    if (state.viewMode === 'sync' && state.engine === 'ready') {
+      if (renderSynchronizedFrame(now)) state.frameCount++;
+    } else {
+      detect(now);
+      drawOverlay();
+      state.frameCount++;
+    }
     if (now - state.lastFps > 1000) {
       const elapsed = Math.max(1, now - state.lastFps);
       state.fps = Math.round(state.frameCount * 1000 / elapsed);
@@ -539,14 +648,34 @@
     const scale = Math.max(result.width / video.videoWidth, result.height / video.videoHeight);
     const width = video.videoWidth * scale, height = video.videoHeight * scale;
     if (state.mirror) { ctx.translate(result.width, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(video, (result.width - width) / 2, (result.height - height) / 2, width, height);
-    ctx.drawImage(canvas, 0, 0, result.width, result.height);
+    if (state.viewMode === 'sync' && state.syncFrameReady && state.engine === 'ready') {
+      // Screenshot the exact synchronized image displayed in the mirror.
+      ctx.drawImage(syncCanvas, 0, 0, result.width, result.height);
+    } else {
+      ctx.drawImage(video, (result.width - width) / 2, (result.height - height) / 2, width, height);
+      ctx.drawImage(canvas, 0, 0, result.width, result.height);
+    }
     const link = document.createElement('a');
     link.download = 'rawnak-fit-' + Date.now() + '.png';
     link.href = result.toDataURL('image/png');
     link.click();
   }
 
+  function changeViewMode(nextMode) {
+    if (!['sync', 'fast'].includes(nextMode) || state.viewMode === nextMode) return;
+    state.viewMode = nextMode;
+    state.lastInference = 0;
+    state.lastVideoTime = -1;
+    state.lastPoints = null;
+    state.lastType = null;
+    state.syncFrameReady = false;
+    state.frameCount = 0;
+    state.inferenceFrames = 0;
+    state.lastFps = performance.now();
+    updateUI();
+  }
+  $('#mode-fast')?.addEventListener('click', () => changeViewMode('fast'));
+  $('#mode-sync')?.addEventListener('click', () => changeViewMode('sync'));
   mainStart.addEventListener('click', startCamera);
   cameraToggle.addEventListener('click', () => { if (state.stream || state.starting) stopCamera(); else void startCamera(); });
   retryButton.addEventListener('click', () => { if (state.stream) { state.engine = 'idle'; void loadEngine(state.selected.engine); } });
