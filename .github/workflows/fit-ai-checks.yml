@@ -25,3 +25,10 @@ jobs:
         run: node tests/static-check.mjs
       - name: Simulate synchronized and fast AR camera modes
         run: node tests/frame-sync.smoke.mjs
+      - name: Check AutoFit Studio JS module syntax
+        run: |
+          node --check studio/engine.js
+          node --check studio/app.js
+          node --check studio/viewer.js
+      - name: Test AutoFit Studio category and asset router
+        run: node --test studio/tests/engine.test.mjs
