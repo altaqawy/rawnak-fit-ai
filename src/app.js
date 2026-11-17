@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.17.040';
+  const BUILD_ID = '2026.11.18.051';
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
   const LIVE_INTERVAL_MS = 65; // 15 Hz target, avoids overloading slow phones
   const $ = (selector) => document.querySelector(selector);
@@ -30,15 +30,31 @@
     { id: 'shoes', name: 'أحذية', description: 'ملابس · قدم', icon: '👟', engine: 'pose', color: '#e8e9df' }
   ];
 
+  const params = new URLSearchParams(window.location.search);
+  const isEmbedded = params.get('embed') === '1';
+  const requestedItem = params.get('item');
+  const initialItem = isEmbedded ? items.find(item => item.id === requestedItem) : null;
   const state = {
     stream: null, starting: false, epoch: 0, engineRequest: 0,
-    selected: items[0], engine: 'idle', models: {}, loading: {},
+    selected: initialItem || items[0], engine: 'idle', models: {}, loading: {},
     vision: null, visionLoading: null, raf: 0, landmarks: null,
     fps: 0, frameCount: 0, inferenceFrames: 0, inferenceFPS: 0, lastFps: 0, lastInference: 0, detected: false,
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1
   };
 
+  if (isEmbedded) {
+    document.documentElement.classList.add('fit-embed');
+    const info = $('#embed-product');
+    if (info) {
+      info.classList.remove('hidden');
+      const safeName = String(params.get('title') || state.selected.name).slice(0, 130);
+      const safeSku = String(params.get('sku') || '').slice(0, 96);
+      const safeVariant = String(params.get('variant') || '').slice(0, 96);
+      info.textContent = '✳ ' + safeName + (safeSku ? ' · ' + safeSku : '') +
+        (safeVariant ? ' · ' + safeVariant : '') + ' — عرض AR توضيحي';
+    }
+  }
   const showError = (message) => {
     errorBox.textContent = message;
     errorBox.classList.remove('hidden');
