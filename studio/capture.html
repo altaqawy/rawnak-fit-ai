@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d2118"><title>RAWNAK FIT · دليل تصوير المنتجات</title>
+<link rel="stylesheet" href="./style.css?v=20261118.1">
+<style>
+.capture-layout{display:grid;grid-template-columns:1fr .85fr;gap:20px;align-items:start}
+.capture-layout .panel{min-width:0}
+.capture-select{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:end}
+.capture-select .field{flex:1;min-width:170px}
+#capture-count{max-width:150px}
+.progressbar{height:8px;background:#334f3c;border-radius:10px;overflow:hidden;margin:15px 0}
+.progressbar>div{height:100%;background:#c5ee9d;transition:width .2s;width:0}
+.capture-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.capture-stat{padding:14px;background:#263d2d;border:1px solid #ffffff18;border-radius:12px;text-align:center}
+.capture-stat strong{display:block;color:#dcf6b9;font:700 20px 'DM Sans',sans-serif}
+.capture-stat span{font-size:11px;color:#b3c8b8}
+.shot-steps{display:grid;gap:10px}
+.shot-step{display:flex;gap:14px;justify-content:space-between;align-items:center;border:1px solid #ffffff15;border-radius:12px;padding:12px 14px;background:#1a3527}
+.shot-step strong{font-size:12px}.shot-step span{white-space:nowrap;color:#c5ea98;font:700 13px 'DM Sans',sans-serif}
+.part-label{display:inline-flex;margin:5px 3px;gap:7px;padding:7px 10px;border:1px solid #c6ee9e29;background:#2b4534;border-radius:10px;color:#e3f0dc;font-size:11px}
+.part-label small{color:#b7d59d;font:700 10px 'DM Sans',sans-serif}
+.capture-text{font-size:12px;line-height:2;color:#c5d4c5}.common-rules{padding-right:18px;font-size:12px;line-height:2.1;color:#bcd0be}
+.capture-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.capture-actions .button{flex:1}
+@media(max-width:850px){.capture-layout{grid-template-columns:1fr}}
+@media(max-width:540px){.capture-stats{gap:5px}.capture-stat{padding:10px 5px}.capture-stat strong{font-size:17px}.capture-stat span{font-size:9px}}
+@media print{body{background:#fff;color:#151515}.topbar,.capture-actions,.capture-select input,.capture-select button{display:none}.panel,.shot-step{background:white;color:#222;border:1px solid #bbb;break-inside:avoid}.capture-text,.common-rules{color:#222}.capture-layout{display:block}.capture-stat{background:#eee;color:#111}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><span class="logo">✳</span><div><strong>RAWNAK <em>Capture Guide</em></strong><small>PRODUCT PHOTOGRAPHY STANDARD / V1</small></div></div>
+  <nav><a href="./">AutoFit Studio</a><a href="../">Live Mirror</a><span class="version">CAPTURE SPEC v1</span></nav>
+</header>
+<main>
+<section class="intro"><span class="eyebrow">MERCHANT ONBOARDING · 3D CAPTURE</span><h1>صور أفضل، <em>مجسم أقرب للمنتج</em></h1><p>حدد نوع القطعة وشوف العدد المقترح وزوايا التصوير والقياسات المطلوبة وطريقة حركة كل جزء. عدد الصور وحده لا يضمن نموذج مطابق — لازم مراجعة جودة ومقاسات فعلية قبل النشر.</p></section>
+<div class="capture-layout">
+<div class="left-column">
+<section class="panel">
+  <div class="panel-heading"><div><span class="step">01 · CAPTURE PACK</span><h2>دليل التصوير حسب المنتج</h2></div></div>
+  <div class="capture-select">
+    <label class="field"><span>نوع المنتج</span><select id="capture-category"></select></label>
+    <label class="field"><span>عدد صورك الحالية</span><input type="number" id="capture-count" min="0" max="1000" value="0"></label>
+  </div>
+  <div class="capture-stats">
+    <div class="capture-stat"><strong id="preview-number">—</strong><span>مبدئي</span></div>
+    <div class="capture-stat"><strong id="verified-number">—</strong><span>حد للمراجعة 360°</span></div>
+    <div class="capture-stat"><strong id="recommended-number">—</strong><span>حزمة مستهدفة</span></div>
+  </div>
+  <div class="progressbar"><div id="capture-progress"></div></div>
+  <p id="capture-status" class="status-line" aria-live="polite"></p>
+  <div class="panel-heading"><div><span class="step">02 · SHOT LIST</span><h2>اللقطات المطلوبة</h2></div></div>
+  <div id="shots" class="shot-steps"></div>
+  <p id="photo-extra" class="capture-text"></p>
+</section>
+<section class="panel">
+  <span class="step">03 · PHOTO STANDARD</span><h2>قواعد التصوير الأساسية</h2>
+  <ol id="rules" class="common-rules"></ol>
+</section>
+</div>
+<div class="right-column">
+<section class="panel">
+  <span class="step">04 · PHYSICAL MEASUREMENTS</span><h2>المقاسات الحقيقية</h2>
+  <p id="required-size" class="capture-text"></p>
+  <p class="note">الكاميرا وحدها لا تقدر تقيس محيط إصبع أو صلابة قماش بدقة. القياسات من التاجر أو المصنع هي مصدر الحقيقة.</p>
+  <span class="step">05 · MATERIAL & MOVEMENT</span><h2>إيه اللي بيتحرك وإيه الصلب؟</h2>
+  <p>مقترح أولي للأجزاء — محتاج تأكيد خامات المنتج.</p>
+  <div id="parts"></div>
+  <h3>بيانات الخامة المطلوبة</h3>
+  <ol class="common-rules" id="materials"></ol>
+  <p class="note">Rigid ثابت · Cloth قماش قابل للانثناء · Deformable مرن · Hinged مفصلة · Linked حلقات متصلة</p>
+  <div class="disclosure"><strong>مهم قبل تفعيل 360°</strong><p>استيفاء عدد الصور لا يعني إثبات مطابقة المنتج. الخامات والجانبان والخلف يحتاجون مراجعة بشرية ونجاح اختبار المجسم.</p></div>
+  <div class="capture-actions"><button class="button light" type="button" id="copy-guide">نسخ تعليمات التصوير</button><button class="button outline" id="print-guide" type="button">طباعة</button></div>
+  <p id="copy-result" class="status-line" aria-live="polite"></p>
+</section>
+</div>
+</div>
+</main>
+<footer><span>RAWNAK FIT AI · CAPTURE STANDARD V1</span><span>GUIDELINES, NOT A 3D-ACCURACY GUARANTEE</span></footer>
+</div>
+<script type="module" src="./capture.js?v=20261118.1"></script>
+</body>
+</html>
