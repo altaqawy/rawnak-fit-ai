@@ -29,3 +29,23 @@
 .studio-link{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:#23452d;border:1px solid #d0eaa755;border-radius:11px;color:#c9efa6;font:700 12px 'DM Sans',sans-serif;white-space:nowrap}
 .studio-link:hover{background:#325e3c;color:#e5ffd0}
 @media(max-width:480px){.nav-actions{gap:7px}.studio-link{padding:9px 10px;font-size:10px}}
+
+
+/* FIT AI SDK iframe mode — compact, dedicated camera UI; merchant store owns the outer modal. */
+.fit-embed body{margin:0;overflow-x:hidden;background:#0d1f17}
+.fit-embed .shell{max-width:100%;padding:0}
+.fit-embed .nav,.fit-embed .hero,.fit-embed .catalog-panel,.fit-embed .footnotes,.fit-embed footer{display:none!important}
+.fit-embed main{margin:0;padding:0}
+.fit-embed .workspace{display:block;direction:rtl;max-width:100%}
+.fit-embed .mirror-panel{border:0;box-shadow:none;border-radius:0;background:#0f2119}
+.fit-embed .panel-head{padding:8px 13px}
+.fit-embed .stage{height:clamp(260px,calc(100dvh - 225px),780px);min-height:260px}
+.fit-embed .mode-selector{padding:7px 12px 0}
+.fit-embed .mode-button{padding:8px}
+.fit-embed .mode-button small{font-size:9px}
+.fit-embed .toolbar{padding:8px 12px}
+.fit-embed .telemetry{padding:0 13px 8px;gap:9px;flex-wrap:wrap}
+.embed-product{color:#e3f3ce;background:#274b32;font-size:12px;padding:9px 14px;line-height:1.6;text-align:right;border-bottom:1px solid #ffffff26}
+@media(max-width:550px){.fit-embed .stage{height:clamp(220px,calc(100dvh - 255px),590px)}
+.fit-embed .mode-button strong{font-size:10px}.fit-embed .mode-button small{display:none}
+.fit-embed .btn{padding:8px;font-size:10px}}
