@@ -29,11 +29,11 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
-assert.ok(html.includes('ALPHA 0.4'), 'HTML and release version updated');
-assert.ok(html.includes('src="./src/app.js?v=20261117-alpha040"'), 'JS has explicit cache busting version');
-assert.ok(html.includes('href="./src/styles.css?v=20261117-alpha040"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('ALPHA 0.5.1'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261118-alpha051"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha051"'), 'CSS has explicit cache busting version');
 assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
-assert.ok(app.includes("const BUILD_ID = '2026.11.17.040'"), 'runtime identifies compiled source');
+assert.ok(app.includes("const BUILD_ID = '2026.11.18.051'"), 'runtime identifies compiled source');
 assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 assert.ok(html.includes('id="sync-canvas"'), 'frame synchronized output exists');
 assert.ok(html.includes('id="mode-sync"') && html.includes('id="mode-fast"'), 'sync/fast mode selectors exist');
@@ -42,4 +42,11 @@ assert.ok(app.includes('ctx.drawImage(sampleCanvas,'), 'synchronized result rend
 assert.ok(app.includes('state.syncFrameReady'), 'synchronized display waits for result');
 assert.ok(app.includes('LIVE_INTERVAL_MS'), 'fast tracking pace is configurable');
 assert.ok(existsSync(path.join(root, 'tests/frame-sync.smoke.mjs')), 'frame sync browser mock regression exists');
+
+assert.ok(html.includes('id="embed-product"'), 'embed product label displayed safely');
+assert.ok(app.includes("params.get('embed') === '1'"), 'embed mode recognized');
+assert.ok(app.includes("items.find(item => item.id === requestedItem)"), 'category selects existing tracking engine');
+assert.ok(css.includes('.fit-embed .catalog-panel'), 'embedded view hides unrelated product catalog');
+assert.ok(existsSync(path.join(root, 'sdk/rawnak-fit.js')), 'SDK shipped');
+assert.ok(existsSync(path.join(root, 'demo/index.html')), 'merchant demo shipped');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');
