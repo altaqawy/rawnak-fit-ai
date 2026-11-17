@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#0b1815">
   <meta name="description" content="RAWNAK FIT AI — Live AR virtual try-on prototype.">
   <title>RAWNAK FIT AI — Live Virtual Mirror</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20261117-alpha032">
+  <link rel="stylesheet" href="./src/styles.css?v=20261117-alpha040">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <span class="version">ALPHA 0.3.2 · CACHE FIX</span>
+    <span class="version">ALPHA 0.4 · FRAME SYNC</span>
   </header>
   <main>
     <section class="hero"><div class="eyebrow">◉ REAL-TIME VIRTUAL TRY-ON</div><h1>شوفها عليك <em>لايف</em></h1><p>افتح الكاميرا، جرّب القطعة، واتحرك براحتك. حتى لو تعطل نموذج التتبع، الكاميرا هتفضل شغالة.</p></section>
@@ -20,17 +20,21 @@
       <article class="mirror-panel">
         <div class="panel-head"><strong>LIVE MIRROR <span id="view-mode"> / FRONT CAMERA</span></strong><span id="stream-indicator" class="indicator">CAMERA OFF</span></div>
         <div id="stage" class="stage" role="region" aria-label="معاينة الكاميرا المباشرة">
-          <div id="camera-layers" class="camera-layers flipped"><video id="camera-video" autoplay muted playsinline></video><canvas id="ar-canvas"></canvas></div>
+          <div id="camera-layers" class="camera-layers flipped"><video id="camera-video" autoplay muted playsinline></video><canvas id="ar-canvas"></canvas><canvas id="sync-canvas" aria-label="فيديو متزامن مع نتائج التتبع"></canvas></div>
           <div id="stage-placeholder" class="stage-placeholder"><div class="camera-glyph">◌</div><div class="eyebrow">YOUR MIRROR IS READY</div><h2>ابدأ تجربة القياس</h2><p>الكاميرا شغالة داخل المتصفح، من غير رفع فيديو لخوادمنا</p><button id="start-main" class="btn primary" type="button">فتح الكاميرا</button></div>
           <div id="live-chip" class="live-chip hidden">● LIVE</div>
           <div id="track-chip" class="track-chip hidden">جاري بدء التتبع...</div>
           <div id="camera-error" class="camera-error hidden" role="alert"></div>
         </div>
+        <div class="mode-selector" role="group" aria-label="طريقة عرض الكاميرا">
+          <button id="mode-sync" type="button" class="mode-button active" aria-pressed="true"><strong>متزامن مع AI</strong><small>كل لقطة مع نتيجة التتبع الخاصة بها</small></button>
+          <button id="mode-fast" type="button" class="mode-button" aria-pressed="false"><strong>لايف سريع</strong><small>فيديو أسرع مع تحديث موضع القطعة</small></button>
+        </div>
         <div class="toolbar">
           <div class="toolbar-main"><button id="camera-toggle" class="btn" type="button">تشغيل الكاميرا</button><button id="mirror-toggle" class="btn ghost" type="button" title="عكس الكاميرا">عكس الصورة</button><button id="retry-tracking" class="btn ghost" type="button">إعادة التتبع</button></div>
           <button id="capture" class="btn accent" type="button" disabled>حفظ لقطة</button>
         </div>
-        <div class="telemetry"><span id="fps">Render FPS —</span><span id="tracking-status">Tracking idle</span><span id="runtime-version">APP LOADING</span><span>LOCAL-FIRST</span></div>
+        <div class="telemetry"><span id="fps">Render FPS —</span><span id="tracking-status">Tracking idle</span><span id="processing-time">Analysis —</span><span id="runtime-version">APP LOADING</span><span>LOCAL-FIRST</span></div>
         <details id="tracking-debug" class="tracking-debug hidden">
           <summary>تفاصيل الخطأ في MediaPipe</summary>
           <p>لو التتبع فشل بعد التعديل، انسخ التقرير وابعته من غير ما تحتاج تصور نفسك.</p>
@@ -51,5 +55,5 @@
   </main>
   <footer>© RAWNAK GROUP · FIT AI LAB <span>ALPHA PROTOTYPE · NOT A FIT GUARANTEE</span></footer>
 </div>
-<script type="module" src="./src/app.js?v=20261117-alpha032"></script>
+<script type="module" src="./src/app.js?v=20261117-alpha040"></script>
 </body></html>
