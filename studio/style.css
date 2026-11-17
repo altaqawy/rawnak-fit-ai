@@ -23,3 +23,20 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:12px;ma
 @media(max-width:1020px){.workspace{grid-template-columns:1fr}.intro{margin-top:43px}.preview-stage{height:440px}.app{padding:0 20px}}
 @media(max-width:600px){.app{padding:0 12px}.topbar{align-items:flex-start;flex-direction:column;gap:13px;padding:17px 0}.topbar nav{width:100%;justify-content:space-between;gap:8px}.brand strong{font-size:19px}.version{font-size:8px;padding:6px}.intro{margin:33px 0 23px}.intro p{font-size:13px}.panel{padding:15px;border-radius:17px}.panel-heading h2{font-size:19px}.grid-fields{gap:9px}.preview-stage{height:320px}.preview-actions .button{flex-basis:calc(50% - 7px);font-size:11px}.demo-tools button{padding:6px 9px}footer{display:block;font-size:9px}footer span{display:block;margin:6px 0}}
 @media(prefers-reduced-motion:reduce){.button,.dropzone{transition:none}}
+
+
+/* V1 guided product capture and motion-part confirmation */
+.capture-hint{margin:13px 0 4px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:12px 13px;border-radius:13px;background:#2b422e;border:1px solid #b8de8e2b}
+.capture-hint strong,.capture-hint small{display:block}
+.capture-hint strong{color:#e2efbf;font-size:12px}
+.capture-hint small{color:#a5baa8;font-size:11px;line-height:1.7;margin-top:3px}
+.capture-hint a{color:#d4ef9c;font-size:11px;font-weight:700;text-decoration:underline}
+.material-panel{margin-top:20px;border:1px solid #d3e9aa27;background:#1b3327;border-radius:13px;padding:13px}
+.material-header{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+.material-header strong{font-size:13px;color:#daefc5}.material-header small{font-size:10px;color:#a2b6a7}
+.material-parts{display:grid;gap:8px}
+.material-part{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:8px 10px;border-radius:9px;background:#12271d;border:1px solid #ffffff14}
+.material-part>span{font-size:11px;flex:1;min-width:130px}
+.material-part select{font:11px 'IBM Plex Sans Arabic',sans-serif;color:#d5f0d1;background:#203a2b;border:1px solid #ffffff27;border-radius:7px;padding:7px}
+.part-confirm{display:flex;gap:6px;align-items:center;font-size:10px;color:#a6bda5;white-space:nowrap}
+.part-confirm input{accent-color:#c8ee9b}
