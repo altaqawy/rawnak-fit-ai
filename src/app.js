@@ -112,10 +112,12 @@
         ? 'الكاميرا مستمرة · ' + (stageLabels[state.loadingStage] || 'جاري تجهيز التتبع')
         : state.engine === 'error'
           ? 'الكاميرا مستمرة · نموذج التتبع غير متاح'
-          : state.detected ? '✓ تم تتبع الجسم' : 'اظهر الجزء المطلوب من جسمك';
+          : state.detected
+            ? '✓ تم تتبع ' + (state.selected.engine === 'hand' ? 'اليد' : state.selected.engine === 'face' ? 'الوجه' : 'الجسم')
+            : (state.selected.engine === 'hand' ? 'اظهر يدك ومعصمك أمام الكاميرا' : state.selected.engine === 'face' ? 'اظهر وجهك أمام الكاميرا' : 'اظهر جسمك أمام الكاميرا');
     }
     $('#tracking-status').textContent = 'Tracking ' + state.engine;
-    $('#fps').textContent = live ? state.fps + ' FPS' : 'FPS —';
+    $('#fps').textContent = live ? 'Render ' + state.fps + ' FPS' : 'Render FPS —';
     retryButton.disabled = !live || state.engine === 'loading';
   };
 
