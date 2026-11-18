@@ -115,3 +115,15 @@
 .fit-embed .garment-controls>div small{display:none}
 @media(max-width:560px){.garment-controls{margin:7px 12px 3px;padding:9px 11px}
  .garment-controls label{font-size:11px}}
+
+
+/* Alpha 1.1: explicit model provenance on live camera */
+.garment-source-status{
+ margin:8px 18px 3px;padding:11px 14px;background:#243e2e;
+ border:1px solid #a8d6b05f;border-radius:12px;
+ color:#e1efcd;font-size:12px;line-height:1.7;
+ overflow-wrap:anywhere
+}
+.garment-source-status.hidden{display:none!important}
+.fit-embed .garment-source-status{margin:5px 10px;padding:8px 10px;font-size:11px}
+@media(max-width:550px){.garment-source-status{margin:6px 12px 2px;font-size:11px}}
