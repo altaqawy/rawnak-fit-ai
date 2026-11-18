@@ -72,16 +72,16 @@ button:disabled{opacity:.5}
   </div>
 </div>
 </main>
-<script defer src="../src/fit-garment-motion.js?v=20261118-alpha090"></script>
+<script defer src="../src/fit-garment-motion.js?v=20261118-alpha100"></script>
 <script type="module">
 const $=id=>document.getElementById(id);
-let scene=null,active=true,last=0,angle=0,drag=null;
+let scene=null,active=true,last=0,angle=0,drag=null,lastCategory=null;
 const toRad=d=>d*Math.PI/180;
 const query=new URLSearchParams(location.search);
 if (query.has('product') && [...$('category').options].some(x=>x.value===query.get('product')))
   $('category').value=query.get('product');
 try {
-  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha090');
+  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha100');
   scene=new Fit3DRenderer($('preview'));
   $('status').textContent='WebGL جاهز ✓ — اسحب بإصبعك لتدوير المجسم، أو حرّك شريط الأكمام';
   $('capture').disabled=false;
@@ -101,6 +101,16 @@ function loop(now){
     $('tilt-value').textContent=$('tilt').value+'°';
     $('zoom-value').textContent=$('zoom').value+'%';
     const category=$('category').value;
+    if(category!==lastCategory){
+      lastCategory=category;
+      const mesh=scene.meshes?.[category]?.userData?.garmentMesh;
+      const geo=mesh?.geometry;
+      const n=geo?.attributes?.position?.count || 0;
+      const triangles=geo?.index?.count ? geo.index.count/3 : (geo?.index?.length||0)/3;
+      $('status').textContent=n
+        ? 'Smooth Fabric Mesh ✓ · '+n+' vertices · '+Math.round(triangles)+' triangles · كمّين متحركين'
+        : '3D WebGL ✓ · مجسم هندسي توضيحي، مش أصل المنتج المعتمد';
+    }
     $('sleeve-row').classList.toggle('hidden',category!=='tee'&&category!=='jacket');
     $('sleeve-value').textContent=$('sleeve').value+'°';
     try{scene.preview(category,{yaw:toRad(angle),tilt:toRad(Number($('tilt').value)),
