@@ -40,6 +40,9 @@ function render() {
     ? Math.round(product.photos.length/profile.verifiedMin*100)+'%*' : '—';
   $('result-category').textContent=categories[product.category] || product.category;
   $('result-engine').textContent=product.engine;
+  $('result-tryon').textContent=product.hasPhotoAR2D?'قصاصة الصورة مع AR · 2D':'رسم توضيحي عام';
+  $('cutout-image').src=product.cutoutSrc||'';
+  setStatus('status-tryon', product.hasPhotoAR2D?'PHOTO AR 2D':'Demo AR','done');
   $('result-color').textContent='اضغط تحليل';
   $('result-ai').textContent='لم يتم تشغيله';
   const parts=$('parts');parts.replaceChildren();
@@ -49,7 +52,7 @@ function render() {
     parts.append(tag);
   }
   $('quality-warning').textContent=
-    'مراجعة الجودة: '+product.photoQA+'. صور AI لا تكفي لاعتماد الشكل من جميع الزوايا أو المقاسات. لازم صور مصدر موثوق وقياسات قبل نشر 360°.';
+    'مراجعة الجودة: '+product.photoQA+'. قصاصة الصورة الحالية بتعرض جانبًا أماميًا فقط. صور AI لا تكفي لاعتماد الشكل من جميع الزوايا أو المقاسات، ولا يوجد GLB مطابق. لازم صور مصدر موثوق وقياسات قبل نشر 360°.';
   $('studio-link').href='../studio/?fixture='+encodeURIComponent(product.sku);
   $('capture-link').href='../studio/capture.html?category='+encodeURIComponent(product.category);
   const slot=$('tryon-slot');slot.replaceChildren();
