@@ -74,7 +74,7 @@ export function evaluatePilot(input){
   if(missingViews.length)blockers.push('زوايا ناقصة: '+missingViews.map(x=>VIEW_LABELS[x]).join('، '));
   if(missingMeasurements.length)blockers.push('مقاسات ناقصة: '+missingMeasurements.map(x=>plan.measures.find(m=>m[0]===x)[1]).join('، '));
   if(photoProblems.length)blockers.push('صور تحتاج مراجعة الدقة/النوع/الزاوية: '+photoProblems.length);
-  if(!rightsConfirmed)blockers.push('يلزم تأكيد حق استخدام الصور');
+  if(!rightsConfirmed)blockers.push('يلزم تأكيد حقوق استخدام الصور');
   if(!categoryConfirmed)blockers.push('يلزم تأكيد الفئة يدويًا');
   return {
     category:input.category,qualityScore:Math.max(0,Math.min(100,score)),

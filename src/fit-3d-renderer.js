@@ -574,7 +574,7 @@ export class Fit3DRenderer {
         mesh.userData.bones.right.rotation.z=a;
       } else if(mesh.userData.sleeves){
         mesh.userData.sleeves.left.rotation.z=a;
-        mesh.userData.sleeves.right.rotation.z=-a;
+        mesh.userData.sleeves.right.rotation.z=a === 0 ? 0 : -a;
       }
     }
     const fitted=Math.min(width*.62/mesh.userData.modelWidth,
