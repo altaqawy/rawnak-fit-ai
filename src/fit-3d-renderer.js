@@ -55,7 +55,7 @@ function buildRing(){
   const g=new THREE.Group();g.name='Ring illustrative reusable 3D template';
   const band=add(g,new THREE.TorusGeometry(.37,.065,20,80),gold(),'Golden ring band');
   band.rotation.x=.22;
-  const stone=add(g,new THREE.IcosahedronGeometry(.14,1),
+  const stone=add(g,new THREE.SphereGeometry(.14,16,12),
     standard('#b4ddf5',.10,.12),'Placeholder gemstone',0,.43,.045);
   stone.scale.set(.84,1.22,.74);
   const setting=standard('#decda0',.65,.27);
