@@ -114,3 +114,18 @@ Do not paste the future production endpoint documented in the architecture into 
 ### QA caveat
 
 GitHub Actions job runs have sometimes reported failure with runner ID 0 and no executed steps, so a failed red badge is **not enough to infer that the code test failed**. The browser/iframe camera still requires validation on real desktop and mobile devices. See [SDK test](tests/sdk.smoke.mjs).
+
+
+## Alpha 0.6 — Synthetic product photo lab (2026-11-18)
+
+[Open four-product demo store](https://altaqawy.github.io/rawnak-fit-ai/demo/) · [See real processing steps and current result](https://altaqawy.github.io/rawnak-fit-ai/demo/process.html?sku=WATCH-DEMO-01) · [Import sample photos to AutoFit Studio](https://altaqawy.github.io/rawnak-fit-ai/studio/?fixture=WATCH-DEMO-01)
+
+The public repository includes **eight generated test-product photos** (two for each of watch, sage T-shirt, black/gold eyeglasses and brown bag), resized to WebP in `demo/assets/` and four transparent product cutouts.
+
+- `demo/gallery.js`: front + alternate angle galleries for every product in the demo merchant site.
+- `demo/process.html` + `process.js`: visible stages with actual photo-loading checks, local pixel-color extraction and opt-in MobileNet classification; displays category-template part metadata, photo-count requirements, cutout result, and missing true 3D reconstruction honestly.
+- `studio/?fixture=SKU`: fetches the two real demo images from GitHub to AutoFit Studio automatically; no fake sizes supplied.
+- `src/app.js`: an **experimental Photo AR 2D overlay** places the corresponding transparent image on hand, face or body keypoints for these four demo SKUs. The viewer can switch to the older generic AR drawing. This is not verified 3D fitting; the product stays a front photo while the shopper turns.
+- `tests/demo-products.test.mjs`: checks SKU mapping, WebP assets and cutouts, source pipeline UI and the renderer allowlist.
+
+**Limits:** AI-created images aren't merchant photos, a second generated angle doesn't establish real 3D geometry, camera frames remain local, and no accurate fit, 3D rotation, occlusion or cloth simulation is promised. Real browser tests and mobile QA are still needed.
