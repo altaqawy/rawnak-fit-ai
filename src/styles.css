@@ -49,3 +49,14 @@
 @media(max-width:550px){.fit-embed .stage{height:clamp(220px,calc(100dvh - 255px),590px)}
 .fit-embed .mode-button strong{font-size:10px}.fit-embed .mode-button small{display:none}
 .fit-embed .btn{padding:8px;font-size:10px}}
+
+
+/* Photo AR lab — side-by-side modes without replacing the stable generic tracker. */
+.demo-asset-switch{display:flex;align-items:center;justify-content:space-between;gap:11px;padding:12px 17px;border-top:1px solid #d3f5b429;background:#213c2ad9;direction:rtl}
+.demo-asset-switch>div:first-child{min-width:0;flex:1}
+.demo-asset-switch strong{display:block;font:800 11px 'DM Sans',sans-serif;direction:ltr;text-align:right;letter-spacing:1px;color:#c8f1a3}
+.demo-asset-switch small{display:block;font-size:11px;color:#c1d7bc;line-height:1.7;margin-top:2px}
+.demo-asset-buttons{display:flex;gap:7px;flex-shrink:0}
+.demo-asset-buttons .btn{font-size:11px;padding:9px 11px}
+.demo-asset-buttons .btn.selected{background:#cef3a8;border-color:#cef3a8;color:#173922}
+@media(max-width:610px){.demo-asset-switch{flex-wrap:wrap;padding:9px 12px}.demo-asset-buttons{width:100%}.demo-asset-buttons .btn{flex:1}}
