@@ -41,6 +41,8 @@ jobs:
           node --check studio/asset-pipeline.js
           node --check studio/photo-style.js
           node --check studio/library.js
+          node --check studio/auto.js
+          node --check studio/auto-template-registry.js
       - name: Test AutoFit Studio category and asset router
         run: node --test studio/tests/*.test.mjs
       - name: Test body fit calibration and alignment
