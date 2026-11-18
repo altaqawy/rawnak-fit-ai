@@ -132,7 +132,13 @@ function buildShirt(jacket=false){
     depth:.24,bevelEnabled:true,bevelThickness:.04,bevelSize:.028,bevelSegments:1,
     curveSegments:5,steps:1
   });
-  add(g,geom,fabric,jacket?'Jacket cloth volume':'Cotton jersey garment volume',0,0,-.13);
+  const garment=add(g,geom,fabric,jacket?'Jacket cloth volume':'Cotton jersey garment volume',0,0,-.13);
+  // Keep neutral/rest vertex positions to avoid cumulative deformation artifacts.
+  // The garment is a small dynamic 3D mesh, NOT a commercial cloth solver.
+  g.userData.garmentMesh=garment;
+  g.userData.restPositions=new Float32Array(geom.attributes.position.array);
+  const Motion=window.RawnakFitGarmentMotion;
+  g.userData.sleeveSpring=Motion?new Motion.SleeveSpring():null;
   line(g,[[-.24,.005,.16],[-.16,.12,.17],[0,.24,.17],[.16,.12,.17],[.24,.005,.16]],
     .022,edge,'Ribbed neckline');
   line(g,[[-.43,1.47,.13],[0,1.51,.13],[.43,1.47,.13]],.012,edge,'Hem stitch');
@@ -217,6 +223,36 @@ export class Fit3DRenderer {
     if (this.secondShoe) this.secondShoe.visible = false;
     this.renderer.clear();
   }
+  updateGarment(category,landmarks,placement,options){
+    if(category!=='tee'&&category!=='jacket')return;
+    const shirt=this.meshes[category],motion=window.RawnakFitGarmentMotion;
+    const target=shirt?.userData.garmentMesh;
+    const rest=shirt?.userData.restPositions;
+    const spring=shirt?.userData.sleeveSpring;
+    if(!target||!rest||!motion)return;
+    const active=options.garmentMotion!==false;
+    if(!active)spring?.reset();
+    const detected=active
+      ? motion.targetSleeves(landmarks,placement,options.project,options.width,options.height)
+      : {left:0,right:0};
+    const dynamics=active&&spring?spring.update(detected,Date.now())
+      : {left:0,right:0,phase:0,energy:0};
+    const attr=target.geometry.attributes.position;
+    motion.deformGarment(attr.array,rest,dynamics);
+    attr.needsUpdate=true;
+    // Low-poly CPU normal refresh only on pose-inference frames.
+    target.geometry.computeVertexNormals();
+  }
+  resetGarment(category){
+    if(category!=='tee'&&category!=='jacket')return;
+    const obj=this.meshes[category];
+    const garment=obj?.userData.garmentMesh,rest=obj?.userData.restPositions;
+    if(!garment||!rest)return;
+    garment.geometry.attributes.position.array.set(rest);
+    garment.geometry.attributes.position.needsUpdate=true;
+    garment.geometry.computeVertexNormals();
+    obj.userData.sleeveSpring?.reset();
+  }
   render(category,landmarks,options){
     if(this.destroyed)return {ok:false,reason:'3D renderer disposed'};
     const {width,height,project,worldLandmarks,scale}=options;
@@ -247,6 +283,8 @@ export class Fit3DRenderer {
       }else if(this.secondShoe)this.secondShoe.visible=false;
     } else {
       mesh.visible=true;
+      if(category==='tee'||category==='jacket')
+        this.updateGarment(category,landmarks,placement,options);
       mesh.position.set(placement.x,placement.y,0);
       mesh.rotation.set(placement.pitch||0,placement.yaw||0,placement.angle||0,'ZYX');
       const wScale=placement.widthPx/mesh.userData.modelWidth;
@@ -267,6 +305,7 @@ export class Fit3DRenderer {
     const mesh=this.meshes[category];
     if(!mesh)return false;
     mesh.visible=true;
+    this.resetGarment(category);
     const fitted=Math.min(width*.62/mesh.userData.modelWidth,
       height*.70/mesh.userData.modelHeight)*Math.min(1.3,Math.max(.7,scale));
     mesh.scale.setScalar(fitted);
