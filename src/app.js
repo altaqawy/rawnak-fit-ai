@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.051';
+  const BUILD_ID = '2026.11.18.060';
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
   const LIVE_INTERVAL_MS = 65; // 15 Hz target, avoids overloading slow phones
   const $ = (selector) => document.querySelector(selector);
@@ -34,13 +34,23 @@
   const isEmbedded = params.get('embed') === '1';
   const requestedItem = params.get('item');
   const initialItem = isEmbedded ? items.find(item => item.id === requestedItem) : null;
+  const demoAssetPaths = Object.freeze({
+    'WATCH-DEMO-01': { item:'watch', path:'./demo/assets/watch-cutout.webp' },
+    'TEE-DEMO-02': { item:'tee', path:'./demo/assets/tshirt-cutout.webp' },
+    'GLASSES-DEMO-03': { item:'glasses', path:'./demo/assets/glasses-cutout.webp' },
+    'BAG-DEMO-04': { item:'bag', path:'./demo/assets/bag-cutout.webp' }
+  });
+  const demoSKU = String(params.get('sku') || '');
+  const demoAsset = isEmbedded && Object.hasOwn(demoAssetPaths, demoSKU)
+    ? demoAssetPaths[demoSKU] : null;
   const state = {
     stream: null, starting: false, epoch: 0, engineRequest: 0,
     selected: initialItem || items[0], engine: 'idle', models: {}, loading: {},
     vision: null, visionLoading: null, raf: 0, landmarks: null,
     fps: 0, frameCount: 0, inferenceFrames: 0, inferenceFPS: 0, lastFps: 0, lastInference: 0, detected: false,
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
-    viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1
+    viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
+    demoImage: null, demoImageReady: false, assetMode: demoAsset ? 'photo' : 'generic'
   };
 
   if (isEmbedded) {
@@ -52,9 +62,61 @@
       const safeSku = String(params.get('sku') || '').slice(0, 96);
       const safeVariant = String(params.get('variant') || '').slice(0, 96);
       info.textContent = '✳ ' + safeName + (safeSku ? ' · ' + safeSku : '') +
-        (safeVariant ? ' · ' + safeVariant : '') + ' — عرض AR توضيحي';
+        (safeVariant ? ' · ' + safeVariant : '') +
+        ' — ' + (demoAsset ? 'تجربة صورة المنتج 2D غير معتمدة' : 'عرض AR توضيحي');
     }
   }
+  function updatePhotoControl() {
+    const root = $('#demo-asset-switch');
+    if (!root) return;
+    const compatible = demoAsset && state.selected.id === demoAsset.item;
+    root.classList.toggle('hidden', !compatible);
+    const ready = state.demoImageReady;
+    const photoBtn = $('#asset-photo');
+    const genericBtn = $('#asset-generic');
+    if (photoBtn) {
+      photoBtn.disabled = !ready;
+      photoBtn.classList.toggle('selected', state.assetMode === 'photo');
+      photoBtn.setAttribute('aria-pressed', String(state.assetMode === 'photo'));
+    }
+    if (genericBtn) {
+      genericBtn.classList.toggle('selected', state.assetMode === 'generic');
+      genericBtn.setAttribute('aria-pressed', String(state.assetMode === 'generic'));
+    }
+    const label = $('#asset-status');
+    if (label) label.textContent = ready
+      ? 'صورة AI مقصوصة من الخلفية · مسقطة على نقاط التتبع · مش 3D ولا قياسًا حقيقيًا'
+      : 'جاري تجهيز/تحميل صورة المنتج للتجربة';
+  }
+  function prepareDemoImage() {
+    if (!demoAsset || typeof Image === 'undefined') return;
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => {
+      state.demoImage = image;
+      state.demoImageReady = true;
+      updatePhotoControl();
+    };
+    image.onerror = () => {
+      state.demoImageReady = false;
+      state.assetMode = 'generic';
+      updatePhotoControl();
+      const label = $('#asset-status');
+      if (label) label.textContent = 'تعذر تحميل قصاصة المنتج · متاح الرسم التوضيحي';
+    };
+    image.src = demoAsset.path;
+    $('#asset-photo')?.addEventListener('click', () => {
+      if (!state.demoImageReady) return;
+      state.assetMode = 'photo';
+      updatePhotoControl();
+    });
+    $('#asset-generic')?.addEventListener('click', () => {
+      state.assetMode = 'generic';
+      updatePhotoControl();
+    });
+    updatePhotoControl();
+  }
+  prepareDemoImage();
   const showError = (message) => {
     errorBox.textContent = message;
     errorBox.classList.remove('hidden');
@@ -115,6 +177,7 @@
         state.syncFrameReady = false;
         state.lastInference = 0;
         drawCatalog();
+        updatePhotoControl();
         if (state.stream) void loadEngine(item.engine);
         updateUI();
       });
@@ -553,9 +616,65 @@
       ctx.strokeStyle = '#9aac9b'; ctx.beginPath(); ctx.moveTo(ankle.x - width * .21, ankle.y + height * .12); ctx.lineTo(ankle.x + width * .16, ankle.y + height * .12); ctx.stroke();
     }
   }
+  function drawDemoPhoto(ctx, landmarks, w, h) {
+    const image = state.demoImage;
+    if (!image || !state.demoImageReady || !demoAsset) return false;
+    const kind = demoAsset.item;
+    ctx.save();
+    try {
+      if (kind === 'watch') {
+        const wrist = project(landmarks[0],w,h), middle = project(landmarks[9],w,h);
+        if (!wrist || !middle) return false;
+        const dx = middle.x-wrist.x, dy = middle.y-wrist.y;
+        const dist = Math.hypot(dx,dy);
+        if (dist < 18) return false;
+        const width = Math.max(34,Math.min(165,dist * .75));
+        const height = width * image.naturalHeight / image.naturalWidth;
+        ctx.translate(wrist.x-dx*.14,wrist.y-dy*.14);
+        ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);
+        ctx.drawImage(image,-width/2,-height*.54,width,height);
+      } else if (kind === 'glasses') {
+        const left = project(landmarks[33],w,h), right = project(landmarks[263],w,h);
+        if (!left || !right) return false;
+        const dist = Math.hypot(right.x-left.x,right.y-left.y);
+        if (dist < 14) return false;
+        const width = dist*2.38, height = width*image.naturalHeight/image.naturalWidth;
+        ctx.translate((left.x+right.x)/2,(left.y+right.y)/2);
+        ctx.rotate(Math.atan2(right.y-left.y,right.x-left.x));
+        ctx.drawImage(image,-width/2,-height*.52,width,height);
+      } else if (kind === 'tee') {
+        const a=project(landmarks[11],w,h),b=project(landmarks[12],w,h);
+        const h1=project(landmarks[23],w,h),h2=project(landmarks[24],w,h);
+        if (![a,b,h1,h2].every(Boolean)) return false;
+        const dist=Math.hypot(b.x-a.x,b.y-a.y);
+        if(dist<32)return false;
+        const width=dist*1.67,height=width*image.naturalHeight/image.naturalWidth;
+        const top=(a.y+b.y)*.5-width*.14;
+        const bottom=(h1.y+h2.y)*.5;
+        const centerY=top+(bottom-top)*.44;
+        ctx.translate((a.x+b.x)/2,centerY);
+        ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));
+        ctx.drawImage(image,-width/2,-height*.26,width,height);
+      } else if (kind === 'bag') {
+        const shoulder=project(landmarks[12],w,h),other=project(landmarks[11],w,h);
+        const hip=project(landmarks[24],w,h);
+        if (![shoulder,other,hip].every(Boolean)) return false;
+        const dist=Math.hypot(other.x-shoulder.x,other.y-shoulder.y);
+        if(dist<28)return false;
+        const width=dist*.83,height=width*image.naturalHeight/image.naturalWidth;
+        const midX=shoulder.x+(shoulder.x-other.x)*.40;
+        const centerY=hip.y-height*.25;
+        ctx.translate(midX,centerY);
+        ctx.drawImage(image,-width/2,-height/2,width,height);
+      } else return false;
+      return true;
+    } finally {ctx.restore();}
+  }
   function drawOverlayTo(ctx, w, h) {
     if (!state.detected || !state.landmarks) return;
     try {
+      if (demoAsset && state.assetMode === 'photo' && state.selected.id === demoAsset.item &&
+          state.demoImageReady && drawDemoPhoto(ctx, state.landmarks, w, h)) return;
       if (state.selected.id === 'tee' || state.selected.id === 'jacket') drawGarment(ctx, state.landmarks, w, h, state.selected);
       else if (state.selected.id === 'glasses') drawGlasses(ctx, state.landmarks, w, h);
       else if (state.selected.id === 'watch' || state.selected.id === 'bracelet') drawWrist(ctx, state.landmarks, w, h, state.selected);
