@@ -1,4 +1,4 @@
-# RAWNAK FIT Embed SDK — Public Alpha 0.2
+# RAWNAK FIT Embed SDK — Public Alpha 0.3
 
 **Runnable store demo (after GitHub Pages deployment):**
 https://altaqawy.github.io/rawnak-fit-ai/demo/
@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-03"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-04"></script>
 
 Then place the component next to your add-to-cart button:
 
@@ -72,7 +72,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Web_components
 
 Public HTML attributes such as store-id, product-id and category are untrusted. **No merchant authorization, domain allowlist, catalog lookup, product approval or usage quota is in this SDK**. These require a secure server-side product manifest API; don't use it to grant access to private assets or certify 360° accuracy.
 
-The selected SKU is used to label a schematic 2D AR overlay; the SDK does not load or reconstruct the merchant product's actual 3D model. There is no real-size measurement or fabric physics guarantee.
+The selected SKU is used to label a illustrative 3D mesh overlay; the SDK does not load or reconstruct the merchant product's actual 3D model. There is no real-size measurement or fabric physics guarantee.
 
 ## Next release tasks
 
@@ -93,3 +93,11 @@ Configured checks:
 - node tests/frame-sync.smoke.mjs
 
 Browser camera, iframe permission behavior and the new sample store need real-device QA. GitHub Actions results must be separately confirmed.
+
+## Alpha 0.3 Live Three.js demo update
+
+The standalone and embedded camera now default to **3D WebGL demonstration meshes** for watch, glasses, shoulder bag, T-shirt, jacket, bangle and shoes. Camera tracking and frame synchronization are unchanged. Previously generated SKU photo cutouts remain an explicit 2D comparison mode.
+
+3D inspector (camera free): https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html
+
+**These are generic meshes, not merchant-SKU-verified 3D assets.** Exact clothing motion, occlusion, material authenticity and true size still require approved GLB, rigging, and physical measurements. See [Alpha 0.8 implementation details](../docs/AR3D_ALPHA08.md).
