@@ -14,7 +14,8 @@ a{color:#c7f29d;text-decoration:none}a:hover{text-decoration:underline}
 h1{font-size:clamp(24px,4vw,43px);line-height:1.4;margin:13px 0}
 p{line-height:1.9;color:#b7c9b6}
 .layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(250px,.7fr);gap:15px}
-#preview{position:relative;min-width:0;min-height:430px;height:min(64vh,600px);background:#162b20;border:1px solid #b7ed985c;border-radius:18px;overflow:hidden}
+#preview{position:relative;min-width:0;min-height:430px;height:min(64vh,600px);background:#162b20;border:1px solid #b7ed985c;border-radius:18px;overflow:hidden;touch-action:none;cursor:grab}
+#preview:active{cursor:grabbing}
 #preview canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
 .panel{padding:21px 18px;background:#1a3326;border:1px solid #d5f5a52b;border-radius:18px}
 .control{margin:18px 0;display:grid;gap:9px}
@@ -32,9 +33,9 @@ button:disabled{opacity:.5}
 <body>
 <main>
 <nav><strong>✳ RAWNAK FIT / 3D ENGINE</strong><a href="../demo/">العودة للمتجر التجريبي</a></nav>
-<div class="kicker">ALPHA 0.9 · DYNAMIC GARMENT INSPECTOR · NO CAMERA REQUIRED</div>
+<div class="kicker">ALPHA 1.0 · ROUNDED GARMENT 3D · NO CAMERA REQUIRED</div>
 <h1>لف المجسم من كل الاتجاهات <span style="color:#bdeb9f">بدون كاميرا</span></h1>
-<p>دي مجسمات 3D حقيقية هندسيًا، لها حجم وعمق وإضاءة وجوانب. الهدف نتأكد إن محرك الرسم يعمل على جهازك أولًا، ثم نختبر تثبيت نفس المجسم على نقاط جسمك في المراية.</p>
+<p>التجربة الجديدة فيها جسم قماش منحني ورقبة دائرية وأكمام منفصلة بتتحرك مع الذراعين. اسحب بإصبعك فوق المجسم عشان تلفه من أي زاوية، وبعدها جرّبه على الكاميرا.</p>
 <div class="layout">
   <div id="preview" role="img" aria-label="معاينة مجسم المنتج ثلاثي الأبعاد، قابل للتدوير"></div>
   <div class="panel">
@@ -55,6 +56,9 @@ button:disabled{opacity:.5}
     <div class="control"><label for="tilt">زاوية النظر: <output id="tilt-value">0°</output></label>
       <input id="tilt" type="range" min="-35" max="35" value="0" step="5">
     </div>
+    <div class="control"><label for="zoom">حجم المجسم: <output id="zoom-value">110%</output></label>
+      <input id="zoom" type="range" min="70" max="145" value="110" step="5">
+    </div>
     <div class="control" id="sleeve-row">
        <label for="sleeve">رفع الأكمام: <output id="sleeve-value">0°</output></label>
        <input id="sleeve" type="range" min="-60" max="60" value="0" step="5">
@@ -71,7 +75,7 @@ button:disabled{opacity:.5}
 <script defer src="../src/fit-garment-motion.js?v=20261118-alpha090"></script>
 <script type="module">
 const $=id=>document.getElementById(id);
-let scene=null,active=true,last=0,angle=0;
+let scene=null,active=true,last=0,angle=0,drag=null;
 const toRad=d=>d*Math.PI/180;
 const query=new URLSearchParams(location.search);
 if (query.has('product') && [...$('category').options].some(x=>x.value===query.get('product')))
@@ -79,7 +83,7 @@ if (query.has('product') && [...$('category').options].some(x=>x.value===query.g
 try {
   const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha090');
   scene=new Fit3DRenderer($('preview'));
-  $('status').textContent='WebGL جاهز ✓ — لف الموديل وشوف الجوانب والخلف';
+  $('status').textContent='WebGL جاهز ✓ — اسحب بإصبعك لتدوير المجسم، أو حرّك شريط الأكمام';
   $('capture').disabled=false;
 } catch(error) {
   $('status').textContent='محرك 3D فشل على الجهاز: '+(error?.message||error);
@@ -95,11 +99,12 @@ function loop(now){
     }else angle=Number($('yaw').value);
     $('yaw-value').textContent=Math.round(angle)+'°';
     $('tilt-value').textContent=$('tilt').value+'°';
+    $('zoom-value').textContent=$('zoom').value+'%';
     const category=$('category').value;
     $('sleeve-row').classList.toggle('hidden',category!=='tee'&&category!=='jacket');
     $('sleeve-value').textContent=$('sleeve').value+'°';
     try{scene.preview(category,{yaw:toRad(angle),tilt:toRad(Number($('tilt').value)),
-      sleeveAngle:toRad(Number($('sleeve').value))});}
+      sleeveAngle:toRad(Number($('sleeve').value)),scale:Number($('zoom').value)/100});}
     catch(error){$('status').textContent='فشل عرض المجسم: '+(error?.message||error);console.warn(error);}
   }
   requestAnimationFrame(loop);
@@ -113,6 +118,24 @@ $('capture').addEventListener('click',()=>{
  anchor.click();
 });
 $('yaw').addEventListener('input',()=>{$('auto').checked=false;});
+const surface=$('preview');
+surface.addEventListener('pointerdown',event=>{
+  if(event.button!==0 && event.pointerType==='mouse')return;
+  $('auto').checked=false;
+  drag={id:event.pointerId,x:event.clientX,y:event.clientY,
+    yaw:Number($('yaw').value),tilt:Number($('tilt').value)};
+  surface.setPointerCapture?.(event.pointerId);
+});
+surface.addEventListener('pointermove',event=>{
+  if(!drag||drag.id!==event.pointerId)return;
+  const yaw=((drag.yaw+(event.clientX-drag.x)*.65+180)%360+360)%360-180;
+  const tilt=Math.max(-35,Math.min(35,drag.tilt+(event.clientY-drag.y)*.22));
+  $('yaw').value=String(Math.round(yaw));
+  $('tilt').value=String(Math.round(tilt));
+});
+const release=event=>{if(drag?.id===event.pointerId)drag=null;};
+surface.addEventListener('pointerup',release);
+surface.addEventListener('pointercancel',release);
 addEventListener('pagehide',()=>{active=false;scene?.dispose();scene=null;});
 </script>
 </body>
