@@ -51,6 +51,31 @@ function buildWatch(){
   g.userData.modelHeight=2.65;
   return g;
 }
+function buildRing(){
+  const g=new THREE.Group();g.name='Ring illustrative reusable 3D template';
+  const band=add(g,new THREE.TorusGeometry(.37,.065,20,80),gold(),'Golden ring band');
+  band.rotation.x=.22;
+  const stone=add(g,new THREE.IcosahedronGeometry(.14,1),
+    standard('#b4ddf5',.10,.12),'Placeholder gemstone',0,.43,.045);
+  stone.scale.set(.84,1.22,.74);
+  const setting=standard('#decda0',.65,.27);
+  for(const x of [-.10,.10])add(g,new THREE.CylinderGeometry(.018,.015,.16,8),
+    setting,'Stone prong',x,.435,.02);
+  g.userData.modelWidth=1.08;g.userData.modelHeight=1.20;
+  return g;
+}
+function buildEarrings(){
+  const g=new THREE.Group();g.name='Earrings illustrative reusable 3D template';
+  for(const side of [-1,1]){
+    const x=side*.34;
+    add(g,new THREE.TorusGeometry(.16,.026,12,48),gold(),'Hoop earring',x,-.05,0);
+    add(g,new THREE.SphereGeometry(.045,14,10),silver(),'Earring pin',x,.16,0);
+    add(g,new THREE.SphereGeometry(.07,14,10),standard('#f2deac',.45,.19),
+      'Small pendant',x,-.23,0);
+  }
+  g.userData.modelWidth=1.0;g.userData.modelHeight=.66;
+  return g;
+}
 function buildBracelet(){
   const g=new THREE.Group();g.name='Metal bangle — 3D example';
   const body=add(g,new THREE.TorusGeometry(.43,.075,14,48),gold(),'Gold bracelet');
@@ -282,7 +307,8 @@ function disposeGroup(node){
   }
 }
 const makers={
-  watch:buildWatch,bracelet:buildBracelet,glasses:buildGlasses,
+  watch:buildWatch,ring:buildRing,earrings:buildEarrings,
+  bracelet:buildBracelet,glasses:buildGlasses,
   bag:buildBag,tee:()=>buildShirt(false),jacket:()=>buildShirt(true),shoes:buildShoe
 };
 
