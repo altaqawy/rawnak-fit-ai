@@ -40,4 +40,11 @@ jobs:
           node --check tests/sdk.smoke.mjs
       - name: Simulate merchant embedding
         run: node tests/sdk.smoke.mjs
+      - name: Verify real demo photo files and process wiring
+        run: |
+          node --check demo/catalog.js
+          node --check demo/gallery.js
+          node --check demo/process.js
+          node --test tests/demo-products.test.mjs
+
 
