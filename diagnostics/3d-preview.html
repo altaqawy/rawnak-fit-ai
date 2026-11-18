@@ -66,6 +66,11 @@ button:disabled{opacity:.5}
       <label><input id="use-glb" type="checkbox" checked> استخدام GLB مرجعي بعظام للكتفين</label>
       <small id="asset-load-status" role="status" aria-live="polite" style="color:#bfe5a4;line-height:1.7">جارٍ تجهيز تحميل ملف GLB…</small>
       <small style="color:#bdc8b4">المجسم المرجعي أصلي للتجربة، لم يُستخرج من صور التيشيرت ولم تتم مراجعة قياساته.</small>
+      <label for="local-glb">اختبر ملف GLB من جهازك (حتى 20MB، بدون رفع للسيرفر)</label>
+      <input id="local-glb" type="file" accept=".glb,model/gltf-binary"
+        style="max-width:100%;font-size:12px;color:#d0e9c1">
+      <small id="local-import-status" role="status" aria-live="polite"
+        style="color:#c9d9a9">لازم SkinnedMesh بعظمتَي Shoulder_L و Shoulder_R</small>
     </div>
     <div class="control" id="sleeve-row">
        <label for="sleeve">رفع الأكمام: <output id="sleeve-value">0°</output></label>
@@ -128,7 +133,9 @@ function loop(now){
       const triangles=geo?.index?.count ? geo.index.count/3 : (geo?.index?.length||0)/3;
       const imported=category==='tee' && scene.useReferenceGLB && scene.referenceTee;
       $('status').textContent=imported
-        ? 'GLB / SkinnedMesh ✓ · 3 Joint Rig · دي تجربة عظام مش قياس ملابس معتمد'
+        ? (scene.referenceStatus.status==='local_unverified'
+           ? 'LOCAL GLB ✓ · ملفك للمعاينة فقط، بدون اعتماد أو رفع'
+           : 'GLB / SkinnedMesh ✓ · 3 Joint Rig · دي تجربة عظام مش قياس ملابس معتمد')
         : n
           ? 'Procedural Legacy · '+n+' vertices · '+Math.round(triangles)+' triangles'
           : '3D WebGL ✓ · مجسم هندسي توضيحي';
@@ -151,6 +158,23 @@ $('capture').addEventListener('click',()=>{
 });
 $('yaw').addEventListener('input',()=>{$('auto').checked=false;});
 $('use-glb').addEventListener('change',()=>{lastCategory=null;});
+$('local-glb').addEventListener('change',async event=>{
+ const file=event.target.files?.[0];
+ if(!file||!scene)return;
+ $('local-import-status').textContent='جاري فحص ملف GLB محليًا وتحميل الهيكل…';
+ try{
+  const holder=await scene.importLocalGarment(file);
+  if(!holder)return;
+  $('category').value='tee';
+  $('use-glb').checked=true;
+  scene.setUseReferenceGLB(true);
+  lastCategory=null;
+  $('asset-load-status').textContent='✓ ملف GLB محلي غير معتمد · '+file.name;
+  $('local-import-status').textContent='تم تحميل المجسم من جهازك فقط. لم يتم إرساله لأي خادم.';
+ }catch(error){
+  $('local-import-status').textContent='فشل استيراد الملف: '+(error?.message||error);
+ }
+});
 const surface=$('preview');
 surface.addEventListener('pointerdown',event=>{
   if(event.button!==0 && event.pointerType==='mouse')return;
