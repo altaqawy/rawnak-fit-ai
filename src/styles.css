@@ -60,3 +60,26 @@
 .demo-asset-buttons .btn{font-size:11px;padding:9px 11px}
 .demo-asset-buttons .btn.selected{background:#cef3a8;border-color:#cef3a8;color:#173922}
 @media(max-width:610px){.demo-asset-switch{flex-wrap:wrap;padding:9px 12px}.demo-asset-buttons{width:100%}.demo-asset-buttons .btn{flex:1}}
+
+
+/* Alpha 0.7: body-relative fit quality before drawing item photos */
+.fit-guide{position:absolute;z-index:11;left:50%;transform:translateX(-50%);
+  top:66px;width:max-content;max-width:calc(100% - 34px);text-align:center;
+  color:#fff0ce;background:#382b19d9;border:1px solid #ffe3a85c;
+  border-radius:12px;padding:9px 13px;line-height:1.6;font-size:12px;
+  box-shadow:0 6px 20px #0006;pointer-events:none}
+.fit-guide.hidden{display:none}
+.fit-calibration{margin:10px 18px 4px;padding:10px 13px;border:1px solid #adcaa540;
+  border-radius:13px;background:#1b3326;display:grid;gap:7px}
+.fit-calibration>div strong,.fit-calibration>div small{display:block}
+.fit-calibration strong{font-size:12px;color:#dcf7c8}
+.fit-calibration small{font-size:10px;line-height:1.5;color:#b0c5b2}
+.fit-calibration label{display:flex;justify-content:space-between;gap:8px;align-items:center;
+  font-size:11px;color:#ccdfcb}
+.fit-calibration output{font:700 12px system-ui;color:#c9f6a5;direction:ltr}
+.fit-calibration input{width:100%;accent-color:#bdf098}
+.fit-embed .fit-calibration{margin:5px 10px;padding:8px 10px}
+.fit-embed .fit-calibration>div small{display:none}
+.fit-embed .fit-calibration label{font-size:10px}
+@media(max-width:520px){.fit-guide{font-size:11px;top:60px;padding:7px 10px}
+.fit-calibration{margin:7px 12px 2px}}
