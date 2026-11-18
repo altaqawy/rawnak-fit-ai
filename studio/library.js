@@ -241,6 +241,20 @@ function extractGlbJson(buffer){
     throw new Error('المعاينة تتطلب GLB مدمجًا بالكامل بدون روابط صور أو بيانات خارجية');
   if((gltf.extensionsRequired||[]).some(x=>!['KHR_materials_unlit','KHR_texture_transform'].includes(x)))
     throw new Error('يحتاج هذا النموذج إضافة ضغط/خامات غير مفعّلة في النسخة الأولى');
+  if(gltf.meshes.length>60)throw new Error('عدد الشبكات الهندسية كبير للمعاينة على الموبايل');
+  const accessors=gltf.accessors||[];
+  let triangleEstimate=0;
+  for(const mesh of gltf.meshes){
+    for(const primitive of mesh.primitives||[]){
+      if(primitive.mode!=null && primitive.mode!==4)
+        throw new Error('يجب أن يحتوي النموذج على مثلثات TRIANGLES');
+      const accessor=accessors[primitive.indices??primitive.attributes?.POSITION];
+      const count=Number(accessor?.count)||0;
+      if(!Number.isSafeInteger(count)||count<0)throw new Error('معلومات هندسة المجسم غير صحيحة');
+      triangleEstimate+=count/3;
+    }
+  }
+  if(triangleEstimate>250000)throw new Error('المجسم ثقيل جدًا للمعاينة: أكثر من 250 ألف مثلث');
   return gltf;
 }
 async function previewGlb(file){
