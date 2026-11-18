@@ -302,33 +302,60 @@ export class Fit3DRenderer {
   }
   updateGarment(category,landmarks,placement,options){
     if(category!=='tee'&&category!=='jacket')return;
-    const shirt=this.meshes[category],motion=window.RawnakFitGarmentMotion;
-    const target=shirt?.userData.garmentMesh;
-    const rest=shirt?.userData.restPositions;
-    const spring=shirt?.userData.sleeveSpring;
-    if(!target||!rest||!motion)return;
-    const active=options.garmentMotion!==false;
-    if(!active)spring?.reset();
-    const detected=active
+    const garment=this.meshes[category],motion=window.RawnakFitGarmentMotion;
+    if(!garment||!motion)return;
+    const sleeves=garment.userData.sleeves;
+    const spring=garment.userData.sleeveSpring;
+    const enabled=options.garmentMotion!==false;
+    if(!enabled)spring?.reset();
+    const targets=enabled
       ? motion.targetSleeves(landmarks,placement,options.project,options.width,options.height)
       : {left:0,right:0};
-    const dynamics=active&&spring?spring.update(detected,Date.now())
-      : {left:0,right:0,phase:0,energy:0};
-    const attr=target.geometry.attributes.position;
-    motion.deformGarment(attr.array,rest,dynamics);
+    const dynamics=enabled&&spring
+      ? spring.update(targets,Date.now()) : {left:0,right:0,phase:0,energy:0};
+    // Each sleeve rotates as its own volumetric fabric tube around a shoulder.
+    // This retains a realistic torso shape instead of bending the whole T-shirt.
+    if(sleeves){
+      sleeves.left.rotation.z=Math.max(-1.1,Math.min(1.1,dynamics.left*.92));
+      sleeves.right.rotation.z=Math.max(-1.1,Math.min(1.1,dynamics.right*.92));
+    }
+    const target=garment.userData.garmentMesh;
+    const base=garment.userData.restPositions;
+    const attr=target?.geometry?.attributes?.position;
+    if(!attr||!base)return;
+    const amplitude=enabled?Math.min(.012,dynamics.energy*.15):0;
+    if(amplitude<.0002 && !garment.userData.torsoWasMoving)return;
+    const positions=attr.array;
+    if(amplitude<.0002){
+      positions.set(base);
+      garment.userData.torsoWasMoving=false;
+    }else{
+      const phase=dynamics.phase;
+      for(let i=0;i<base.length;i+=3){
+        const y=base[i+1],x=base[i];
+        positions[i]=base[i];
+        positions[i+1]=y;
+        positions[i+2]=base[i+2]+Math.sin(y*11+x*9+phase)*amplitude*Math.min(1,y);
+      }
+      garment.userData.torsoWasMoving=true;
+    }
     attr.needsUpdate=true;
-    // Low-poly CPU normal refresh only on pose-inference frames.
     target.geometry.computeVertexNormals();
   }
   resetGarment(category){
     if(category!=='tee'&&category!=='jacket')return;
     const obj=this.meshes[category];
     const garment=obj?.userData.garmentMesh,rest=obj?.userData.restPositions;
-    if(!garment||!rest)return;
+    if(obj?.userData.sleeves){
+      obj.userData.sleeves.left.rotation.z=0;
+      obj.userData.sleeves.right.rotation.z=0;
+    }
+    obj?.userData.sleeveSpring?.reset();
+    if(!garment||!rest||!obj.userData.torsoWasMoving)return;
     garment.geometry.attributes.position.array.set(rest);
     garment.geometry.attributes.position.needsUpdate=true;
     garment.geometry.computeVertexNormals();
-    obj.userData.sleeveSpring?.reset();
+    obj.userData.torsoWasMoving=false;
   }
   render(category,landmarks,options){
     if(this.destroyed)return {ok:false,reason:'3D renderer disposed'};
@@ -383,16 +410,10 @@ export class Fit3DRenderer {
     if(!mesh)return false;
     mesh.visible=true;
     this.resetGarment(category);
-    if((category==='tee'||category==='jacket') && sleeveAngle!==0){
-      const attr=mesh.userData.garmentMesh?.geometry.attributes.position;
-      const rest=mesh.userData.restPositions;
-      const motion=window.RawnakFitGarmentMotion;
-      if(attr&&rest&&motion){
-        const a=Math.max(-1.12,Math.min(1.12,Number(sleeveAngle)||0));
-        motion.deformGarment(attr.array,rest,{left:a,right:-a,energy:0,phase:0});
-        attr.needsUpdate=true;
-        mesh.userData.garmentMesh.geometry.computeVertexNormals();
-      }
+    if((category==='tee'||category==='jacket') && mesh.userData.sleeves){
+      const a=Math.max(-1.12,Math.min(1.12,Number(sleeveAngle)||0));
+      mesh.userData.sleeves.left.rotation.z=a;
+      mesh.userData.sleeves.right.rotation.z=-a;
     }
     const fitted=Math.min(width*.62/mesh.userData.modelWidth,
       height*.70/mesh.userData.modelHeight)*Math.min(1.3,Math.max(.7,scale));
