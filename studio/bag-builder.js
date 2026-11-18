@@ -12,7 +12,7 @@ const inputKeys=['widthCm','heightCm','depthCm','style','material','closure','st
   'lining','bodyColor','logoPlacement','logoType','logoText'];
 const state={photos:[],model:null,scene:null,renderer:null,camera:null,controls:null,
   raf:0,observer:null,renderReady:false,hasChanges:false,modelVersion:0,
-  logoFile:null,logoObjectUrl:null,logoTexture:null};
+  logoFile:null,logoObjectUrl:null,logoTexture:null,corrections:{}};
 function gather(){
  const raw={};
  for(const key of inputKeys)raw[key]=$(key).value;
@@ -101,14 +101,38 @@ async function addPhotos(files){
  $('photo-quality').textContent=skipped?skipped+' صور تم تجاهلها، راجع نوع الملف/الحجم/الصلاحية':'تمت إضافة الصور محليًا';
  scheduleRebuild();
 }
+function getReviewedParts(){
+ const parts=describeBagComponents(gather());
+ const ids=new Set(parts.map(p=>p.id));
+ for(const id of Object.keys(state.corrections))if(!ids.has(id))delete state.corrections[id];
+ return parts.map(p=>{
+  const correction=state.corrections[p.id];
+  return correction ? {...p,behavior:correction.behavior,moving:correction.moving,
+    joint:correction.moving?(p.joint||'manual-unassigned'):null,
+    reviewedByMerchant:true,physicsImplemented:false}:p;
+ });
+}
+function showPartProperties(){
+ const p=getReviewedParts().find(v=>v.id===$('part-select').value);
+ if(!p)return;
+ $('part-behavior').value=['rigid','semi-rigid','flexible','surface-attached'].includes(p.behavior)
+  ?p.behavior:'semi-rigid';
+ $('part-movable').checked=p.moving===true;
+}
 function showParts(){
- const box=$('parts');box.textContent='';
- for(const p of describeBagComponents(gather())){
+ const box=$('parts'),select=$('part-select');
+ const selected=select.value;box.textContent='';select.textContent='';
+ for(const p of getReviewedParts()){
   const element=document.createElement('span');element.className=p.moving?'movable':'';
-  element.textContent=(p.moving?'↝ ':'■ ')+p.id+' · '+p.behavior;
+  element.textContent=(p.moving?'↝ ':'■ ')+p.id+' · '+p.behavior+
+   (p.reviewedByMerchant?' ✓':'');
   element.title=p.role+(p.joint?' / '+p.joint:'');
   box.append(element);
+  const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.id;
+  select.append(opt);
  }
+ if([...select.options].some(o=>o.value===selected))select.value=selected;
+ showPartProperties();
 }
 let rebuildTimer=null;
 function scheduleRebuild(){
@@ -175,6 +199,9 @@ async function buildAndRender(){
  const spec=gather();
  if(state.model){state.scene.remove(state.model.root);state.model.dispose();}
  state.model=buildModularBag(spec);
+ state.model.parts=getReviewedParts();
+ state.model.root.userData.parts=state.model.parts;
+ state.model.root.userData.corrections=Object.entries(state.corrections).map(([id,value])=>({id,...value}));
  state.scene.add(state.model.root);
  $('stage-message').hidden=true;
  state.renderReady=true;
@@ -220,6 +247,11 @@ async function exportGLB(){
 }
 function exportJSON(){
  const draft=makeBagDraft(gather(),selectedPhotos());
+ draft.parts=getReviewedParts();
+ draft.partCorrections=Object.entries(state.corrections).map(([id,value])=>({
+   id,...value,source:'merchant-review',trainingAllowed:false,
+   simulationImplemented:false
+ }));
  draft.review={
   source:'merchant-structured-input+photos',
   userSuppliedPhotos:state.photos.length,
@@ -253,6 +285,24 @@ $('swing').addEventListener('input',()=>{
 });
 $('show-inside').addEventListener('change',()=>{
  state.model?.setInterior($('show-inside').checked);
+});
+$('part-select').addEventListener('change',showPartProperties);
+$('save-part-correction').addEventListener('click',()=>{
+ const id=$('part-select').value;
+ if(!getReviewedParts().some(p=>p.id===id))return;
+ state.corrections[id]={
+   behavior:$('part-behavior').value,
+   moving:$('part-movable').checked
+ };
+ if(state.model){
+   state.model.parts=getReviewedParts();
+   state.model.root.userData.parts=state.model.parts;
+   state.model.root.userData.corrections=Object.entries(state.corrections)
+     .map(([partId,data])=>({id:partId,...data}));
+ }
+ showParts();
+ $('part-feedback').textContent='تم حفظ تصحيح '+id+
+   ' كبيانات مراجعة فقط؛ تغيير المرونة هنا لا يشغّل فيزياء القماش أو يحرك مفصلًا غير مجهّز.';
 });
 $('download-json').addEventListener('click',exportJSON);
 $('download-glb').addEventListener('click',()=>void exportGLB());
