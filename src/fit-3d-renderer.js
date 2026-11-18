@@ -296,7 +296,7 @@ export class Fit3DRenderer {
     this.renderer.render(this.scene,this.camera);
     return {ok:true,canvas:this.canvas,placement};
   }
-  preview(category,{yaw=0,tilt=0,scale=1}={}){
+  preview(category,{yaw=0,tilt=0,scale=1,sleeveAngle=0}={}){
     if(this.destroyed)return false;
     const width=Math.max(240,this.canvas.parentElement?.clientWidth||480);
     const height=Math.max(240,this.canvas.parentElement?.clientHeight||430);
@@ -306,6 +306,17 @@ export class Fit3DRenderer {
     if(!mesh)return false;
     mesh.visible=true;
     this.resetGarment(category);
+    if((category==='tee'||category==='jacket') && sleeveAngle!==0){
+      const attr=mesh.userData.garmentMesh?.geometry.attributes.position;
+      const rest=mesh.userData.restPositions;
+      const motion=window.RawnakFitGarmentMotion;
+      if(attr&&rest&&motion){
+        const a=Math.max(-1.12,Math.min(1.12,Number(sleeveAngle)||0));
+        motion.deformGarment(attr.array,rest,{left:a,right:-a,energy:0,phase:0});
+        attr.needsUpdate=true;
+        mesh.userData.garmentMesh.geometry.computeVertexNormals();
+      }
+    }
     const fitted=Math.min(width*.62/mesh.userData.modelWidth,
       height*.70/mesh.userData.modelHeight)*Math.min(1.3,Math.max(.7,scale));
     mesh.scale.setScalar(fitted);
