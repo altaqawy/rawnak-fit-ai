@@ -20,7 +20,7 @@
 <div class="app">
   <header class="topbar">
     <div class="brand"><span class="logo">✳</span><div><strong>RAWNAK <em>AutoFit</em></strong><small>PRODUCT INTELLIGENCE STUDIO</small></div></div>
-    <nav><a href="./library.html">مكتبة تجهيز 3D</a><a href="../demo/">المنتجات التجريبية</a><a href="./capture.html" id="capture-nav">دليل التصوير</a><a href="../">المراية اللايف</a><a href="https://github.com/altaqawy/rawnak-fit-ai" rel="noopener" target="_blank">GitHub ↗</a><span class="version">ALPHA 0.5.2 · PRODUCT FIXTURES</span></nav>
+    <nav><a href="./library.html">التجربة التلقائية · صور فقط ✳</a><a href="../demo/">المنتجات التجريبية</a><a href="./capture.html" id="capture-nav">دليل التصوير</a><a href="../">المراية اللايف</a><a href="https://github.com/altaqawy/rawnak-fit-ai" rel="noopener" target="_blank">GitHub ↗</a><span class="version">ALPHA 0.5.2 · PRODUCT FIXTURES</span></nav>
   </header>
   <main>
     <section class="intro">
@@ -29,6 +29,10 @@
       <p>ارفع صور المنتج، وسيحاول المحرك تحديد نوعه واختيار أفضل طريقة لتجهيزه. الساعات والخواتم والغوايش لها قوالب 3D أولية قابلة للتعديل؛ باقي الفئات تتحول إلى خطة تجهيز ومراجعة واضحة.</p>
     </section>
     <div id="fixture-message" hidden style="padding:12px 16px;background:#244533;border:1px solid #a8d88866;border-radius:12px;margin:0 0 15px;color:#d9efc0;font-size:12px;line-height:1.8"></div>
+    <div style="margin:8px 0 22px;padding:18px 22px;border:1px solid #b3e49486;border-radius:15px;background:#203e2e;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap">
+      <div><strong style="font-size:17px;color:#d6ffb4">الجديد: ترفع الصور فقط والباقي تلقائي</strong><p style="margin:4px 0;color:#b0d0b6;font-size:12px">الواجهة التالية مخصصة للتجار بدون نمذجة أو ملفات GLB أو مقاسات إجبارية. الصفحة الحالية أدوات التطوير القديمة.</p></div>
+      <a class="button light" href="./library.html" style="text-decoration:none">افتح Photo-Only Studio ↗</a>
+    </div>
     <section class="workspace">
       <div class="left-column">
         <section class="panel" aria-labelledby="upload-title">
@@ -58,7 +62,7 @@
           <div class="route-meta"><span>التجهيز الحالي</span><b id="engine-type">—</b></div>
           <div class="route-meta"><span>حالة المنتج</span><b id="engine-status">ينتظر الإدخال</b></div>
           <ul id="requirements" class="requirements"></ul>
-          <button id="open-library" type="button" class="button outline wide" style="margin-top:12px">استكمال المنتج في مكتبة قوالب 3D ↗</button>
+          <button id="open-library" type="button" class="button outline wide" style="margin-top:12px">ابدأ التجربة التلقائية · ارفع الصور فقط ↗</button>
           <div class="material-panel">
             <div class="material-header"><strong>تأكيد الأجزاء وحركتها</strong><small>اقتراح حسب نوع المنتج · ليس كشفًا مؤكدًا من الصور</small></div>
             <div id="material-parts" class="material-parts"></div>
