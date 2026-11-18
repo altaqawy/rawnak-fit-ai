@@ -166,3 +166,20 @@ The green T-shirt in Android Inspector was still a flat silhouette extruded into
 Open the [touch-friendly 3D Inspector](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html?product=tee) to drag-rotate/zoom the garment and adjust sleeve angles independently of the camera, or open the [live demo](https://altaqawy.github.io/rawnak-fit-ai/demo/) to test pose attachment.
 
 This improves the **procedural geometry's appearance**, not the accuracy of the generated reference product's front/back design. The garment is not a merchant-approved digital twin or a full cloth-physics simulation. See [Alpha 1.0 implementation + limitations](docs/ROUNDED_GARMENT_ALPHA10.md).
+
+
+## Alpha 1.1 — Importable GLB and shoulder skinning
+
+The real product-asset path is now separate from the old procedural T-shirt generator:
+- [Reference garment GLB](assets/garments/reference-tee-v1.glb) (original demo model, approximately 101 KB)
+- [Source manifest and QA gate](assets/garments/reference-tee-v1.manifest.json)
+- [GLTFLoader, hardcoded reference allowlist and local in-memory preview import](src/fit-glb-assets.js)
+- [Live Three.js shoulder bone/SkinnedMesh renderer](src/fit-3d-renderer.js)
+- [Inspector to compare GLB versus previous procedural model](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html?product=tee&build=20261118-alpha110)
+- [Technical limitations and merchant acceptance criteria](docs/RIGGED_GARMENT_ALPHA11.md)
+
+The reference tee includes glTF 2.0 skinning, three joints, and per-vertex bone weights. MediaPipe shoulder/elbow angles now rotate the imported garment bones; this is different from moving separate rigid cylinders. The asset is loaded once per preview session and camera frames are not uploaded for generation.
+
+**Important:** The reference garment is *authored test geometry*, not photo-to-3D reconstruction, not an actual seller SKU, not accurate cloth physics, and not verified sizing. The old procedural model is still available for explicit comparison. The Inspector can also preview a local GLB with `Shoulder_L` and `Shoulder_R` bones without uploading it, but local files are never automatically approved or published.
+
+New CI contract: `node --test tests/reference-glb.test.mjs`; runtime test on actual phone/browser is still required.
