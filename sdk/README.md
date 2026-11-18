@@ -1,4 +1,4 @@
-# RAWNAK FIT Embed SDK — Public Alpha 0.1.1
+# RAWNAK FIT Embed SDK — Public Alpha 0.2
 
 **Runnable store demo (after GitHub Pages deployment):**
 https://altaqawy.github.io/rawnak-fit-ai/demo/
@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-02"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-03"></script>
 
 Then place the component next to your add-to-cart button:
 
