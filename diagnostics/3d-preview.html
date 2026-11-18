@@ -80,7 +80,7 @@ button:disabled{opacity:.5}
   </div>
 </div>
 </main>
-<script defer src="../src/fit-garment-motion.js?v=20261118-alpha100"></script>
+<script defer src="../src/fit-garment-motion.js?v=20261118-alpha110"></script>
 <script type="module">
 const $=id=>document.getElementById(id);
 let scene=null,active=true,last=0,angle=0,drag=null,lastCategory=null;
@@ -89,7 +89,7 @@ const query=new URLSearchParams(location.search);
 if (query.has('product') && [...$('category').options].some(x=>x.value===query.get('product')))
   $('category').value=query.get('product');
 try {
-  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha100');
+  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha110');
   scene=new Fit3DRenderer($('preview'));
   $('status').textContent='WebGL جاهز ✓ — جارٍ تحميل Skinned GLB مرجعي…';
   $('capture').disabled=false;
