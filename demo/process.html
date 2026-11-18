@@ -52,6 +52,10 @@ nav{display:flex;gap:17px;font-size:12px;color:#c1d1bf}nav a:hover{color:var(--g
 #tryon-slot{margin:15px 0}
 rawnak-fit::part(button){width:100%;min-width:230px}
 footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;border-top:1px solid var(--line);margin-top:34px;direction:ltr}
+.cutout-result{display:flex;align-items:center;gap:17px;background:#0e241a;border-radius:12px;border:1px solid #ffffff1d;margin-top:15px;padding:12px}
+.cutout-result img{width:135px;height:155px;object-fit:contain;background:radial-gradient(circle,#395748,#162d22);border-radius:10px}
+.cutout-result strong{font-size:13px;color:#e4f5d7}.cutout-result p{font-size:11px;color:#a4c1a6;line-height:1.7}
+@media(max-width:550px){.cutout-result img{width:92px;height:110px}.cutout-result{gap:9px}}
 @media(max-width:980px){.grid{grid-template-columns:1fr}}
 @media(max-width:550px){.wrap{padding:0 12px}header{align-items:flex-start;flex-direction:column}nav{font-size:11px}.panel{padding:13px}.photo{min-height:130px}.photo-grid{gap:8px}.metrics{gap:5px}.metric{padding:10px 6px}.metric strong{font-size:15px}.stage{grid-template-columns:30px 1fr auto;gap:8px}.stage p{font-size:10px}}
 </style>
@@ -79,7 +83,8 @@ footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;borde
 <div class="result-line"><span>اللون من الصورة</span><b id="result-color">اضغط تحليل</b></div>
 <div class="result-line"><span>توقع نموذج التصنيف</span><b id="result-ai">لم يتم تشغيله</b></div>
 <div class="result-line"><span>موديل 3D مطابق للمنتج</span><b>غير متاح حاليًا</b></div>
-<div class="result-line"><span>المعاينة اللايف</span><b>رسمة تجريبية فقط</b></div></div>
+<div class="result-line"><span>المعاينة اللايف</span><b id="result-tryon">صورة AI ثنائية الأبعاد</b></div></div>
+<div class="cutout-result"><img id="cutout-image" src="" alt="قصاصة المنتج مع خلفية شفافة" loading="lazy"><div><strong>النتيجة الوسيطة: عزل صورة المنتج</strong><p>تُستعمل قصاصة أمامية لإسقاط الصورة فوق نقاط الوجه أو اليد أو الجسم. لا تعطي دوران 3D حقيقيًا.</p></div></div>
 <p class="photo-note">الأجزاء المقترحة حسب فئة المنتج، وليست أجزاء تم استخراجها تلقائيًا من الصور:</p><div id="parts" class="parts"></div>
 <div class="notice" id="quality-warning"></div>
 <div class="action-row"><a id="studio-link" class="btn secondary" href="../studio/">فتح المنتج في AutoFit Studio</a><a id="capture-link" class="btn secondary" href="../studio/capture.html">الصور المطلوبة لهذه الفئة</a></div>
@@ -93,7 +98,7 @@ footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;borde
 <div class="stage"><div class="counter">02</div><div><h3>تحليل الصورة</h3><p>استخراج لون تقريبي من Canvas ثم تجربة MobileNet محليًا عند الطلب</p></div><span id="status-analysis" class="status off">لم يبدأ</span></div>
 <div class="stage"><div class="counter">03</div><div><h3>اختيار الفئة والأجزاء</h3><p>تحديد المحرك من بيانات المنتج وإظهار أجزاء صلبة/قماش/مفصلات ليراجعها التاجر</p></div><span id="status-parts" class="status done">قالب فئة</span></div>
 <div class="stage"><div class="counter">04</div><div><h3>إنشاء GLB ثلاثي الأبعاد</h3><p>مطلوب محرك إعادة بناء أو قالب معتمد وتأكيد القياسات والجوانب — غير متصل في النسخة الحالية</p></div><span class="status pending">غير مُنفّذ</span></div>
-<div class="stage"><div class="counter">05</div><div><h3>Live AR Try-On</h3><p>تجربة تتبع اليد أو الوجه أو الجسم؛ المعروض لسه رسمة عامة مش نفس المنتج</p></div><span class="status done">Demo AR</span></div>
+<div class="stage"><div class="counter">05</div><div><h3>Live AR Try-On</h3><p>تجربة تتبع اليد أو الوجه أو الجسم؛ المعروض لسه رسمة عامة مش نفس المنتج</p></div><span id="status-tryon" class="status done">PHOTO AR 2D</span></div>
 <div class="action-row"><button class="btn" id="analyze-button" type="button">حلل الصورة فعليًا</button><button class="btn secondary" id="reset-button" type="button">إعادة التقييم</button></div>
 <p id="analysis-message" class="info" aria-live="polite">شغّل التحليل علشان تشوف لون الصورة واقتراح MobileNet.</p>
 </section>
@@ -101,5 +106,5 @@ footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;borde
 </div>
 </main><footer>RAWNAK FIT AI · DEMO PRODUCT PIPELINE · IMAGES ARE SYNTHETIC AND NOT VERIFIED 3D ASSETS</footer>
 </div>
-<script type="module" src="./process.js?v=20261118-p1"></script>
+<script type="module" src="./process.js?v=20261118-p2"></script>
 </body></html>
