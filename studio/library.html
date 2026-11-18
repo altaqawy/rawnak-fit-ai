@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c1916">
+<meta name="description" content="RAWNAK FIT — local-first product photos and 3D template quality lab">
+<title>RAWNAK FIT · Asset Library Studio</title>
+<link rel="stylesheet" href="./library.css?v=20261118.1">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="wordmark" href="./"><span class="spark">✳</span> RAWNAK <strong>FIT</strong> <span class="dim">/ ASSET ENGINE</span></a>
+  <nav aria-label="تنقل"><a href="./">AutoFit Studio</a><a href="./capture.html">دليل التصوير</a><a href="../demo/">المتجر</a><a href="../diagnostics/3d-preview.html?product=tee">3D Inspector</a></nav>
+</header>
+<main>
+  <section class="hero">
+    <p class="eyebrow">ALPHA 0.1 · ASSET LIBRARY PILOT · LOCAL-FIRST</p>
+    <h1>من صور المنتج إلى <em>خطة مجسم 3D قابلة للتحقق</em></h1>
+    <p>نبدأ بثلاث فئات: تيشيرت، ساعة، وشنطة. نختار القالب ونراجع الزوايا والمقاسات، ثم نجرب GLB في المتصفح قبل اعتماد أي منتج. <strong>لا يتم توليد مجسم تلقائيًا أو إرسال صورك لخادم في المرحلة دي.</strong></p>
+    <div class="stats"><span><b>3</b> منتجات تجريبية</span><span><b>9</b> مصادر مدروسة</span><span><b>0</b> اعتماد تلقائي</span></div>
+  </section>
+  <section class="steps" aria-label="خطوات التجهيز">
+    <span>01 · نوع المنتج</span><span>02 · صور وزوايا</span><span>03 · مقاسات ومصدر</span><span>04 · فحص GLB</span><span>05 · تصدير خطة التجهيز</span>
+  </section>
+  <section class="section" aria-labelledby="pilots-title">
+    <div class="section-head"><div><p class="eyebrow">SELECT A PILOT</p><h2 id="pilots-title">اختار المنتج اللي هنجهزه</h2></div><span class="muted">اختيار الفئة مش إثبات لجودة المجسم</span></div>
+    <div class="pilots" role="group" aria-label="منتجات المرحلة الأولى">
+      <button type="button" class="pilot active" data-category="tshirt" aria-pressed="true"><span class="glyph">◧</span><strong>تيشيرت</strong><small>Pattern + Rig</small></button>
+      <button type="button" class="pilot" data-category="watch" aria-pressed="false"><span class="glyph">◷</span><strong>ساعة</strong><small>Parametric + Multi-view</small></button>
+      <button type="button" class="pilot" data-category="bag" aria-pressed="false"><span class="glyph">▣</span><strong>شنطة</strong><small>Body + Strap</small></button>
+    </div>
+  </section>
+  <div class="workspace">
+    <div class="column">
+      <section class="panel" aria-labelledby="photos-title">
+        <div class="panel-heading"><div><small>STEP 01 / CAPTURE</small><h2 id="photos-title">صور وزوايا المنتج</h2></div><span id="photo-count" class="mini-pill">0 صورة</span></div>
+        <label class="upload" for="upload-images">
+          <span class="upload-symbol">↑</span><strong>اختار صور المنتج الحقيقي</strong>
+          <small>JPG / PNG / WEBP · حتى 48 صورة · 10MB للصورة · الصور تفضل على جهازك</small>
+        </label>
+        <input id="upload-images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+        <p id="capture-advice" class="muted" aria-live="polite"></p>
+        <div id="photo-list" class="photo-list"></div>
+        <div class="actions"><button id="clear-photos" type="button" class="outline small">مسح الصور</button><a href="./capture.html" id="capture-guide">تعليمات التصوير لهذه الفئة ↗</a></div>
+      </section>
+      <section class="panel" aria-labelledby="meta-title">
+        <div class="panel-heading"><div><small>STEP 02 / MEASURE</small><h2 id="meta-title">بيانات ومقاسات حقيقية</h2></div></div>
+        <div class="fields">
+          <label class="wide">اسم المنتج<input id="name" type="text" maxlength="100" placeholder="مثال: تيشيرت قطن أخضر" autocomplete="off"></label>
+          <label>SKU<input id="sku" type="text" maxlength="64" placeholder="RW-TEE-001" dir="ltr" autocomplete="off"></label>
+          <label>المقاس/اللون<input id="variant" type="text" maxlength="80" placeholder="M / Sage" autocomplete="off"></label>
+        </div>
+        <div id="measurements" class="fields"></div>
+        <label class="check"><input id="rights-confirmed" type="checkbox"> أمتلك حقوق استخدام صور المنتج أو عندي إذن من صاحبها</label>
+        <label class="check"><input id="category-confirmed" type="checkbox"> راجعت نوع المنتج وحددته بنفسي</label>
+      </section>
+      <section class="panel" aria-labelledby="library-title">
+        <div class="panel-heading"><div><small>STEP 03 / TEMPLATE ROUTING</small><h2 id="library-title">مكتبة النماذج وأدوات المعالجة</h2></div></div>
+        <div class="route-card"><span id="route-family" class="eyebrow">GARMENT</span><strong id="route-template">—</strong><p id="route-description"></p>
+          <div id="route-links" class="links"></div>
+        </div>
+        <div class="micro-note">المصادر روابط بحث وتقييم، ولم نستورد ملفاتها أو أوزانها بعد. الترخيص التجاري وحق إعادة توزيع ملفات 3D لازم يتراجع لكل أصل.</div>
+      </section>
+    </div>
+    <div class="column">
+      <section class="panel" aria-labelledby="qa-title">
+        <div class="panel-heading"><div><small>STEP 04 / QUALITY GATE</small><h2 id="qa-title">فحص الجاهزية</h2></div><span class="mini-pill" id="qa-percent">0%</span></div>
+        <div class="progress"><div id="progress-fill" style="width:0%"></div></div>
+        <p id="qa-status" class="status" role="status">في انتظار الصور والقياسات</p>
+        <div id="qa-blockers" class="checks"></div>
+        <p class="micro-note">الدرجة هنا لمدى اكتمال المدخلات فقط. لا تقيس جودة GLB أو واقعية الملبس أو دقة المقاس على العميل.</p>
+      </section>
+      <section class="panel" aria-labelledby="model-title">
+        <div class="panel-heading"><div><small>STEP 05 / LOCAL GLB REVIEW</small><h2 id="model-title">فحص مجسم من جهازك</h2></div></div>
+        <div id="model-stage" class="model-stage"><div id="model-placeholder">ارفع ملف GLB لمعاينة الشكل من جميع الجهات<br><small>مافيش تحويل تلقائي للصور إلى مجسم هنا</small></div></div>
+        <label class="glb-label" for="upload-glb">اختيار GLB محلي · حد أقصى 20MB</label>
+        <input id="upload-glb" type="file" accept=".glb,model/gltf-binary">
+        <p id="model-status" class="muted" role="status">لم يتم اختيار ملف. أي مجسم يتم تحميله هنا للمعاينة فقط.</p>
+        <div class="model-actions"><button type="button" class="outline" id="reset-model">إزالة المجسم</button><a id="model-reference" href="../diagnostics/3d-preview.html?product=tee">شوف التيشيرت المرجعي GLB ↗</a></div>
+      </section>
+      <section class="panel" aria-labelledby="export-title">
+        <div class="panel-heading"><div><small>STEP 06 / DELIVERY</small><h2 id="export-title">تجهيز سجل المنتج</h2></div></div>
+        <p id="processing-status" class="muted">المعالجة الخارجية مش متصلة بعد · مفيش API keys في المتصفح</p>
+        <div class="actions"><button type="button" class="primary" id="download-manifest">تصدير Asset Draft JSON ↓</button><button type="button" class="outline" id="copy-report">نسخ تقرير المراجعة</button></div>
+        <p class="micro-note">تصدير خطة التجهيز لا يعني أن المنتج اتوافق عليه أو اتنشر. الصور والمجسم المحلي مش بيتضمنوا في JSON.</p>
+      </section>
+    </div>
+  </div>
+  <footer>RAWNAK FIT AI · ASSET PIPELINE ALPHA · NOT PRODUCT-EXACT · <a href="https://github.com/altaqawy/rawnak-fit-ai">GitHub</a></footer>
+</main>
+<script type="module" src="./library.js?v=20261118.1"></script>
+</body>
+</html>
