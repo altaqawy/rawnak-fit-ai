@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#0b1815">
   <meta name="description" content="RAWNAK FIT AI — Live AR virtual try-on prototype.">
   <title>RAWNAK FIT AI — Live Virtual Mirror</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha080">
+  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha090">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.8 · LIVE 3D MESH</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.9 · GARMENT MOTION</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -36,6 +36,11 @@
           <div><strong>معايرة نسبية حسب الجسم</strong><small>النظام يقيس مواضع الكتفين/الوجه/المعصم داخل الصورة — مش مقاس الملابس الحقيقي بالسنتيمتر</small></div>
           <label for="fit-scale">حجم المعاينة <output id="fit-scale-value">100%</output></label>
           <input id="fit-scale" type="range" min="70" max="130" step="5" value="100">
+        </div>
+        <div id="garment-controls" class="garment-controls hidden" role="group" aria-label="حركة القماش وتداخل الذراعين">
+          <div><strong>GARMENT MOTION · BETA</strong><small>حركة خفيفة للأكمام مع الكتفين والكوع — بدون محاكاة قماش فيزيائية كاملة</small></div>
+          <label><input id="garment-motion" type="checkbox" checked> تحريك الأكمام مع الذراع</label>
+          <label><input id="arm-occlusion" type="checkbox" checked> إظهار الذراع أمام القماش <span>في الوضع المتزامن فقط · تقريبي</span></label>
         </div>
         <div id="demo-asset-switch" class="demo-asset-switch hidden" role="group" aria-label="اختيار أسلوب عرض المنتج">
           <div><strong>LIVE 3D MESH · THREE.JS</strong><small id="asset-status">مجسم 3D هندسي مع إضاءة وعمق — مش نسخة دقيقة من المنتج</small></div>
@@ -61,7 +66,7 @@
       <aside class="catalog-panel">
         <div class="catalog-title"><span class="eyebrow">TRY SOMETHING ON</span><h2>اختار القطعة</h2><p>تبديل المنتج مش هيقفل الكاميرا</p></div>
         <div id="products" class="products" role="group" aria-label="المنتجات التجريبية"></div>
-        <div class="disclaimer"><strong>تنبيه الجودة</strong><p>المنتجات بتظهر كمجسمات 3D تجريبية بعمق وإضاءة، مش مجسمات مطابقة 100% لصور المتجر. دقة المقاسات وحركة القماش وتداخل اليد مع المجسم لسه مراحل تطوير.</p></div>
+        <div class="disclaimer"><strong>تنبيه الجودة</strong><p>المنتجات بتظهر كمجسمات 3D تجريبية بعمق وإضاءة، مش مجسمات مطابقة 100% لصور المتجر. تحريك الأكمام وتداخل الذراع في النسخة الحالية تجريبي وغير فيزيائي بالكامل. مازال مطلوب موديل مُقاس وملف GLB معتمد قبل الاستخدام التجاري.</p></div>
         <a class="diagnostic-link" href="./diagnostics/3d-preview.html" target="_blank" rel="noopener">استعراض مجسمات 3D بدون كاميرا ↗</a>
         <a class="diagnostic-link" href="./diagnostics/camera-only.html" target="_blank" rel="noopener">اختبار الكاميرا فقط بدون AI ↗</a>
         <a class="diagnostic-link" href="./diagnostics/tracking.html" target="_blank" rel="noopener">اختبار تحميل نموذج التتبع بدون كاميرا ↗</a>
@@ -71,7 +76,9 @@
   </main>
   <footer>© RAWNAK GROUP · FIT AI LAB <span>ALPHA PROTOTYPE · NOT A FIT GUARANTEE</span></footer>
 </div>
-<script defer src="./src/fit-calibration.js?v=20261118-alpha080"></script>
-<script defer src="./src/fit-3d-pose.js?v=20261118-alpha080"></script>
-<script type="module" src="./src/app.js?v=20261118-alpha080"></script>
+<script defer src="./src/fit-calibration.js?v=20261118-alpha090"></script>
+<script defer src="./src/fit-3d-pose.js?v=20261118-alpha090"></script>
+<script defer src="./src/fit-garment-motion.js?v=20261118-alpha090"></script>
+<script defer src="./src/fit-arm-occlusion.js?v=20261118-alpha090"></script>
+<script type="module" src="./src/app.js?v=20261118-alpha090"></script>
 </body></html>
