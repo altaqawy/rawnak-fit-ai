@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-06"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-07"></script>
 
 Then place the component next to your add-to-cart button:
 
@@ -107,3 +107,7 @@ The existing embedded Three.js camera scene now offers garment sleeve deformatio
 
 ### Alpha 1.0 rounded 3D garment
 The 3D shirt and jacket now use a curved, indexed open-surface mesh, a front/back crew neckline, separate pivoting tubular sleeves, seam rings and a small procedural weave texture. The 3D model inspector supports direct touch dragging and zoom. Geometry is still a demo, not an approved product replica or physical sizing. SDK embed version: 0.3.2. [Details](../docs/ROUNDED_GARMENT_ALPHA10.md).
+
+### Alpha 1.1: GLB reference + local inspector imports
+
+The T-shirt is now backed by a fixed allowlisted GLB reference with a skinned shoulder rig. This reference is not authentic photo reconstruction or a merchant-approved SKU. The [Inspector](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html?product=tee) lets a user compare GLB vs the legacy procedural model and import a local .glb for temporary QA without uploading it. Other demo categories remain procedural. See [technical overview](../docs/RIGGED_GARMENT_ALPHA11.md). SDK v0.3.3 is a browser demonstration, not the future authenticated tenant service.
