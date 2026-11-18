@@ -157,3 +157,12 @@ Synchronized mode optionally restores original camera pixels for a foreground fo
 Still missing for realistic merchant try-on: measured/approved GLB geometry and UV fabric textures, true body-to-cloth collisions, garment physics, person/arm segmentation and verified actual device QA. **No accurate fitting guarantee.**
 
 Static syntax and pose/motion mock scenarios were verified; WebGL, iframe camera permissions and movement quality on mobile must be checked using real devices.
+
+
+## Alpha 1.0 — Curved 3D clothing surface
+
+The green T-shirt in Android Inspector was still a flat silhouette extruded into a rigid block. The demo T-shirt and jacket have now been rebuilt with a curved open 3D torso, an actual crew-neck opening, rounded separately animated sleeves, seam details, and a 64px repeating illustrative cotton weave texture.
+
+Open the [touch-friendly 3D Inspector](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html?product=tee) to drag-rotate/zoom the garment and adjust sleeve angles independently of the camera, or open the [live demo](https://altaqawy.github.io/rawnak-fit-ai/demo/) to test pose attachment.
+
+This improves the **procedural geometry's appearance**, not the accuracy of the generated reference product's front/back design. The garment is not a merchant-approved digital twin or a full cloth-physics simulation. See [Alpha 1.0 implementation + limitations](docs/ROUNDED_GARMENT_ALPHA10.md).
