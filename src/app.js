@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.080';
+  const BUILD_ID = '2026.11.18.090';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -53,7 +53,8 @@
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
-    fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: ''
+    fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0
   };
 
   if (isEmbedded) {
@@ -139,7 +140,7 @@
     if (state.three || state.threeLoading) return state.threeLoading || state.three;
     state.threeError = '';
     state.threeLoading = (async () => {
-      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha080', document.baseURI).href;
+      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha090', document.baseURI).href;
       const mod = await import(moduleUrl);
       const renderer = new mod.Fit3DRenderer(layers);
       state.three = renderer;
@@ -252,6 +253,9 @@
     cameraToggle.textContent = live ? 'إيقاف الكاميرا' : state.starting ? 'إلغاء التشغيل' : 'تشغيل الكاميرا';
     indicator.textContent = live ? '● CAMERA LIVE' : state.starting ? 'CONNECTING…' : 'CAMERA OFF';
     indicator.style.color = live ? '#c8ee9b' : '#a5bdac';
+    const garmentControls=$('#garment-controls');
+    if (garmentControls) garmentControls.classList.toggle('hidden',
+      state.assetMode!=='3d'||!['tee','jacket'].includes(state.selected.id));
     const hint = $('#fit-guide');
     if (hint) {
       hint.textContent = state.fitHint;
@@ -716,7 +720,8 @@
           return;
         }
         const output = state.three.render(state.selected.id, state.landmarks, {
-          width:w,height:h,project,worldLandmarks:state.worldLandmarks,scale:state.sizeScale
+          width:w,height:h,project,worldLandmarks:state.worldLandmarks,scale:state.sizeScale,
+          garmentMotion:state.garmentMotion
         });
         state.fitHint = output.ok ? (output.placement?.approximate ? output.placement.reason : '') : output.reason;
         if (output.ok && state.viewMode === 'sync') {
@@ -801,6 +806,15 @@
       // Object-fit cover, exactly matching the coordinates used in project().
       ctx.drawImage(sampleCanvas, (w - displayWidth) / 2, (h - displayHeight) / 2, displayWidth, displayHeight);
       drawOverlayTo(ctx, w, h);
+      // Same-frame forearm pixels may be composited over shirt geometry. This
+      // approximate overlap mask is explicitly opt-in and is NOT segmentation.
+      state.occlusionCount=0;
+      if(state.assetMode==='3d' && (state.selected.id==='tee'||state.selected.id==='jacket') &&
+         state.armOcclusion && state.detected && state.three && window.RawnakFitArmOcclusion) {
+        state.occlusionCount=window.RawnakFitArmOcclusion.restoreArms(ctx,sampleCanvas,
+          state.landmarks,{width:w,height:h,project,worldLandmarks:state.worldLandmarks,
+          sourceWidth,sourceHeight});
+      }
       if (!state.syncFrameReady) {
         state.syncFrameReady = true;
         updateUI();
@@ -880,6 +894,13 @@
   }
   $('#mode-fast')?.addEventListener('click', () => changeViewMode('fast'));
   $('#mode-sync')?.addEventListener('click', () => changeViewMode('sync'));
+  $('#garment-motion')?.addEventListener('change',event=>{
+    state.garmentMotion=Boolean(event.target.checked);
+  });
+  $('#arm-occlusion')?.addEventListener('change',event=>{
+    state.armOcclusion=Boolean(event.target.checked);
+    state.occlusionCount=0;
+  });
   $('#fit-scale')?.addEventListener('input', event => {
     const number=Number(event.target.value);
     state.sizeScale=Math.max(.7,Math.min(1.3,number/100 || 1));
