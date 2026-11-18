@@ -22,7 +22,7 @@ function reset(){
   set('image-status','اختار الصور علشان يبدأ التحليل تلقائيًا');
   set('result-status','لسه مفيش منتج للتحليل');
   set('step1','لم يبدأ');set('step2','لم يبدأ');set('step3','لم يبدأ');
-  if(state.viewer){state.viewer.clear();state.viewer.preview('tee');state.viewer.clear();}
+  if(state.viewer){state.viewer.clear();}
 }
 function script(url,test){
   if(test())return Promise.resolve();
@@ -134,7 +134,7 @@ function updateResult(result){
 async function ensureRenderer(){
   if(state.viewer)return state.viewer;
   if(!scriptPromise){
-    scriptPromise=import('../src/fit-3d-renderer.js?v=20261118-alpha110')
+    scriptPromise=import('../src/fit-3d-renderer.js?v=20261118-auto2')
       .then(module=>{
         const renderer=new module.Fit3DRenderer($('viewer'));
         state.viewer=renderer;
@@ -162,7 +162,9 @@ function tintTemplate(category,color){
         : category==='bag'?/bag|leather|body|flap/i.test(part+' '+name)
         : category==='shoes'?/upper|shoe|fabric/i.test(part+' '+name)
         : category==='bracelet'?/bracelet|band/i.test(part+' '+name)
-        : category==='glasses'?/frame/i.test(part+' '+name):false;
+        : category==='glasses'?/frame/i.test(part+' '+name)
+        : category==='ring'?/ring band/i.test(part+' '+name)
+        : category==='earrings'?/hoop|pendant/i.test(part+' '+name):false;
       if(shouldTint){mat.color.set(color);mat.needsUpdate=true;}
     }
   });
