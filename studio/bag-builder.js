@@ -283,27 +283,20 @@ function renderReports() {
 }
 function changedReferences() {
   reconstruction = null;
-  const p = current(),
-    fit = p.fit;
-  const valid = fit?.sources.every((id) =>
-    photos.some(
-      (img) => img.id === id && ['front', 'back'].includes(img.view) && img.source === 'merchant',
-    ),
+  const consistent = results().status !== 'inconsistent-views';
+  const assigned = new Set(
+    photos
+      .filter((img) => ['front', 'back'].includes(img.view) && img.source === 'merchant')
+      .map((img) => img.id),
   );
-  // Reference assignments are outside parameter history. A removed source
-  // invalidates its fit in every history frame, including after Undo.
+  // Reference assignment is outside parameter undo. A removed or conflicting
+  // observation invalidates the affected fit in every restorable history frame.
   const clean = (item) => ({
     ...item,
-    fit: item.fit?.sources.every((id) =>
-      photos.some(
-        (img) => img.id === id && ['front', 'back'].includes(img.view) && img.source === 'merchant',
-      ),
-    )
-      ? item.fit
-      : null,
+    fit: consistent && item.fit?.sources.every((id) => assigned.has(id)) ? item.fit : null,
     approval: 'unreviewed',
   });
-  history.present = { ...p, fit: valid ? fit : null, approval: 'unreviewed' };
+  history.present = clean(current());
   history.past = history.past.map(clean);
   history.future = [];
   renderPhotos();
