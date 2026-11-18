@@ -32,7 +32,9 @@
       const dir={x:(middle.x-wrist.x)/palmLength,y:(middle.y-wrist.y)/palmLength};
       const x=wrist.x-dir.x*palmLength*.22,y=wrist.y-dir.y*palmLength*.22;
       if(!within(x,y,15))return invalid('خلّي المعصم في منتصف الكادر');
-      const widthPx=clamp(palmWidth*(category==='watch'?1.30:1.38)*adjust,25,Math.min(width*.40,150));
+      // Typical watch case is smaller than the palm width; the previous 1.3x
+      // made the dial oversized even when the wrist landmark was accurate.
+      const widthPx=clamp(palmWidth*(category==='watch'?.72:.92)*adjust,24,Math.min(width*.32,110));
       return {ok:true,x,y,widthPx,heightPx:widthPx*2.7,
         // local watch model points up (negative screen y). Rotate it to wrist -> fingers
         angle:Math.atan2(dir.x,-dir.y), yaw:clamp(((landmarks[5]?.z||0)-(landmarks[17]?.z||0))*3,-.8,.8),
