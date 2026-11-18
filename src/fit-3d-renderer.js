@@ -318,6 +318,7 @@ export class Fit3DRenderer {
     this.lastWidth=0;this.lastHeight=0;this.destroyed=false;
     this.referenceTee=null;
     this.referencePromise=null;
+    this.referenceGeneration=0;
     this.referenceStatus={status:'idle',assetId:'RAWNAK-REF-TEE-001',approved:false};
     this.useReferenceGLB=true;
   }
@@ -329,42 +330,73 @@ export class Fit3DRenderer {
     this.useReferenceGLB=Boolean(enabled);
     this.clear();
   }
+  installGarmentSource(source){
+    if(this.destroyed)return null;
+    const yFlip=new THREE.Group();
+    yFlip.name='GLB_Yup_to_camera_Ydown';
+    yFlip.rotation.x=Math.PI;
+    yFlip.add(source.source);
+    const holder=new THREE.Group();
+    holder.name=source.status==='local_unverified'?'LOCAL_GLB_UNVERIFIED':'REFERENCE_TEE_GLTF_NOT_VERIFIED';
+    holder.add(yFlip);
+    holder.visible=false;
+    holder.userData.modelWidth=source.modelWidth;
+    holder.userData.modelHeight=source.modelHeight;
+    holder.userData.assetId=source.id;
+    holder.userData.riggedGarment=true;
+    holder.userData.approved=false;
+    holder.userData.bones=source.joints;
+    const Motion=window.RawnakFitGarmentMotion;
+    holder.userData.sleeveSpring=Motion?new Motion.SleeveSpring():null;
+    if(this.referenceTee){
+      this.scene.remove(this.referenceTee);
+      disposeGroup(this.referenceTee);
+    }
+    this.referenceTee=holder;
+    this.scene.add(holder);
+    this.referenceStatus={status:source.status==='local_unverified'?'local_unverified':'ready',
+      assetId:source.id,fileName:source.fileName||null,approved:false};
+    return holder;
+  }
   async ensureReferenceGarment(){
     if(this.destroyed)return null;
     if(this.referenceTee)return this.referenceTee;
     if(this.referencePromise)return this.referencePromise;
+    const generation=++this.referenceGeneration;
     this.referenceStatus={status:'loading',assetId:'RAWNAK-REF-TEE-001',approved:false};
     this.referencePromise=(async()=>{
       const {loadReferenceGarment}=await import('./fit-glb-assets.js?v=20261118-alpha110');
       const source=await loadReferenceGarment('tee');
-      if(this.destroyed)return null;
-      const yFlip=new THREE.Group();
-      yFlip.name='GLB_Yup_to_camera_Ydown';
-      yFlip.rotation.x=Math.PI; // glTF Y-up garment hem is negative Y.
-      yFlip.add(source.source);
-      const holder=new THREE.Group();
-      holder.name='REFERENCE_TEE_GLTF_NOT_VERIFIED';
-      holder.add(yFlip);
-      holder.visible=false;
-      holder.userData.modelWidth=source.modelWidth;
-      holder.userData.modelHeight=source.modelHeight;
-      holder.userData.assetId=source.id;
-      holder.userData.riggedGarment=true;
-      holder.userData.approved=false;
-      holder.userData.bones=source.joints;
-      const Motion=window.RawnakFitGarmentMotion;
-      holder.userData.sleeveSpring=Motion?new Motion.SleeveSpring():null;
-      this.referenceTee=holder;
-      this.scene.add(holder);
-      this.referenceStatus={status:'ready',assetId:source.id,approved:false};
-      return holder;
+      if(this.destroyed||generation!==this.referenceGeneration)return null;
+      return this.installGarmentSource(source);
     })().catch(error=>{
-      this.referenceStatus={status:'error',assetId:'RAWNAK-REF-TEE-001',
-        approved:false,message:String(error?.message||error)};
-      console.warn('[RAWNAK FIT GLB] Reference garment load failed:',error);
+      if(generation===this.referenceGeneration){
+        this.referenceStatus={status:'error',assetId:'RAWNAK-REF-TEE-001',
+          approved:false,message:String(error?.message||error)};
+        console.warn('[RAWNAK FIT GLB] Reference load failed:',error);
+      }
       return null;
     }).finally(()=>{this.referencePromise=null;});
     return this.referencePromise;
+  }
+  async importLocalGarment(file){
+    if(this.destroyed)throw new Error('Renderer destroyed');
+    const generation=++this.referenceGeneration;
+    this.referenceStatus={status:'loading_local',approved:false,assetId:'LOCAL-UNVERIFIED'};
+    try{
+      const {parseLocalGarmentFile}=await import('./fit-glb-assets.js?v=20261118-alpha110');
+      const source=await parseLocalGarmentFile(file);
+      if(this.destroyed||generation!==this.referenceGeneration)return null;
+      const holder=this.installGarmentSource(source);
+      this.useReferenceGLB=true;
+      return holder;
+    }catch(error){
+      if(generation===this.referenceGeneration){
+        this.referenceStatus={status:'error',approved:false,assetId:'LOCAL-UNVERIFIED',
+          message:String(error?.message||error)};
+      }
+      throw error;
+    }
   }
   resize(width,height){
     if(width===this.lastWidth&&height===this.lastHeight)return;
