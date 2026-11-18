@@ -204,7 +204,10 @@ export class Fit3DRenderer {
     if(width===this.lastWidth&&height===this.lastHeight)return;
     this.lastWidth=width;this.lastHeight=height;
     this.renderer.setSize(width,height,false);
-    this.camera.left=0;this.camera.right=width;this.camera.top=0;this.camera.bottom=height;
+    // Camera is centered on the preview. Use centered, Y-down view extents
+    // so pixel (0,0) is top-left and a product at (x,y) sits on that exact pixel.
+    this.camera.left=-width/2;this.camera.right=width/2;
+    this.camera.top=-height/2;this.camera.bottom=height/2;
     this.camera.position.set(width/2,height/2,900);
     this.camera.lookAt(width/2,height/2,0);
     this.camera.updateProjectionMatrix();
