@@ -144,3 +144,16 @@ The 3D compositor is integrated into the same-frame synchronized mirror pipeline
 **Scope limit:** These 3D models are procedural *templates* inspired by test products; they are **not verified reconstructions of the exact reference photos**. Shirt sleeves are not skeletal-rigged, cloth does not physically flow, and scene geometry does not yet correctly hide behind hands or a human body. Approved per-SKU GLB mesh assets, UV textures, size measurements, occlusion and garment physics are separate milestones.
 
 This release was checked with JavaScript syntax, synthetic tracking-landmark calculations and a mocked 3D scene factory. **Live WebGL on Android and cross-origin merchant iframe remains unverified until the user tests it.**
+
+
+## Alpha 0.9 — Arm-following garment mesh (2026-11-18)
+
+[Rotate dynamic T-shirt in 3D without camera](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html?product=tee) · [Live merchant try-on](https://altaqawy.github.io/rawnak-fit-ai/demo/) · [Implementation details and limitations](docs/GARMENT_MOTION_ALPHA09.md)
+
+The T-shirt and jacket now support **real-time sleeve mesh deformation** from MediaPipe shoulder/elbow landmarks, with light spring smoothing. This is a low-poly CPU mesh deformation and **not full fabric physics or skeletal skinning**. The 3D inspector has a sleeve-raise slider to check the movement independently of tracking.
+
+Synchronized mode optionally restores original camera pixels for a foreground forearm where the arm crosses the shirt. The arm mask is a conservative heuristic derived from pose joints, **not reliable segmentation**. The two new live controls (`garment-motion`, `arm-occlusion`) can disable these features independently. The camera remains on-device, without generated AI video frames or recurring model tokens.
+
+Still missing for realistic merchant try-on: measured/approved GLB geometry and UV fabric textures, true body-to-cloth collisions, garment physics, person/arm segmentation and verified actual device QA. **No accurate fitting guarantee.**
+
+Static syntax and pose/motion mock scenarios were verified; WebGL, iframe camera permissions and movement quality on mobile must be checked using real devices.
