@@ -82,12 +82,12 @@ footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;borde
 <div class="result-line"><span>محرك التجهيز</span><b id="result-engine">—</b></div>
 <div class="result-line"><span>اللون من الصورة</span><b id="result-color">اضغط تحليل</b></div>
 <div class="result-line"><span>توقع نموذج التصنيف</span><b id="result-ai">لم يتم تشغيله</b></div>
-<div class="result-line"><span>موديل 3D مطابق للمنتج</span><b>غير متاح حاليًا</b></div>
-<div class="result-line"><span>المعاينة اللايف</span><b id="result-tryon">صورة AI ثنائية الأبعاد</b></div></div>
+<div class="result-line"><span>مجسم هندسي 3D للاختبار</span><b>متاح — لا يمثل المنتج بدقة</b></div><div class="result-line"><span>مجسم 3D مطابق للصور والمقاسات</span><b>غير متاح بعد</b></div>
+<div class="result-line"><span>المعاينة اللايف</span><b id="result-tryon">مجسم 3D تجريبي بعمق وإضاءة</b></div></div>
 <div class="cutout-result"><img id="cutout-image" src="" alt="قصاصة المنتج مع خلفية شفافة" loading="lazy"><div><strong>النتيجة الوسيطة: عزل صورة المنتج</strong><p>تُستعمل قصاصة أمامية لإسقاط الصورة فوق نقاط الوجه أو اليد أو الجسم. لا تعطي دوران 3D حقيقيًا.</p></div></div>
 <p class="photo-note">الأجزاء المقترحة حسب فئة المنتج، وليست أجزاء تم استخراجها تلقائيًا من الصور:</p><div id="parts" class="parts"></div>
 <div class="notice" id="quality-warning"></div>
-<div class="action-row"><a id="studio-link" class="btn secondary" href="../studio/">فتح المنتج في AutoFit Studio</a><a id="capture-link" class="btn secondary" href="../studio/capture.html">الصور المطلوبة لهذه الفئة</a></div>
+<div class="action-row"><a id="inspect-3d-link" class="btn secondary" href="../diagnostics/3d-preview.html">لف مجسم المنتج 3D</a><a id="studio-link" class="btn secondary" href="../studio/">فتح المنتج في AutoFit Studio</a><a id="capture-link" class="btn secondary" href="../studio/capture.html">الصور المطلوبة لهذه الفئة</a></div>
 <div id="tryon-slot"></div>
 </section>
 </div>
@@ -98,7 +98,7 @@ footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;borde
 <div class="stage"><div class="counter">02</div><div><h3>تحليل الصورة</h3><p>استخراج لون تقريبي من Canvas ثم تجربة MobileNet محليًا عند الطلب</p></div><span id="status-analysis" class="status off">لم يبدأ</span></div>
 <div class="stage"><div class="counter">03</div><div><h3>اختيار الفئة والأجزاء</h3><p>تحديد المحرك من بيانات المنتج وإظهار أجزاء صلبة/قماش/مفصلات ليراجعها التاجر</p></div><span id="status-parts" class="status done">قالب فئة</span></div>
 <div class="stage"><div class="counter">04</div><div><h3>إنشاء GLB ثلاثي الأبعاد</h3><p>مطلوب محرك إعادة بناء أو قالب معتمد وتأكيد القياسات والجوانب — غير متصل في النسخة الحالية</p></div><span class="status pending">غير مُنفّذ</span></div>
-<div class="stage"><div class="counter">05</div><div><h3>Live AR Try-On</h3><p>تجربة تتبع اليد أو الوجه أو الجسم؛ المعروض لسه رسمة عامة مش نفس المنتج</p></div><span id="status-tryon" class="status done">PHOTO AR 2D</span></div>
+<div class="stage"><div class="counter">05</div><div><h3>Live AR Try-On</h3><p>المحرك يعرض Mesh 3D تجريبي على نقاط الجسم واليد أو الوجه. الشكل مش إعادة بناء دقيقة لنفس SKU.</p></div><span id="status-tryon" class="status done">3D DEMO MESH</span></div>
 <div class="action-row"><button class="btn" id="analyze-button" type="button">حلل الصورة فعليًا</button><button class="btn secondary" id="reset-button" type="button">إعادة التقييم</button></div>
 <p id="analysis-message" class="info" aria-live="polite">شغّل التحليل علشان تشوف لون الصورة واقتراح MobileNet.</p>
 </section>
