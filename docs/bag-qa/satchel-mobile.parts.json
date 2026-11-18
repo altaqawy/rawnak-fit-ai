@@ -1,0 +1,1734 @@
+{
+  "schema": "rawnak.fit.bag/2",
+  "units": "m",
+  "frame": {
+    "up": "+Y",
+    "front": "+Z",
+    "origin": "base-center",
+    "handedness": "right"
+  },
+  "style": "structured",
+  "parts": [
+    {
+      "id": "body",
+      "role": "assembly",
+      "type": "assembly",
+      "parent": null,
+      "requires": [],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.1,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.28,
+        "height": 0.2,
+        "depth": 0.11
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "body",
+      "includedInGLB": true
+    },
+    {
+      "id": "front_panel",
+      "role": "panel",
+      "type": "panel",
+      "parent": "body",
+      "requires": [
+        "front"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": 30,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.09979932010173798,
+        0.04193600732833147
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2420211136341095,
+        "height": 0.19959864020347595,
+        "depth": 0.025794511660933495
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "front_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "back_panel",
+      "role": "panel",
+      "type": "panel",
+      "parent": "body",
+      "requires": [
+        "back"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": 30,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.09979932010173798,
+        -0.04193600732833147
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2420211136341095,
+        "height": 0.19959864020347595,
+        "depth": 0.025794511660933495
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "back_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "left_gusset",
+      "role": "side",
+      "type": "side",
+      "parent": "body",
+      "requires": [
+        "left"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.1198463961482048,
+        0.10300339106470346,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.039926961064338684,
+        "height": 0.19399322383105755,
+        "depth": 0.09492038935422897
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "left_gusset",
+      "includedInGLB": true
+    },
+    {
+      "id": "right_gusset",
+      "role": "side",
+      "type": "side",
+      "parent": "body",
+      "requires": [
+        "right"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.1198463961482048,
+        0.10300339106470346,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.039926961064338684,
+        "height": 0.19399322383105755,
+        "depth": 0.09492038935422897
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "right_gusset",
+      "includedInGLB": true
+    },
+    {
+      "id": "bottom_panel",
+      "role": "bottom",
+      "type": "bottom",
+      "parent": "body",
+      "requires": [
+        "bottom"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.00559999980032444,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.25200000405311584,
+        "height": 0.01119999960064888,
+        "depth": 0.09570000320672989
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "bottom_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "opening",
+      "role": "opening",
+      "type": "opening",
+      "parent": "body",
+      "requires": [
+        "top",
+        "open"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.19455536454916,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.24266380071640015,
+        "height": 0.012700125575065613,
+        "depth": 0.0772356241941452
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "opening",
+      "includedInGLB": true
+    },
+    {
+      "id": "piping",
+      "role": "piping",
+      "type": "piping",
+      "parent": "body",
+      "requires": [
+        "front",
+        "back",
+        "detail"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.006464646721724421,
+        -2.421438694000244e-8
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.25628724694252014,
+        "height": 0.010956444661132991,
+        "depth": 0.0993247739970684
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "piping",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_front_left",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "front",
+        "left",
+        "detail"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.11117831990122795,
+        0.10264948476105928,
+        0.03987071290612221
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.022569023072719574,
+        "height": 0.19472607038915157,
+        "depth": 0.018938273191452026
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "front_panel",
+        "left_gusset"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_front_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_front_right",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "front",
+        "right",
+        "detail"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.11278427764773369,
+        0.10264948476105928,
+        0.03969171456992626
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.023351721465587616,
+        "height": 0.19472607038915157,
+        "depth": 0.018580276519060135
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "right_gusset",
+        "front_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_front_right",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_back_right",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "back",
+        "right",
+        "detail"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.1111859492957592,
+        0.10266385553404689,
+        -0.039772369898855686
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.022584281861782074,
+        "height": 0.19467819575220346,
+        "depth": 0.01913495920598507
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "back_panel",
+        "right_gusset"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_back_right",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_back_left",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "back",
+        "left",
+        "detail"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.11279604583978653,
+        0.10266385553404689,
+        -0.03949704300612211
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.023328185081481934,
+        "height": 0.19467819575220346,
+        "depth": 0.01858430542051792
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "left_gusset",
+        "back_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_back_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "base_insert",
+      "role": "reinforcement",
+      "type": "reinforcement",
+      "parent": "bottom_panel",
+      "requires": [
+        "bottom",
+        "inside"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.00922010000795126,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2485654205083847,
+        "height": 0.008911199867725372,
+        "depth": 0.09157776832580566
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "bottom_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "base_insert",
+      "includedInGLB": true
+    },
+    {
+      "id": "lining",
+      "role": "interior",
+      "type": "interior",
+      "parent": "body",
+      "requires": [
+        "inside"
+      ],
+      "material": "polyester",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.09885820234194398,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.27435141801834106,
+        "height": 0.18402798008173704,
+        "depth": 0.10432273894548416
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "lining",
+      "includedInGLB": true
+    },
+    {
+      "id": "compartment_1",
+      "role": "compartment",
+      "type": "compartment",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "air",
+      "behavior": "fixed",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "fixed",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        1.115888366208675e-17,
+        0.08073500000000002,
+        -0.0343814274509804
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.23800000000000002,
+        "height": 0.136,
+        "depth": 0.03666666666666667
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "kind": "empty-lined-volume",
+        "normalizedDepthInterval": [
+          -1,
+          -0.33333333333333337
+        ]
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "compartment_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "divider_1",
+      "role": "interior_partition",
+      "type": "interior_partition",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "polyester",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.07911716750822961,
+        -0.014910831581801176
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.273867130279541,
+        "height": 0.143376134801656,
+        "depth": 0.004953351803123951
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "divider_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "compartment_2",
+      "role": "compartment",
+      "type": "compartment",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "air",
+      "behavior": "fixed",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "fixed",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        9.291637178071645e-34,
+        0.08073500000000002,
+        -2.862828928166838e-18
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.23800000000000002,
+        "height": 0.136,
+        "depth": 0.03666666666666667
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "kind": "empty-lined-volume",
+        "normalizedDepthInterval": [
+          -0.33333333333333337,
+          0.33333333333333326
+        ]
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "compartment_2",
+      "includedInGLB": true
+    },
+    {
+      "id": "divider_2",
+      "role": "interior_partition",
+      "type": "interior_partition",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "polyester",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.07911806902848184,
+        0.015034649055451155
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.273867130279541,
+        "height": 0.14337793784216046,
+        "depth": 0.004705716855823994
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "divider_2",
+      "includedInGLB": true
+    },
+    {
+      "id": "compartment_3",
+      "role": "compartment",
+      "type": "compartment",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "air",
+      "behavior": "fixed",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "fixed",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.08073500000000002,
+        0.03438142745098039
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.23800000000000002,
+        "height": 0.136,
+        "depth": 0.036666666666666674
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "kind": "empty-lined-volume",
+        "normalizedDepthInterval": [
+          0.33333333333333326,
+          1
+        ]
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "compartment_3",
+      "includedInGLB": true
+    },
+    {
+      "id": "inner_open_pocket_1",
+      "role": "open_pocket",
+      "type": "open_pocket",
+      "parent": "lining",
+      "requires": [
+        "pockets"
+      ],
+      "material": "polyester",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.0794118233025074,
+        0.04572354070842266
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.20052114129066467,
+        "height": 0.09811704605817795,
+        "depth": 0.012293901294469833
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "inner_open_pocket_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "inner_zip_pocket_1",
+      "role": "zip_pocket",
+      "type": "zip_pocket",
+      "parent": "lining",
+      "requires": [
+        "pockets"
+      ],
+      "material": "polyester",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.07941218093037605,
+        -0.04563417471945286
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.20052114129066467,
+        "height": 0.09811776131391525,
+        "depth": 0.012472633272409439
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "inner_zip_pocket_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "inner_zip_pocket_1_slider",
+      "role": "pocket_slider",
+      "type": "pocket_slider",
+      "parent": "inner_zip_pocket_1",
+      "requires": [
+        "pockets"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": true,
+      "joint": "slider",
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        -0.09689080594747804,
+        0.1275736833398945,
+        -0.04456371752953266
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.00989999994635582,
+        "height": 0.00989999994635582,
+        "depth": 0.00989999994635582
+      },
+      "thicknessM": null,
+      "anchors": {
+        "start": [
+          -0.09689080594747804,
+          0.1275736833398945,
+          -0.04456371752953266
+        ],
+        "end": [
+          0.09689080594747806,
+          0.1275736833398945,
+          -0.044563717529532657
+        ]
+      },
+      "connections": [
+        "inner_zip_pocket_1"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": {
+        "unit": "path-fraction",
+        "min": 0,
+        "max": 1
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "inner_zip_pocket_1_slider",
+      "includedInGLB": true
+    },
+    {
+      "id": "handle_1_tab_a",
+      "role": "attachment_loop",
+      "type": "attachment_loop",
+      "parent": "closure",
+      "requires": [
+        "strap"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.0656279306858778,
+        0.20976001523765325,
+        0.012870932047657876
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.016444776207208633,
+        "height": 0.011188795112919814,
+        "depth": 0.012196799839720544
+      },
+      "thicknessM": null,
+      "anchors": {
+        "sewn": [
+          -0.06562792848765293,
+          0.20557681768287123,
+          0.0020349319658402795
+        ],
+        "loop": [
+          -0.06562792848765293,
+          0.21918481768287124,
+          0.00657093196584028
+        ]
+      },
+      "connections": [
+        "closure"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "handle_1_tab_a",
+      "includedInGLB": true
+    },
+    {
+      "id": "handle_1_ring_a",
+      "role": "ring",
+      "type": "ring",
+      "parent": "handle_1_tab_a",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.06562792848765293,
+        0.21918481768287124,
+        0.00657093196584028
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.02399040013551712,
+        "height": 0.02399040013551712,
+        "depth": 0.003734363941475749
+      },
+      "thicknessM": null,
+      "anchors": {
+        "center": [
+          -0.06562792848765293,
+          0.21918481768287124,
+          0.00657093196584028
+        ],
+        "attachment": [
+          -0.06562792848765293,
+          0.22845841768287123,
+          0.00657093196584028
+        ]
+      },
+      "connections": [
+        "handle_1_tab_a"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "handle_1_ring_a",
+      "includedInGLB": true
+    },
+    {
+      "id": "handle_1_tab_b",
+      "role": "attachment_loop",
+      "type": "attachment_loop",
+      "parent": "closure",
+      "requires": [
+        "strap"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.0656279306858778,
+        0.20976001523765322,
+        0.012870932047657876
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.016444776207208633,
+        "height": 0.01118879511291987,
+        "depth": 0.012196799839720544
+      },
+      "thicknessM": null,
+      "anchors": {
+        "sewn": [
+          0.0656279284876529,
+          0.20557681768287117,
+          0.0020349319658402795
+        ],
+        "loop": [
+          0.0656279284876529,
+          0.21918481768287118,
+          0.00657093196584028
+        ]
+      },
+      "connections": [
+        "closure"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "handle_1_tab_b",
+      "includedInGLB": true
+    },
+    {
+      "id": "handle_1_ring_b",
+      "role": "ring",
+      "type": "ring",
+      "parent": "handle_1_tab_b",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.0656279284876529,
+        0.21918481768287118,
+        0.00657093196584028
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.02399040013551712,
+        "height": 0.02399040013551712,
+        "depth": 0.003734363941475749
+      },
+      "thicknessM": null,
+      "anchors": {
+        "center": [
+          0.0656279284876529,
+          0.21918481768287118,
+          0.00657093196584028
+        ],
+        "attachment": [
+          0.0656279284876529,
+          0.22845841768287117,
+          0.00657093196584028
+        ]
+      },
+      "connections": [
+        "handle_1_tab_b"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "handle_1_ring_b",
+      "includedInGLB": true
+    },
+    {
+      "id": "handle_1",
+      "role": "handle",
+      "type": "handle",
+      "parent": "closure",
+      "requires": [
+        "strap",
+        "handles"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": true,
+      "joint": "handle_anchor",
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        1.0274907313867487e-10,
+        0.27466807489110856,
+        0.006638158088905034
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.13652265863493085,
+        "height": 0.09287978407519404,
+        "depth": 0.01947354804724455
+      },
+      "thicknessM": null,
+      "anchors": {
+        "a": [
+          -0.06562792848765293,
+          0.22845841768287123,
+          0.00657093196584028
+        ],
+        "b": [
+          0.0656279284876529,
+          0.22845841768287117,
+          0.00657093196584028
+        ],
+        "carry": [
+          -4.5102810375396984e-17,
+          0.31845841768287114,
+          0.00657093196584028
+        ]
+      },
+      "connections": [
+        "handle_1_ring_a",
+        "handle_1_ring_b"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "requestedLengthM": null,
+        "actualCenterlineM": 0.2594813672780854,
+        "minimumSpanM": 0.13125585697530584,
+        "widthM": 0.0182,
+        "handleDropM": 0.09
+      },
+      "range": {
+        "unit": "degrees",
+        "min": -32,
+        "max": 32,
+        "axis": [
+          1,
+          -4.2292323185015324e-16,
+          0
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "attachmentFrame": "closure",
+      "node": "HANDLE_ANCHOR_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "closure",
+      "role": "flap",
+      "type": "flap",
+      "parent": "opening",
+      "requires": [
+        "closure",
+        "open"
+      ],
+      "material": "faux_leather",
+      "behavior": "rigid",
+      "moving": true,
+      "joint": "hinge",
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        -0.00004841387271878328,
+        0.16011619556844237,
+        0.011719382516926953
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2741697430610657,
+        "height": 0.09433988854289055,
+        "depth": 0.09691876497655895
+      },
+      "thicknessM": null,
+      "anchors": {
+        "hinge": [
+          1.4401846357972875e-17,
+          0.19840000000000002,
+          -0.035750000000000004
+        ],
+        "axisStart": [
+          -0.09840423831128597,
+          0.19840000000000002,
+          -0.035750000000000004
+        ],
+        "axisEnd": [
+          0.09840423831128602,
+          0.19840000000000002,
+          -0.035750000000000004
+        ]
+      },
+      "connections": [
+        "opening"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": {
+        "unit": "degrees",
+        "min": 0,
+        "max": 112,
+        "axis": [
+          -1,
+          0,
+          0
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "CLOSURE_HINGE",
+      "includedInGLB": true
+    }
+  ],
+  "anchors": {
+    "handle_1_a": {
+      "node": "anchor_handle_1_a",
+      "position": [
+        -0.06562792848765293,
+        0.22845841768287123,
+        0.00657093196584028
+      ]
+    },
+    "handle_1_b": {
+      "node": "anchor_handle_1_b",
+      "position": [
+        0.0656279284876529,
+        0.22845841768287117,
+        0.00657093196584028
+      ]
+    },
+    "handle_1_carry": {
+      "node": "anchor_handle_1_carry",
+      "position": [
+        -4.5102810375396984e-17,
+        0.31845841768287114,
+        0.00657093196584028
+      ]
+    },
+    "base": {
+      "node": "anchor_base",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    "opening": {
+      "node": "anchor_opening",
+      "position": [
+        0,
+        0.19840000000000002,
+        0
+      ]
+    }
+  },
+  "carryingModes": [
+    {
+      "mode": "handheld",
+      "part": "handle_1",
+      "anchor": "anchor_handle_1_carry",
+      "attachments": [
+        "anchor_handle_1_a",
+        "anchor_handle_1_b"
+      ]
+    }
+  ],
+  "profile": "mobile",
+  "animations": [
+    {
+      "name": "Closure",
+      "channel": "opening",
+      "seconds": 1,
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "Carriers",
+      "channel": "swing",
+      "seconds": 1,
+      "range": [
+        -1,
+        1
+      ]
+    },
+    {
+      "name": "Pocket zippers",
+      "channel": "pockets",
+      "seconds": 1,
+      "range": [
+        0,
+        1
+      ]
+    }
+  ],
+  "performance": {
+    "triangles": 12760,
+    "draws": 71,
+    "textureLimit": 512
+  },
+  "pose": "closed-neutral",
+  "materials": {
+    "outer": "faux_leather",
+    "lining": "polyester",
+    "baseColor": "#6e4336",
+    "metalColor": "#d9be80",
+    "source": [],
+    "fallback": "procedural-PBR",
+    "finishes": {
+      "skin": {
+        "color": "#6e4336",
+        "roughness": 0.49,
+        "metalness": 0
+      },
+      "trim": {
+        "color": "#633c30",
+        "roughness": 0.49,
+        "metalness": 0
+      },
+      "lining": {
+        "color": "#ac8773",
+        "roughness": 0.85,
+        "metalness": 0
+      },
+      "edge": {
+        "color": "#4a2c22",
+        "roughness": 0.6,
+        "metalness": 0
+      },
+      "thread": {
+        "color": "#c4a57e",
+        "roughness": 0.87,
+        "metalness": 0
+      },
+      "metal": {
+        "color": "#d9be80",
+        "roughness": 0.25,
+        "metalness": 0.82
+      },
+      "zip": {
+        "color": "#61584c",
+        "roughness": 0.44,
+        "metalness": 0.58
+      },
+      "plastic": {
+        "color": "#37352f",
+        "roughness": 0.38,
+        "metalness": 0
+      },
+      "art": {
+        "color": "#ffffff",
+        "roughness": 0.68,
+        "metalness": 0
+      }
+    }
+  },
+  "verification": {
+    "merchantReview": "unreviewed",
+    "photoGeometryVerified": false,
+    "dimensionsVerified": false,
+    "physicalSimulation": false,
+    "retailARReady": false
+  }
+}

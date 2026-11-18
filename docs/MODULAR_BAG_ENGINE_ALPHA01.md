@@ -1,5 +1,7 @@
 # RAWNAK FIT — Modular Bag Engine Alpha 0.1
 
+The current builder and export contract are documented in [Bag Atelier](BAG_ATELIER.md). This page records the original Alpha 0.1 design.
+
 Date: 2026-11-18  
 [Live structured bag-builder pilot](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html)
 

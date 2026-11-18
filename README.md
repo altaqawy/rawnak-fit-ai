@@ -203,10 +203,8 @@ The merchant supplies **images only**. All manual fields (category, angle tags, 
 Previous manual measurement and QA work remains archived in code for the developer workflow, but **is not required of sellers**. The next R&D milestone is category-specific image segmentation, silhouette deformation, real product texture projection, and automated comparison before merchant publication. See [Issue #6](https://github.com/altaqawy/rawnak-fit-ai/issues/6).
 
 
-## NEW — Modular Bag Builder (structure + photos + review)
+## Bag Atelier
 
-The female-handbag workflow now has an [advanced structure-first Bag Builder](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html). It lets merchant owners specify real dimensions, exterior and interior compartments, pockets, material flexibility, closure type, strap/handle configuration and brand placement, then upload the corresponding photo views. It assembles a **part-separated, parametric 3D structural preview**, illustrates flap/strap motions and interior partitions, provides optional part rigidity/movability corrections, and can export **GLB + Parts JSON** locally. The full [implementation and limitations are documented here](docs/MODULAR_BAG_ENGINE_ALPHA01.md).
+Build an editable handbag from its construction, dimensions and reference photographs. Eight family patterns share sewn components, an inspectable cavity and constrained carrying and closure mechanisms. The local editor exports the editable project, a component graph for AR integration and an animated GLB. Frontal silhouettes can guide the body outline. Merchant review and product-fidelity verification are recorded separately.
 
-The model is generated from **structured measurements and simple geometry**, not a faithful AI reconstruction of the seller's photographs yet. Hidden inner pockets/lining, closure mechanisms, true softness and actual bag style will require category-specific image-part reconstruction, template meshes and review. All accuracy/merchant certification and AR publishing states remain false.
-
-The [Photo-Only Studio](https://altaqawy.github.io/rawnak-fit-ai/studio/library.html) remains available as a simpler alternative. The newly requested advanced handbag flow **does ask for structure/dimensions and external/interior images**, then uses them as a supervised target for future accurate reconstruction.
+[Open the Bag Builder](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html) · [Capabilities, limitations and integration contract](docs/BAG_ATELIER.md) · [Family renders](docs/bag-qa/families.webp) · [Inspection views](docs/bag-qa/inspection.webp)

@@ -1,0 +1,87 @@
+{
+  "browser": "153.0.8010.0",
+  "roundTrip": {
+    "meshCount": 70,
+    "anchorCount": 5,
+    "animations": [
+      "Closure",
+      "Carriers",
+      "Pocket zippers"
+    ],
+    "covered": 1554,
+    "bytes": 509220,
+    "logoEmbedded": true
+  },
+  "closures": [
+    {
+      "meshCount": 68,
+      "anchorCount": 5,
+      "animations": [
+        "Closure",
+        "Carriers",
+        "Pocket zippers"
+      ],
+      "covered": 936,
+      "bytes": 614144,
+      "logoEmbedded": false
+    },
+    {
+      "meshCount": 65,
+      "anchorCount": 5,
+      "animations": [
+        "Closure",
+        "Carriers",
+        "Pocket zippers"
+      ],
+      "covered": 1056,
+      "bytes": 584532,
+      "logoEmbedded": false
+    },
+    {
+      "meshCount": 62,
+      "anchorCount": 5,
+      "animations": [
+        "Closure",
+        "Carriers",
+        "Pocket zippers"
+      ],
+      "covered": 817,
+      "bytes": 424008,
+      "logoEmbedded": false
+    }
+  ],
+  "sample": {
+    "meshCount": 71,
+    "anchorCount": 5,
+    "animations": [
+      "Closure",
+      "Carriers",
+      "Pocket zippers"
+    ],
+    "covered": 1658,
+    "bytes": 521648,
+    "logoEmbedded": false
+  },
+  "memory": {
+    "rebuilds": 12,
+    "first": {
+      "geometries": 70,
+      "textures": 5
+    },
+    "last": {
+      "geometries": 70,
+      "textures": 5
+    },
+    "structured": {
+      "buildAndDrawMs": 172,
+      "triangles": 12280,
+      "draws": 69,
+      "textureLimit": 512,
+      "memory": {
+        "geometries": 70,
+        "textures": 5
+      }
+    }
+  },
+  "snapshots": 17
+}
