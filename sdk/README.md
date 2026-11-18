@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-05"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-06"></script>
 
 Then place the component next to your add-to-cart button:
 
@@ -104,3 +104,6 @@ The standalone and embedded camera now default to **3D WebGL demonstration meshe
 
 ### Alpha 0.9: live moving sleeves
 The existing embedded Three.js camera scene now offers garment sleeve deformation (low-poly CPU vertex updates) and experimental same-frame arm overlap in synchronized mode, with explicit toggle controls. These are not verified full skeletal skinning or cloth simulation. Read [Alpha 0.9 implementation](../docs/GARMENT_MOTION_ALPHA09.md). The SDK beta version in the embedded URL is `0.3.1`.
+
+### Alpha 1.0 rounded 3D garment
+The 3D shirt and jacket now use a curved, indexed open-surface mesh, a front/back crew neckline, separate pivoting tubular sleeves, seam rings and a small procedural weave texture. The 3D model inspector supports direct touch dragging and zoom. Geometry is still a demo, not an approved product replica or physical sizing. SDK embed version: 0.3.2. [Details](../docs/ROUNDED_GARMENT_ALPHA10.md).
