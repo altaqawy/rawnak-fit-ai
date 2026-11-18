@@ -715,7 +715,7 @@
         const output = state.three.render(state.selected.id, state.landmarks, {
           width:w,height:h,project,worldLandmarks:state.worldLandmarks,scale:state.sizeScale
         });
-        state.fitHint = output.ok ? '' : output.reason;
+        state.fitHint = output.ok ? (output.placement?.approximate ? output.placement.reason : '') : output.reason;
         if (output.ok && state.viewMode === 'sync') {
           // Same analyzed camera frame + its 3D output on the same composed canvas.
           ctx.drawImage(output.canvas,0,0,w,h);
