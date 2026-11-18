@@ -316,6 +316,55 @@ export class Fit3DRenderer {
       mesh.visible=false;this.meshes[id]=mesh;this.scene.add(mesh);
     }
     this.lastWidth=0;this.lastHeight=0;this.destroyed=false;
+    this.referenceTee=null;
+    this.referencePromise=null;
+    this.referenceStatus={status:'idle',assetId:'RAWNAK-REF-TEE-001',approved:false};
+    this.useReferenceGLB=true;
+  }
+  getActiveModel(category){
+    return category==='tee' && this.useReferenceGLB && this.referenceTee
+      ? this.referenceTee : this.meshes[category];
+  }
+  setUseReferenceGLB(enabled){
+    this.useReferenceGLB=Boolean(enabled);
+    this.clear();
+  }
+  async ensureReferenceGarment(){
+    if(this.destroyed)return null;
+    if(this.referenceTee)return this.referenceTee;
+    if(this.referencePromise)return this.referencePromise;
+    this.referenceStatus={status:'loading',assetId:'RAWNAK-REF-TEE-001',approved:false};
+    this.referencePromise=(async()=>{
+      const {loadReferenceGarment}=await import('./fit-glb-assets.js?v=20261118-alpha110');
+      const source=await loadReferenceGarment('tee');
+      if(this.destroyed)return null;
+      const yFlip=new THREE.Group();
+      yFlip.name='GLB_Yup_to_camera_Ydown';
+      yFlip.rotation.x=Math.PI; // glTF Y-up garment hem is negative Y.
+      yFlip.add(source.source);
+      const holder=new THREE.Group();
+      holder.name='REFERENCE_TEE_GLTF_NOT_VERIFIED';
+      holder.add(yFlip);
+      holder.visible=false;
+      holder.userData.modelWidth=source.modelWidth;
+      holder.userData.modelHeight=source.modelHeight;
+      holder.userData.assetId=source.id;
+      holder.userData.riggedGarment=true;
+      holder.userData.approved=false;
+      holder.userData.bones=source.joints;
+      const Motion=window.RawnakFitGarmentMotion;
+      holder.userData.sleeveSpring=Motion?new Motion.SleeveSpring():null;
+      this.referenceTee=holder;
+      this.scene.add(holder);
+      this.referenceStatus={status:'ready',assetId:source.id,approved:false};
+      return holder;
+    })().catch(error=>{
+      this.referenceStatus={status:'error',assetId:'RAWNAK-REF-TEE-001',
+        approved:false,message:String(error?.message||error)};
+      console.warn('[RAWNAK FIT GLB] Reference garment load failed:',error);
+      return null;
+    }).finally(()=>{this.referencePromise=null;});
+    return this.referencePromise;
   }
   resize(width,height){
     if(width===this.lastWidth&&height===this.lastHeight)return;
@@ -331,12 +380,13 @@ export class Fit3DRenderer {
   }
   clear(){
     Object.values(this.meshes).forEach(mesh=>{mesh.visible=false;});
+    if (this.referenceTee) this.referenceTee.visible=false;
     if (this.secondShoe) this.secondShoe.visible = false;
     this.renderer.clear();
   }
   updateGarment(category,landmarks,placement,options){
     if(category!=='tee'&&category!=='jacket')return;
-    const garment=this.meshes[category],motion=window.RawnakFitGarmentMotion;
+    const garment=this.getActiveModel(category),motion=window.RawnakFitGarmentMotion;
     if(!garment||!motion)return;
     const sleeves=garment.userData.sleeves;
     const spring=garment.userData.sleeveSpring;
@@ -347,8 +397,17 @@ export class Fit3DRenderer {
       : {left:0,right:0};
     const dynamics=enabled&&spring
       ? spring.update(targets,Date.now()) : {left:0,right:0,phase:0,energy:0};
-    // Each sleeve rotates as its own volumetric fabric tube around a shoulder.
-    // This retains a realistic torso shape instead of bending the whole T-shirt.
+    // Imported GLB: native glTF skinning weighs vertices against named joint
+    // transforms. Local source mesh is Y-up and flipped 180deg into camera Y-down.
+    if(garment.userData.riggedGarment){
+      const bones=garment.userData.bones;
+      if(bones){
+        bones.left.rotation.z=-Math.max(-1.1,Math.min(1.1,dynamics.left*.92));
+        bones.right.rotation.z=-Math.max(-1.1,Math.min(1.1,dynamics.right*.92));
+      }
+      return;
+    }
+    // Legacy procedural mesh, used only for explicit comparison or load failure.
     if(sleeves){
       sleeves.left.rotation.z=Math.max(-1.1,Math.min(1.1,dynamics.left*.92));
       sleeves.right.rotation.z=Math.max(-1.1,Math.min(1.1,dynamics.right*.92));
@@ -378,7 +437,13 @@ export class Fit3DRenderer {
   }
   resetGarment(category){
     if(category!=='tee'&&category!=='jacket')return;
-    const obj=this.meshes[category];
+    const obj=this.getActiveModel(category);
+    if(obj?.userData.riggedGarment){
+      const bones=obj.userData.bones;
+      if(bones){bones.left.rotation.z=0;bones.right.rotation.z=0;}
+      obj.userData.sleeveSpring?.reset();
+      return;
+    }
     const garment=obj?.userData.garmentMesh,rest=obj?.userData.restPositions;
     if(obj?.userData.sleeves){
       obj.userData.sleeves.left.rotation.z=0;
@@ -400,7 +465,7 @@ export class Fit3DRenderer {
     const placement=solve.compute(category,landmarks,{width,height,project,worldLandmarks,scale});
     if(!placement.ok){this.clear();return placement;}
     this.clear();
-    const mesh=this.meshes[category];
+    const mesh=this.getActiveModel(category);
     if(!mesh){return {ok:false,reason:'مجسم غير متاح للفئة'};}
     if(category==='shoes'){
       // One 3D shoe per detected ankle, both with depth and lighting.
@@ -440,14 +505,19 @@ export class Fit3DRenderer {
     const height=Math.max(240,this.canvas.parentElement?.clientHeight||430);
     this.resize(width,height);
     this.clear();
-    const mesh=this.meshes[category];
+    const mesh=this.getActiveModel(category);
     if(!mesh)return false;
     mesh.visible=true;
     this.resetGarment(category);
-    if((category==='tee'||category==='jacket') && mesh.userData.sleeves){
+    if((category==='tee'||category==='jacket')){
       const a=Math.max(-1.12,Math.min(1.12,Number(sleeveAngle)||0));
-      mesh.userData.sleeves.left.rotation.z=a;
-      mesh.userData.sleeves.right.rotation.z=-a;
+      if(mesh.userData.riggedGarment){
+        mesh.userData.bones.left.rotation.z=-a;
+        mesh.userData.bones.right.rotation.z=a;
+      } else if(mesh.userData.sleeves){
+        mesh.userData.sleeves.left.rotation.z=a;
+        mesh.userData.sleeves.right.rotation.z=-a;
+      }
     }
     const fitted=Math.min(width*.62/mesh.userData.modelWidth,
       height*.70/mesh.userData.modelHeight)*Math.min(1.3,Math.max(.7,scale));
@@ -464,6 +534,7 @@ export class Fit3DRenderer {
     if(this.destroyed)return;
     this.destroyed=true;
     for(const mesh of Object.values(this.meshes))disposeGroup(mesh);
+    if(this.referenceTee)disposeGroup(this.referenceTee);
     if(this.secondShoe)disposeGroup(this.secondShoe);
     this.renderer.dispose();
     this.canvas.remove();
