@@ -29,11 +29,11 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
-assert.ok(html.includes('ALPHA 0.9'), 'HTML and release version updated');
-assert.ok(html.includes('src="./src/app.js?v=20261118-alpha090"'), 'JS has explicit cache busting version');
-assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha090"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('ALPHA 1.0'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261118-alpha100"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha100"'), 'CSS has explicit cache busting version');
 assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
-assert.ok(app.includes("const BUILD_ID = '2026.11.18.090'"), 'runtime identifies compiled source');
+assert.ok(app.includes("const BUILD_ID = '2026.11.18.100'"), 'runtime identifies compiled source');
 assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 assert.ok(html.includes('id="sync-canvas"'), 'frame synchronized output exists');
 assert.ok(html.includes('id="mode-sync"') && html.includes('id="mode-fast"'), 'sync/fast mode selectors exist');
@@ -58,7 +58,7 @@ assert.ok(existsSync(path.join(root, 'tests/demo-products.test.mjs')), 'product 
 
 assert.ok(existsSync(path.join(root,'src/fit-calibration.js')), 'body-relative calibration source exists');
 assert.ok(existsSync(path.join(root,'tests/body-calibration.test.mjs')), 'calibration regressions exist');
-assert.ok(html.includes('src="./src/fit-calibration.js?v=20261118-alpha090"'), 'calibration helper is loaded before runtime');
+assert.ok(html.includes('src="./src/fit-calibration.js?v=20261118-alpha100"'), 'calibration helper is loaded before runtime');
 assert.ok(html.indexOf('src="./src/fit-calibration.js') < html.indexOf('src="./src/app.js'), 'calibration helper runs before camera app');
 assert.ok(html.includes('id="fit-guide"') && html.includes('id="fit-scale"'), 'camera guidance + preview scale control exist');
 assert.ok(app.includes('fitGeometry.createPlacement('), 'Photo AR uses relative body geometry instead of fixed viewport sizes');
@@ -67,7 +67,7 @@ assert.ok(app.includes('if (state.demoImageReady) drawDemoPhoto(ctx, state.landm
 assert.ok(existsSync(path.join(root,'src/fit-3d-renderer.js')), 'real 3D WebGL renderer exists');
 assert.ok(existsSync(path.join(root,'src/fit-3d-pose.js')), '3D pose anchor helper exists');
 assert.ok(existsSync(path.join(root,'tests/fit-3d.test.mjs')), '3D position regression tests exist');
-assert.ok(html.includes('src="./src/fit-3d-pose.js?v=20261118-alpha090"'), '3D helper loaded before app');
+assert.ok(html.includes('src="./src/fit-3d-pose.js?v=20261118-alpha100"'), '3D helper loaded before app');
 assert.ok(html.includes('id="asset-3d"'), '3D renderer selection in the mirror');
 assert.ok(app.includes("assetMode: '3d'"), '3D is the default for demo products');
 assert.ok(app.includes('ctx.drawImage(output.canvas,0,0,w,h)'), '3D scene combined with same analyzed frame');
@@ -76,10 +76,17 @@ assert.ok(existsSync(path.join(root,'src/fit-garment-motion.js')), 'garment defo
 assert.ok(existsSync(path.join(root,'src/fit-arm-occlusion.js')), 'same-frame forearm helper exists');
 assert.ok(existsSync(path.join(root,'tests/garment-motion.test.mjs')), 'garment motion regressions exist');
 assert.ok(html.includes('id="garment-motion"') && html.includes('id="arm-occlusion"'), 'garment options have real controls');
-assert.ok(html.indexOf('fit-garment-motion.js?v=20261118-alpha090') <
-  html.indexOf('app.js?v=20261118-alpha090'), 'motion loaded before app');
-assert.ok(html.indexOf('fit-arm-occlusion.js?v=20261118-alpha090') <
-  html.indexOf('app.js?v=20261118-alpha090'), 'occlusion helper loaded before app');
+assert.ok(html.indexOf('fit-garment-motion.js?v=20261118-alpha100') <
+  html.indexOf('app.js?v=20261118-alpha100'), 'motion loaded before app');
+assert.ok(html.indexOf('fit-arm-occlusion.js?v=20261118-alpha100') <
+  html.indexOf('app.js?v=20261118-alpha100'), 'occlusion helper loaded before app');
 assert.ok(app.includes('garmentMotion:state.garmentMotion'), 'garment motion state passed to renderer');
 assert.ok(app.includes('RawnakFitArmOcclusion.restoreArms(ctx,sampleCanvas'), 'occlusion uses same captured frame');
+assert.ok(existsSync(path.join(root,'tests/garment-surface.test.mjs')), 'smooth garment test exists');
+assert.ok(html.includes('ALPHA 1.0'), 'curved-cloth model is the current build');
+const garment3D=readFileSync(path.join(root,'src/fit-3d-renderer.js'),'utf8');
+assert.ok(garment3D.includes('function parametricShell('), 'curved fabric surface generator');
+assert.ok(garment3D.includes('function cottonWeaveTexture('), 'small local textile texture');
+assert.ok(garment3D.includes('userData.sleeves'), 'independent animated sleeve geometry');
+assert.ok(garment3D.includes('sleeves.left.rotation.z'), 'shoulder-driven motion on 3D sleeves');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');
