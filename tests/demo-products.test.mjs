@@ -48,12 +48,15 @@ test('processing page exposes real analysis, clearly separates unfinished model 
   assert.ok(studio.includes('void openDemoFixture()'),'can import real test photos into Studio');
 });
 
-test('photo AR user can switch to previous schematic mode and all SKU paths are allowlisted',()=>{
+test('3D is default while optional 2D comparison stays allowlisted',()=>{
   const app=text('src/app.js'), html=text('index.html');
   assert.ok(app.includes('demoAssetPaths = Object.freeze'));
   assert.ok(app.includes("state.assetMode === 'photo'"));
   assert.ok(app.includes("state.assetMode = 'generic'"));
   assert.ok(app.includes('drawDemoPhoto(ctx, state.landmarks, w, h)'));
   assert.ok(html.includes('id="asset-photo"')&&html.includes('id="asset-generic"'));
-  assert.ok(html.includes('PHOTO AR'));
+  assert.ok(html.includes('LIVE 3D MESH'));
+  assert.ok(html.includes('id="asset-3d"'));
+  assert.ok(app.includes("assetMode: '3d'"));
+  assert.ok(app.includes("state.three.render(state.selected.id"));
 });
