@@ -21,6 +21,8 @@ jobs:
         run: |
           node --check src/app.js
           node --check src/fit-calibration.js
+          node --check src/fit-3d-pose.js
+          node --check src/fit-3d-renderer.js
       - name: Check model diagnostics syntax
         run: node --check tests/frame-sync.smoke.mjs
       - name: Check project UI contracts
@@ -38,6 +40,8 @@ jobs:
         run: node --test studio/tests/*.test.mjs
       - name: Test body fit calibration and alignment
         run: node --test tests/body-calibration.test.mjs
+      - name: Test live 3D pose and real mesh pipeline
+        run: node --test tests/fit-3d.test.mjs
       - name: Check SDK script syntax
         run: |
           node --check sdk/rawnak-fit.js
