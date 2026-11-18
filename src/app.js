@@ -1,7 +1,8 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.070';
+  const BUILD_ID = '2026.11.18.080';
   const fitGeometry = window.RawnakFitCalibration;
+  const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
   const LIVE_INTERVAL_MS = 65; // 15 Hz target, avoids overloading slow phones
   const $ = (selector) => document.querySelector(selector);
@@ -52,7 +53,7 @@
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
-    fitHint: '', sizeScale: 1, assetMode: demoAsset ? 'photo' : 'generic'
+    fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: ''
   };
 
   if (isEmbedded) {
@@ -65,7 +66,7 @@
       const safeVariant = String(params.get('variant') || '').slice(0, 96);
       info.textContent = '✳ ' + safeName + (safeSku ? ' · ' + safeSku : '') +
         (safeVariant ? ' · ' + safeVariant : '') +
-        ' — ' + (demoAsset ? 'تجربة صورة المنتج 2D غير معتمدة' : 'عرض AR توضيحي');
+        ' — مجسم 3D تجريبي غير مطابق بالكامل للمنتج';
     }
   }
   function updatePhotoControl() {
@@ -76,6 +77,11 @@
     const ready = state.demoImageReady;
     const photoBtn = $('#asset-photo');
     const genericBtn = $('#asset-generic');
+    const threeBtn = $('#asset-3d');
+    if (threeBtn) {
+      threeBtn.classList.toggle('selected', state.assetMode === '3d');
+      threeBtn.setAttribute('aria-pressed', String(state.assetMode === '3d'));
+    }
     if (photoBtn) {
       photoBtn.disabled = !ready;
       photoBtn.classList.toggle('selected', state.assetMode === 'photo');
@@ -86,9 +92,12 @@
       genericBtn.setAttribute('aria-pressed', String(state.assetMode === 'generic'));
     }
     const label = $('#asset-status');
-    if (label) label.textContent = ready
-      ? 'صورة AI مقصوصة من الخلفية · مسقطة على نقاط التتبع · مش 3D ولا قياسًا حقيقيًا'
-      : 'جاري تجهيز/تحميل صورة المنتج للتجربة';
+    if (label) label.textContent = state.assetMode === '3d'
+      ? (state.threeError
+          ? 'محرك 3D غير متاح · افتح تفاصيل الخطأ أو اختار الوضع 2D'
+          : state.three ? 'مجسم 3D هندسي حقيقي بعمق وإضاءة، لكنه مش إعادة بناء دقيقة للمنتج' : 'جاري تحميل محرك المجسمات 3D…')
+      : ready ? 'الصورة 2D للتجربة القديمة فقط، بدون عمق حقيقي'
+      : 'جاري تجهيز صورة المنتج للتجربة';
   }
   function prepareDemoImage() {
     if (!demoAsset || typeof Image === 'undefined') return;
@@ -102,24 +111,51 @@
     };
     image.onerror = () => {
       state.demoImageReady = false;
-      state.assetMode = 'generic';
       updatePhotoControl();
       const label = $('#asset-status');
       if (label) label.textContent = 'تعذر تحميل قصاصة المنتج · متاح الرسم التوضيحي';
     };
     image.src = demoAsset.path;
+    $('#asset-3d')?.addEventListener('click', () => {
+      state.assetMode = '3d';state.fitHint = '';
+      void ensureThree();
+      updatePhotoControl();updateUI();
+    });
     $('#asset-photo')?.addEventListener('click', () => {
       if (!state.demoImageReady) return;
-      state.assetMode = 'photo';
-      updatePhotoControl();
+      state.assetMode = 'photo';state.fitHint = '';
+      state.three?.clear();
+      updatePhotoControl();updateUI();
     });
     $('#asset-generic')?.addEventListener('click', () => {
-      state.assetMode = 'generic';
-      updatePhotoControl();
+      state.assetMode = 'generic';state.fitHint = '';
+      state.three?.clear();
+      updatePhotoControl();updateUI();
     });
     updatePhotoControl();
   }
   prepareDemoImage();
+  async function ensureThree() {
+    if (state.three || state.threeLoading) return state.threeLoading || state.three;
+    state.threeError = '';
+    state.threeLoading = (async () => {
+      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha080', document.baseURI).href;
+      const mod = await import(moduleUrl);
+      const renderer = new mod.Fit3DRenderer(layers);
+      state.three = renderer;
+      return renderer;
+    })().catch(error => {
+      state.threeError = error?.message || String(error);
+      console.warn('[RAWNAK FIT] 3D renderer unavailable, webcam remains live',error);
+      state.fitHint = 'فشل تحميل 3D. تأكد من دعم WebGL ثم اضغط إعادة تجربة 3D.';
+      return null;
+    }).finally(() => {
+      state.threeLoading = null;
+      updatePhotoControl();
+      updateUI();
+    });
+    return state.threeLoading;
+  }
   const showError = (message) => {
     errorBox.textContent = message;
     errorBox.classList.remove('hidden');
@@ -178,6 +214,7 @@
         state.lastPoints = null;
         state.detected = false;
         state.fitHint = '';
+        state.three?.clear();
         state.worldLandmarks = null;
         state.syncFrameReady = false;
         state.lastInference = 0;
@@ -197,6 +234,8 @@
     captureButton.disabled = !live;
     // Keep showing live preview until a fully processed synchronized frame exists.
     layers.classList.toggle('synced', live && state.viewMode === 'sync' && state.engine === 'ready' && state.syncFrameReady);
+    layers.classList.toggle('three-fast', live && state.assetMode === '3d' && Boolean(state.three) &&
+      state.viewMode === 'fast' && state.engine === 'ready' && state.detected);
     const modeFast = $('#mode-fast');
     const modeSync = $('#mode-sync');
     if (modeFast && modeSync) {
@@ -213,7 +252,7 @@
     const hint = $('#fit-guide');
     if (hint) {
       hint.textContent = state.fitHint;
-      hint.classList.toggle('hidden', !live || !state.fitHint || state.assetMode !== 'photo');
+      hint.classList.toggle('hidden', !live || !state.fitHint);
     }
     if (live) {
       trackChip.textContent = state.engine === 'loading'
@@ -286,6 +325,7 @@
     state.landmarks = null;
     state.worldLandmarks = null;
     state.fitHint = '';
+    state.three?.clear();
     state.engine = 'loading';
     state.syncFrameReady = false;
     state.loadingStage = state.visionLoading ? 'model' : 'library';
@@ -364,6 +404,7 @@
     state.landmarks = null;
     state.worldLandmarks = null;
     state.fitHint = '';
+    state.three?.clear();
     state.lastPoints = null;
     state.fps = 0;
     state.syncFrameReady = false;
@@ -437,6 +478,7 @@
       state.lastInference = 0;
       updateUI();
       state.raf = requestAnimationFrame(renderLoop);
+      if (state.assetMode === '3d') void ensureThree();
       void loadEngine(sourceType(state.selected.engine)); // model failures do not close stream
     } catch (error) {
       if (epoch !== state.epoch) return;
@@ -658,8 +700,29 @@
     } finally {ctx.restore();}
   }
   function drawOverlayTo(ctx, w, h) {
-    if (!state.detected || !state.landmarks) return;
+    if (!state.detected || !state.landmarks) {
+      state.three?.clear();
+      return;
+    }
     try {
+      if (state.assetMode === '3d') {
+        if (!state.three) {
+          state.fitHint = state.threeError
+            ? 'تعذر تحميل 3D — جرّب تشغيله مجددًا أو افتح وضع 2D'
+            : 'جاري تحميل مجسمات 3D…';
+          return;
+        }
+        const output = state.three.render(state.selected.id, state.landmarks, {
+          width:w,height:h,project,worldLandmarks:state.worldLandmarks,scale:state.sizeScale
+        });
+        state.fitHint = output.ok ? '' : output.reason;
+        if (output.ok && state.viewMode === 'sync') {
+          // Same analyzed camera frame + its 3D output on the same composed canvas.
+          ctx.drawImage(output.canvas,0,0,w,h);
+        }
+        return;
+      }
+      state.three?.clear();
       if (demoAsset && state.assetMode === 'photo' && state.selected.id === demoAsset.item) {
         // If anchor quality is insufficient, NEVER replace the failed photo with the
         // old oversized schematic overlay. Show a positioning hint instead.
@@ -673,6 +736,11 @@
       else if (state.selected.id === 'shoes') drawShoes(ctx, state.landmarks, w, h);
     } catch (error) {
       console.warn('[RAWNAK FIT] AR overlay skipped this frame', error);
+      if (state.assetMode === '3d') {
+        state.threeError = error?.message || String(error);
+        state.fitHint = 'تعذر عرض المجسم 3D — التتبع والكاميرا مازالوا شغالين';
+        state.three?.clear();
+      }
     }
   }
   function drawOverlay() {
@@ -784,6 +852,8 @@
     } else {
       ctx.drawImage(video, (result.width - width) / 2, (result.height - height) / 2, width, height);
       ctx.drawImage(canvas, 0, 0, result.width, result.height);
+      if (state.assetMode === '3d' && state.three?.canvas)
+        ctx.drawImage(state.three.canvas,0,0,result.width,result.height);
     }
     const link = document.createElement('a');
     link.download = 'rawnak-fit-' + Date.now() + '.png';
@@ -799,6 +869,7 @@
     state.lastPoints = null;
     state.lastType = null;
     state.syncFrameReady = false;
+    state.three?.clear();
     state.frameCount = 0;
     state.inferenceFrames = 0;
     state.lastFps = performance.now();
@@ -829,7 +900,11 @@
     state.mirror = !state.mirror;
     layers.classList.toggle('flipped', state.mirror);
   });
-  window.addEventListener('pagehide', stopCamera);
+  window.addEventListener('pagehide', () => {
+    stopCamera();
+    state.three?.dispose();
+    state.three = null;
+  });
   drawCatalog();
   updateUI();
 })();
