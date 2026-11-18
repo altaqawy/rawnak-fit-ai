@@ -1,6 +1,6 @@
 (function sdkModule(){
   'use strict';
-  const VERSION = '0.3.0';
+  const VERSION = '0.3.1';
   const ROOT = new URL('../', document.currentScript?.src || location.href);
   const SUPPORTED = Object.freeze({
     watch: 'watch', bangle: 'bracelet', bracelet: 'bracelet',
@@ -127,7 +127,7 @@
 
       const footer=document.createElement('div');footer.className='bottom';
       const note=document.createElement('div');note.className='note';
-      note.textContent='Live 3D Beta: المنتج المعروض مجسم هندسي 3D حقيقي بعمق وإضاءة، لكنه تقريبي وليس نفس SKU أو ضمان مقاس. التحليل بيتم على جهازك.';
+      note.textContent='Live 3D Beta: مجسم تقريبي بعمق وإضاءة، وتحريك أكمام تجريبي للملابس. مش نسخة مطابقة للمنتج ولا ضمان مقاس. التتبع على جهازك.';
       const actions=document.createElement('div');actions.className='actions';
       const fallback=document.createElement('a');fallback.className='fallback';fallback.href=this.previewURL;
       fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.textContent='فتح المراية في صفحة مستقلة ↗';
