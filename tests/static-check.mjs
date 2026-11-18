@@ -29,11 +29,11 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
-assert.ok(html.includes('ALPHA 0.7'), 'HTML and release version updated');
-assert.ok(html.includes('src="./src/app.js?v=20261118-alpha070"'), 'JS has explicit cache busting version');
-assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha070"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('ALPHA 0.8'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261118-alpha080"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha080"'), 'CSS has explicit cache busting version');
 assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
-assert.ok(app.includes("const BUILD_ID = '2026.11.18.070'"), 'runtime identifies compiled source');
+assert.ok(app.includes("const BUILD_ID = '2026.11.18.080'"), 'runtime identifies compiled source');
 assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 assert.ok(html.includes('id="sync-canvas"'), 'frame synchronized output exists');
 assert.ok(html.includes('id="mode-sync"') && html.includes('id="mode-fast"'), 'sync/fast mode selectors exist');
@@ -58,10 +58,18 @@ assert.ok(existsSync(path.join(root, 'tests/demo-products.test.mjs')), 'product 
 
 assert.ok(existsSync(path.join(root,'src/fit-calibration.js')), 'body-relative calibration source exists');
 assert.ok(existsSync(path.join(root,'tests/body-calibration.test.mjs')), 'calibration regressions exist');
-assert.ok(html.includes('src="./src/fit-calibration.js?v=20261118-alpha070"'), 'calibration helper is loaded before runtime');
+assert.ok(html.includes('src="./src/fit-calibration.js?v=20261118-alpha080"'), 'calibration helper is loaded before runtime');
 assert.ok(html.indexOf('src="./src/fit-calibration.js') < html.indexOf('src="./src/app.js'), 'calibration helper runs before camera app');
 assert.ok(html.includes('id="fit-guide"') && html.includes('id="fit-scale"'), 'camera guidance + preview scale control exist');
 assert.ok(app.includes('fitGeometry.createPlacement('), 'Photo AR uses relative body geometry instead of fixed viewport sizes');
 assert.ok(app.includes('state.worldLandmarks = result.worldLandmarks?.[0]'), 'pose depth landmarks captured for orientation confidence');
 assert.ok(app.includes('if (state.demoImageReady) drawDemoPhoto(ctx, state.landmarks, w, h);'), 'bad anchor never falls through into fake schematic overlay');
+assert.ok(existsSync(path.join(root,'src/fit-3d-renderer.js')), 'real 3D WebGL renderer exists');
+assert.ok(existsSync(path.join(root,'src/fit-3d-pose.js')), '3D pose anchor helper exists');
+assert.ok(existsSync(path.join(root,'tests/fit-3d.test.mjs')), '3D position regression tests exist');
+assert.ok(html.includes('src="./src/fit-3d-pose.js?v=20261118-alpha080"'), '3D helper loaded before app');
+assert.ok(html.includes('id="asset-3d"'), '3D renderer selection in the mirror');
+assert.ok(app.includes("assetMode: '3d'"), '3D is the default for demo products');
+assert.ok(app.includes('ctx.drawImage(output.canvas,0,0,w,h)'), '3D scene combined with same analyzed frame');
+assert.ok(app.includes("new mod.Fit3DRenderer(layers)"), 'WebGL scene loaded lazily on webcam start');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');
