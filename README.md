@@ -183,3 +183,12 @@ The reference tee includes glTF 2.0 skinning, three joints, and per-vertex bone 
 **Important:** The reference garment is *authored test geometry*, not photo-to-3D reconstruction, not an actual seller SKU, not accurate cloth physics, and not verified sizing. The old procedural model is still available for explicit comparison. The Inspector can also preview a local GLB with `Shoulder_L` and `Shoulder_R` bones without uploading it, but local files are never automatically approved or published.
 
 New CI contract: `node --test tests/reference-glb.test.mjs`; runtime test on actual phone/browser is still required.
+
+
+## Asset Library pilot — photo intake and reusable 3D routes
+
+[Open RAWNAK Asset Library](https://altaqawy.github.io/rawnak-fit-ai/studio/library.html) · [Implementation notes](docs/ASSET_LIBRARY_PILOT_V01.md) · [Source registry](studio/asset-library-sources.json)
+
+The new merchant-side pilot supports T-shirts, watches and bags. It accepts local images with explicit view tags, validates minimum photo coverage, original pixel resolution, manufacturer dimensions and use-rights confirmation; suggests category-specific reusable modeling routes; estimates a **non-verified product color hint** from a front image; previews a local GLB on the device with orbit controls; and exports a strict metadata-only Asset Draft JSON.
+
+This is **not yet image-to-3D generation**. Third-party reconstruction models and marketplace assets have **not** been imported or run; the vendor's exact product design is not automatically reconstructed. Asset approval stays false until a real SKU GLB has been reviewed and authorized. The original AutoFit Studio now links into the pilot without transferring image files between pages.
