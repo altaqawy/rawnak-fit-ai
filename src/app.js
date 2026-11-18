@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.090';
+  const BUILD_ID = '2026.11.18.100';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -140,7 +140,7 @@
     if (state.three || state.threeLoading) return state.threeLoading || state.three;
     state.threeError = '';
     state.threeLoading = (async () => {
-      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha090', document.baseURI).href;
+      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha100', document.baseURI).href;
       const mod = await import(moduleUrl);
       const renderer = new mod.Fit3DRenderer(layers);
       state.three = renderer;
