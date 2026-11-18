@@ -1,6 +1,7 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.060';
+  const BUILD_ID = '2026.11.18.070';
+  const fitGeometry = window.RawnakFitCalibration;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
   const LIVE_INTERVAL_MS = 65; // 15 Hz target, avoids overloading slow phones
   const $ = (selector) => document.querySelector(selector);
@@ -50,7 +51,8 @@
     fps: 0, frameCount: 0, inferenceFrames: 0, inferenceFPS: 0, lastFps: 0, lastInference: 0, detected: false,
     mirror: true, diagnostic: '', loadingStage: 'idle', lastType: null, lastPoints: null,
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
-    demoImage: null, demoImageReady: false, assetMode: demoAsset ? 'photo' : 'generic'
+    demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
+    fitHint: '', sizeScale: 1, assetMode: demoAsset ? 'photo' : 'generic'
   };
 
   if (isEmbedded) {
@@ -94,6 +96,7 @@
     image.decoding = 'async';
     image.onload = () => {
       state.demoImage = image;
+      state.demoCrop = fitGeometry?.alphaBounds(image) || {x:0,y:0,width:image.naturalWidth,height:image.naturalHeight};
       state.demoImageReady = true;
       updatePhotoControl();
     };
@@ -174,6 +177,8 @@
         state.lastType = null;
         state.lastPoints = null;
         state.detected = false;
+        state.fitHint = '';
+        state.worldLandmarks = null;
         state.syncFrameReady = false;
         state.lastInference = 0;
         drawCatalog();
@@ -205,6 +210,11 @@
     cameraToggle.textContent = live ? 'إيقاف الكاميرا' : state.starting ? 'إلغاء التشغيل' : 'تشغيل الكاميرا';
     indicator.textContent = live ? '● CAMERA LIVE' : state.starting ? 'CONNECTING…' : 'CAMERA OFF';
     indicator.style.color = live ? '#c8ee9b' : '#a5bdac';
+    const hint = $('#fit-guide');
+    if (hint) {
+      hint.textContent = state.fitHint;
+      hint.classList.toggle('hidden', !live || !state.fitHint || state.assetMode !== 'photo');
+    }
     if (live) {
       trackChip.textContent = state.engine === 'loading'
         ? 'الكاميرا مستمرة · ' + (stageLabels[state.loadingStage] || 'جاري تجهيز التتبع')
@@ -274,6 +284,8 @@
     const request = ++state.engineRequest;
     state.detected = false;
     state.landmarks = null;
+    state.worldLandmarks = null;
+    state.fitHint = '';
     state.engine = 'loading';
     state.syncFrameReady = false;
     state.loadingStage = state.visionLoading ? 'model' : 'library';
@@ -350,6 +362,8 @@
     state.engine = 'idle';
     state.loadingStage = 'idle';
     state.landmarks = null;
+    state.worldLandmarks = null;
+    state.fitHint = '';
     state.lastPoints = null;
     state.fps = 0;
     state.syncFrameReady = false;
@@ -441,13 +455,16 @@
     if (!coords) return null;
     if (state.lastType !== type || !state.lastPoints || state.lastPoints.length !== coords.length) {
       state.lastType = type;
-      state.lastPoints = coords.map((p) => ({ x: p.x, y: p.y }));
+      state.lastPoints = coords.map((p) => ({ x:p.x, y:p.y, z:p.z, visibility:p.visibility, presence:p.presence }));
     } else {
       coords.forEach((point, i) => {
         // Faster response in both modes; in synchronized mode only tiny jitter is filtered.
         const alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
         state.lastPoints[i].x += (point.x - state.lastPoints[i].x) * alpha;
         state.lastPoints[i].y += (point.y - state.lastPoints[i].y) * alpha;
+        if(Number.isFinite(point.z)) state.lastPoints[i].z = (state.lastPoints[i].z || 0) * (1-alpha) + point.z * alpha;
+        state.lastPoints[i].visibility = point.visibility;
+        state.lastPoints[i].presence = point.presence;
       });
     }
     return state.lastPoints;
@@ -464,6 +481,7 @@
       state.inferenceFrames += 1;
       const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
       state.landmarks = smoothing(type, raw);
+      state.worldLandmarks = result.worldLandmarks?.[0] || null;
       state.detected = !!state.landmarks;
     } catch (error) {
       console.error('[RAWNAK FIT] Inference error; preserving camera', error);
@@ -617,64 +635,37 @@
     }
   }
   function drawDemoPhoto(ctx, landmarks, w, h) {
-    const image = state.demoImage;
-    if (!image || !state.demoImageReady || !demoAsset) return false;
-    const kind = demoAsset.item;
+    const image=state.demoImage;
+    if (!image || !state.demoImageReady || !demoAsset || !fitGeometry || !state.demoCrop) return false;
+    const layout=fitGeometry.createPlacement(demoAsset.item,landmarks,{
+      width:w,height:h,project,crop:state.demoCrop,
+      scale:state.sizeScale,worldLandmarks:state.worldLandmarks
+    });
+    if (!layout.ok) {
+      state.fitHint=layout.reason;
+      return false;
+    }
+    state.fitHint='';
+    const {x,y,width,height,angle}=layout;
+    const crop=state.demoCrop;
     ctx.save();
     try {
-      if (kind === 'watch') {
-        const wrist = project(landmarks[0],w,h), middle = project(landmarks[9],w,h);
-        if (!wrist || !middle) return false;
-        const dx = middle.x-wrist.x, dy = middle.y-wrist.y;
-        const dist = Math.hypot(dx,dy);
-        if (dist < 18) return false;
-        const width = Math.max(34,Math.min(165,dist * .75));
-        const height = width * image.naturalHeight / image.naturalWidth;
-        ctx.translate(wrist.x-dx*.14,wrist.y-dy*.14);
-        ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);
-        ctx.drawImage(image,-width/2,-height*.54,width,height);
-      } else if (kind === 'glasses') {
-        const left = project(landmarks[33],w,h), right = project(landmarks[263],w,h);
-        if (!left || !right) return false;
-        const dist = Math.hypot(right.x-left.x,right.y-left.y);
-        if (dist < 14) return false;
-        const width = dist*2.38, height = width*image.naturalHeight/image.naturalWidth;
-        ctx.translate((left.x+right.x)/2,(left.y+right.y)/2);
-        ctx.rotate(Math.atan2(right.y-left.y,right.x-left.x));
-        ctx.drawImage(image,-width/2,-height*.52,width,height);
-      } else if (kind === 'tee') {
-        const a=project(landmarks[11],w,h),b=project(landmarks[12],w,h);
-        const h1=project(landmarks[23],w,h),h2=project(landmarks[24],w,h);
-        if (![a,b,h1,h2].every(Boolean)) return false;
-        const dist=Math.hypot(b.x-a.x,b.y-a.y);
-        if(dist<32)return false;
-        const width=dist*1.67,height=width*image.naturalHeight/image.naturalWidth;
-        const top=(a.y+b.y)*.5-width*.14;
-        const bottom=(h1.y+h2.y)*.5;
-        const centerY=top+(bottom-top)*.44;
-        ctx.translate((a.x+b.x)/2,centerY);
-        ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));
-        ctx.drawImage(image,-width/2,-height*.26,width,height);
-      } else if (kind === 'bag') {
-        const shoulder=project(landmarks[12],w,h),other=project(landmarks[11],w,h);
-        const hip=project(landmarks[24],w,h);
-        if (![shoulder,other,hip].every(Boolean)) return false;
-        const dist=Math.hypot(other.x-shoulder.x,other.y-shoulder.y);
-        if(dist<28)return false;
-        const width=dist*.83,height=width*image.naturalHeight/image.naturalWidth;
-        const midX=shoulder.x+(shoulder.x-other.x)*.40;
-        const centerY=hip.y-height*.25;
-        ctx.translate(midX,centerY);
-        ctx.drawImage(image,-width/2,-height/2,width,height);
-      } else return false;
+      ctx.translate(x,y);
+      ctx.rotate(angle);
+      ctx.drawImage(image,crop.x,crop.y,crop.width,crop.height,
+        -width/2,-height/2,width,height);
       return true;
     } finally {ctx.restore();}
   }
   function drawOverlayTo(ctx, w, h) {
     if (!state.detected || !state.landmarks) return;
     try {
-      if (demoAsset && state.assetMode === 'photo' && state.selected.id === demoAsset.item &&
-          state.demoImageReady && drawDemoPhoto(ctx, state.landmarks, w, h)) return;
+      if (demoAsset && state.assetMode === 'photo' && state.selected.id === demoAsset.item) {
+        // If anchor quality is insufficient, NEVER replace the failed photo with the
+        // old oversized schematic overlay. Show a positioning hint instead.
+        if (state.demoImageReady) drawDemoPhoto(ctx, state.landmarks, w, h);
+        return;
+      }
       if (state.selected.id === 'tee' || state.selected.id === 'jacket') drawGarment(ctx, state.landmarks, w, h, state.selected);
       else if (state.selected.id === 'glasses') drawGlasses(ctx, state.landmarks, w, h);
       else if (state.selected.id === 'watch' || state.selected.id === 'bracelet') drawWrist(ctx, state.landmarks, w, h, state.selected);
@@ -728,6 +719,7 @@
       state.inferenceFrames++;
       const raw = (type === 'face' ? result.faceLandmarks?.[0] : result.landmarks?.[0]) || null;
       state.landmarks = smoothing(type, raw);
+      state.worldLandmarks = result.worldLandmarks?.[0] || null;
       state.detected = Boolean(state.landmarks);
       const target = setupSyncCanvas();
       if (!target) return false;
@@ -814,6 +806,12 @@
   }
   $('#mode-fast')?.addEventListener('click', () => changeViewMode('fast'));
   $('#mode-sync')?.addEventListener('click', () => changeViewMode('sync'));
+  $('#fit-scale')?.addEventListener('input', event => {
+    const number=Number(event.target.value);
+    state.sizeScale=Math.max(.7,Math.min(1.3,number/100 || 1));
+    const label=$('#fit-scale-value');
+    if(label)label.textContent=Math.round(state.sizeScale*100)+'%';
+  });
   mainStart.addEventListener('click', startCamera);
   cameraToggle.addEventListener('click', () => { if (state.stream || state.starting) stopCamera(); else void startCamera(); });
   retryButton.addEventListener('click', () => { if (state.stream) { state.engine = 'idle'; void loadEngine(state.selected.engine); } });
