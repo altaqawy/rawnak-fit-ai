@@ -107,7 +107,7 @@ No per-frame generative AI credits are consumed. For exact SKU geometry, future 
 - [Web Component source](sdk/rawnak-fit.js)
 - [Next.js/React example wrapper](sdk/react/RawnakTryOnButton.tsx)
 
-The public widget selects a category and opens the existing on-device live camera renderer inside a camera-enabled iframe, with a separate-page fallback and an add-to-cart event the host store can handle. **This does not connect exact merchant GLB assets**, authenticate tenant IDs or authorize private store products. The current preview is illustrative 2D AR.
+The public widget selects a category and opens the existing on-device live camera renderer inside a camera-enabled iframe, with a separate-page fallback and an add-to-cart event the host store can handle. **This does not connect exact merchant GLB assets**, authenticate tenant IDs or authorize private store products. The current default preview is an illustrative 3D WebGL mesh, not an authentic merchant SKU digital twin.
 
 Do not paste the future production endpoint documented in the architecture into sites yet. For actual commercial integration, build a secure SKU/variant manifest, merchant domain allowlists and a verified asset approval pipeline.
 
@@ -129,3 +129,18 @@ The public repository includes **eight generated test-product photos** (two for 
 - `tests/demo-products.test.mjs`: checks SKU mapping, WebP assets and cutouts, source pipeline UI and the renderer allowlist.
 
 **Limits:** AI-created images aren't merchant photos, a second generated angle doesn't establish real 3D geometry, camera frames remain local, and no accurate fit, 3D rotation, occlusion or cloth simulation is promised. Real browser tests and mobile QA are still needed.
+
+## Alpha 0.8 — Real-time 3D mesh overlays (2026-11-18)
+
+- [3D Model Inspector — rotate freely, no camera](https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html)
+- [Try actual 3D demos with body/hand/face tracking](https://altaqawy.github.io/rawnak-fit-ai/demo/)
+- [Architecture, code and QA details](docs/AR3D_ALPHA08.md)
+- Core: [Three.js 3D renderer](src/fit-3d-renderer.js) and [landmark anchoring](src/fit-3d-pose.js)
+
+The demo now defaults to **actual volumetric mesh geometry** rendered with WebGL/Three.js. Example models include white/silver watch, sage T-shirt, black/gold glasses, brown structured shoulder bag, jacket, bangle and shoes. The geometry is not a flat photograph and can rotate. The image-only Photo AR and old 2D schematic drawing remain optional comparison modes.
+
+The 3D compositor is integrated into the same-frame synchronized mirror pipeline, with reduced watch dial size, body-relative clothing orientation, approximate shoulder-only fallback for a cropped torso (labeled as approximate), and GPU error recovery that does not close the camera. No generative AI is called on every video frame.
+
+**Scope limit:** These 3D models are procedural *templates* inspired by test products; they are **not verified reconstructions of the exact reference photos**. Shirt sleeves are not skeletal-rigged, cloth does not physically flow, and scene geometry does not yet correctly hide behind hands or a human body. Approved per-SKU GLB mesh assets, UV textures, size measurements, occlusion and garment physics are separate milestones.
+
+This release was checked with JavaScript syntax, synthetic tracking-landmark calculations and a mocked 3D scene factory. **Live WebGL on Android and cross-origin merchant iframe remains unverified until the user tests it.**
