@@ -80,28 +80,33 @@
       if(Number.isFinite(dx)&&Number.isFinite(dz))yaw=clamp(Math.atan2(dz,Math.max(dx,.02)),-1.25,1.25);
     }
     if(category==='tee'||category==='jacket'){
-      if(!hipL||!hipR)return invalid('خلّي كتافك وخصرك ظاهرين علشان التيشيرت يتثبت تحت رقبتك');
-      const centerHip=mid(hipL,hipR),torso=distance(top,centerHip);
+      const hipsVisible=Boolean(hipL&&hipR);
+      const torso=hipsVisible?distance(top,mid(hipL,hipR)):shoulders*1.13;
       if(torso<48)return invalid('ابعد شوية عن الكاميرا علشان طول الجذع يبان');
+      // If hips are cropped, an explicitly approximate shoulder-anchored 3D preview
+      // is still visible. It is never represented as accurate clothing fit.
       return {ok:true,x:top.x,y:top.y+shoulders*.04,
         widthPx:shoulders*(category==='jacket'?1.47:1.36)*adjust,
         heightPx:torso*1.19*adjust,angle:roll,yaw,pitch:0,
+        approximate:!hipsVisible,
+        reason:hipsVisible?'':'عرض تقريبي 3D — ابعد شوية علشان يظهر الخصر ونقيس طول القطعة',
         metrics:{shouldersPx:Math.round(shoulders),torsoPx:Math.round(torso)}};
     }
     if(category==='bag'){
-      if(!hipL||!hipR)return invalid('اظهر الكتفين والخصر علشان الشنطة تتثبت على الجسم');
-      const centerHip=mid(hipL,hipR);
-      const torso=distance(top,centerHip);
-      if(torso<45)return invalid('ابعد عن الكاميرا علشان نقدر نحدد الكتف والخصر');
-      // Choose the screen-right shoulder/hip for an illustrative shoulder bag.
-      const side=left.x>right.x?{shoulder:left,hip:hipL,other:hipR}:{shoulder:right,hip:hipR,other:hipL};
-      const sign=Math.sign(side.hip.x-side.other.x)||1;
+      const hipsVisible=Boolean(hipL&&hipR);
+      const torso=hipsVisible?distance(top,mid(hipL,hipR)):shoulders*1.06;
+      if(torso<45)return invalid('ارجع خطوة لورا علشان نقدر نحدد مكان الشنطة');
+      const rightmost=left.x>right.x?left:right;
+      const rightHip=hipsVisible?(left.x>right.x?hipL:hipR):null;
+      const sign=rightmost.x>width/2?1:-1;
       const bagW=shoulders*.66*adjust;
-      const x=side.hip.x+sign*shoulders*.14;
-      const y=side.hip.y-torso*.14;
-      if(!within(x,y,bagW*.48))return invalid('حرّك الجسم للوسط علشان الشنطة تبان');
+      const x=(rightHip?.x??rightmost.x)+sign*shoulders*.14;
+      const y=hipsVisible?rightHip.y-torso*.14:rightmost.y+torso*.73;
+      if(!within(x,y,bagW*.48))return invalid('حرك الكتف والشنطة لمنتصف الكاميرا أو ابعد خطوة');
       return {ok:true,x,y,widthPx:bagW,heightPx:bagW*1.35,
         angle:roll*.25,yaw:clamp(yaw*.65,-.8,.8),pitch:0,
+        approximate:!hipsVisible,
+        reason:hipsVisible?'':'عرض 3D تقريبي مع الكتف — اظهار الخصر هيحسن تثبيت الشنطة',
         metrics:{shouldersPx:Math.round(shoulders),torsoPx:Math.round(torso)}};
     }
     return invalid('مجسم غير معروف');
