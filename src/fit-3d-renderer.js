@@ -258,6 +258,26 @@ export class Fit3DRenderer {
     this.renderer.render(this.scene,this.camera);
     return {ok:true,canvas:this.canvas,placement};
   }
+  preview(category,{yaw=0,tilt=0,scale=1}={}){
+    if(this.destroyed)return false;
+    const width=Math.max(240,this.canvas.parentElement?.clientWidth||480);
+    const height=Math.max(240,this.canvas.parentElement?.clientHeight||430);
+    this.resize(width,height);
+    this.clear();
+    const mesh=this.meshes[category];
+    if(!mesh)return false;
+    mesh.visible=true;
+    const fitted=Math.min(width*.62/mesh.userData.modelWidth,
+      height*.70/mesh.userData.modelHeight)*Math.min(1.3,Math.max(.7,scale));
+    mesh.scale.setScalar(fitted);
+    mesh.rotation.set(tilt,yaw,0,'ZYX');
+    // Garment geometry starts at its collar; other models are centered.
+    const y=category==='tee'||category==='jacket'
+      ? (height-mesh.userData.modelHeight*fitted)*.5 : height*.5;
+    mesh.position.set(width*.5,y,0);
+    this.renderer.render(this.scene,this.camera);
+    return true;
+  }
   dispose(){
     if(this.destroyed)return;
     this.destroyed=true;
