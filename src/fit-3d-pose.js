@@ -45,8 +45,9 @@
       if(widthEyes<20)return invalid('قرّب وجهك شوية');
       const center=mid(left,right);
       const yawProxy=clamp((nose.x-center.x)/widthEyes*2.4,-1.05,1.05);
-      const depthYaw=landmarks[33] && landmarks[263] ?
-        clamp((landmarks[263].z-landmarks[33].z)*3,-1,1):0;
+      const zLeft=landmarks[33]?.z,zRight=landmarks[263]?.z;
+      const depthYaw=Number.isFinite(zLeft)&&Number.isFinite(zRight)
+        ? clamp((zRight-zLeft)*3,-1,1):0;
       return {ok:true,x:center.x,y:center.y+widthEyes*.06,
         widthPx:widthEyes*2.38*adjust,heightPx:widthEyes*.9*adjust,
         angle:Math.atan2(right.y-left.y,right.x-left.x),yaw:clamp(yawProxy+depthYaw*.55,-1.15,1.15),
