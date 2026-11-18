@@ -32,7 +32,7 @@ button:disabled{opacity:.5}
 <body>
 <main>
 <nav><strong>✳ RAWNAK FIT / 3D ENGINE</strong><a href="../demo/">العودة للمتجر التجريبي</a></nav>
-<div class="kicker">ALPHA 0.8 · WEBGL 3D INSPECTOR · NO CAMERA REQUIRED</div>
+<div class="kicker">ALPHA 0.9 · DYNAMIC GARMENT INSPECTOR · NO CAMERA REQUIRED</div>
 <h1>لف المجسم من كل الاتجاهات <span style="color:#bdeb9f">بدون كاميرا</span></h1>
 <p>دي مجسمات 3D حقيقية هندسيًا، لها حجم وعمق وإضاءة وجوانب. الهدف نتأكد إن محرك الرسم يعمل على جهازك أولًا، ثم نختبر تثبيت نفس المجسم على نقاط جسمك في المراية.</p>
 <div class="layout">
@@ -55,6 +55,11 @@ button:disabled{opacity:.5}
     <div class="control"><label for="tilt">زاوية النظر: <output id="tilt-value">0°</output></label>
       <input id="tilt" type="range" min="-35" max="35" value="0" step="5">
     </div>
+    <div class="control" id="sleeve-row">
+       <label for="sleeve">رفع الأكمام: <output id="sleeve-value">0°</output></label>
+       <input id="sleeve" type="range" min="-60" max="60" value="0" step="5">
+       <small style="color:#b7c9b6">اختبار ديناميكية الأكمام بدون كاميرا (T-shirt / Jacket)</small>
+     </div>
     <div class="control"><label><input id="auto" type="checkbox" checked> دوران تلقائي 360°</label></div>
     <button type="button" id="capture" disabled>حفظ صورة المجسم</button>
     <p id="status" aria-live="polite">جاري تحميل Three.js وتهيئة WebGL…</p>
@@ -63,6 +68,7 @@ button:disabled{opacity:.5}
   </div>
 </div>
 </main>
+<script defer src="../src/fit-garment-motion.js?v=20261118-alpha090"></script>
 <script type="module">
 const $=id=>document.getElementById(id);
 let scene=null,active=true,last=0,angle=0;
@@ -71,7 +77,7 @@ const query=new URLSearchParams(location.search);
 if (query.has('product') && [...$('category').options].some(x=>x.value===query.get('product')))
   $('category').value=query.get('product');
 try {
-  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha080');
+  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha090');
   scene=new Fit3DRenderer($('preview'));
   $('status').textContent='WebGL جاهز ✓ — لف الموديل وشوف الجوانب والخلف';
   $('capture').disabled=false;
@@ -89,7 +95,11 @@ function loop(now){
     }else angle=Number($('yaw').value);
     $('yaw-value').textContent=Math.round(angle)+'°';
     $('tilt-value').textContent=$('tilt').value+'°';
-    try{scene.preview($('category').value,{yaw:toRad(angle),tilt:toRad(Number($('tilt').value))});}
+    const category=$('category').value;
+    $('sleeve-row').classList.toggle('hidden',category!=='tee'&&category!=='jacket');
+    $('sleeve-value').textContent=$('sleeve').value+'°';
+    try{scene.preview(category,{yaw:toRad(angle),tilt:toRad(Number($('tilt').value)),
+      sleeveAngle:toRad(Number($('sleeve').value))});}
     catch(error){$('status').textContent='فشل عرض المجسم: '+(error?.message||error);console.warn(error);}
   }
   requestAnimationFrame(loop);
