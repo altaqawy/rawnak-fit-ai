@@ -9,7 +9,7 @@ https://altaqawy.github.io/rawnak-fit-ai/demo/
 
 Insert this script once:
 
-    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-04"></script>
+    <script defer src="https://altaqawy.github.io/rawnak-fit-ai/sdk/rawnak-fit.js?v=20261118-05"></script>
 
 Then place the component next to your add-to-cart button:
 
@@ -101,3 +101,6 @@ The standalone and embedded camera now default to **3D WebGL demonstration meshe
 3D inspector (camera free): https://altaqawy.github.io/rawnak-fit-ai/diagnostics/3d-preview.html
 
 **These are generic meshes, not merchant-SKU-verified 3D assets.** Exact clothing motion, occlusion, material authenticity and true size still require approved GLB, rigging, and physical measurements. See [Alpha 0.8 implementation details](../docs/AR3D_ALPHA08.md).
+
+### Alpha 0.9: live moving sleeves
+The existing embedded Three.js camera scene now offers garment sleeve deformation (low-poly CPU vertex updates) and experimental same-frame arm overlap in synchronized mode, with explicit toggle controls. These are not verified full skeletal skinning or cloth simulation. Read [Alpha 0.9 implementation](../docs/GARMENT_MOTION_ALPHA09.md). The SDK beta version in the embedded URL is `0.3.1`.
