@@ -113,40 +113,117 @@ function buildBag(){
   g.userData.modelWidth=1.50;g.userData.modelHeight=2.15;
   return g;
 }
-function shirtShape(){
-  const s=new THREE.Shape();
-  s.moveTo(-.51,0);s.lineTo(-.72,.12);s.lineTo(-.88,.44);
-  s.lineTo(-.58,.57);s.lineTo(-.49,.39);s.lineTo(-.47,1.49);
-  s.quadraticCurveTo(0,1.53,.47,1.49);
-  s.lineTo(.49,.39);s.lineTo(.58,.57);s.lineTo(.88,.44);
-  s.lineTo(.72,.12);s.lineTo(.51,0);s.lineTo(.24,0);
-  s.quadraticCurveTo(0,.29,-.24,0);s.lineTo(-.51,0);
-  return s;
+// Alpha 1.0: smooth, open 3D clothing shell — no flat polygon extrusion.
+// Geometry is deliberately generic (not a reconstructed customer SKU).
+function parametricShell(rows,segments,point) {
+  const positions=[],uv=[],indices=[],ring=segments+1;
+  for(let row=0;row<=rows;row++){
+    const v=row/rows;
+    for(let i=0;i<=segments;i++){
+      const t=i/segments,theta=t*Math.PI*2;
+      const p=point(v,theta);
+      positions.push(p[0],p[1],p[2]);
+      uv.push(t,v);
+    }
+  }
+  for(let j=0;j<rows;j++)for(let k=0;k<segments;k++){
+    const n=j*ring+k;
+    indices.push(n,n+1,n+ring,n+1,n+ring+1,n+ring);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+function pointOnTorso(v,angle){
+  const expansion=Math.min(1,v/.16);
+  const ease=expansion*(2-expansion);
+  const rx=.275+(.505-.275)*ease-.045*Math.sin(Math.PI*v)+.008*v;
+  const rz=.158+(.235-.158)*ease-.01*Math.sin(Math.PI*v);
+  // Different front/back necklines, with round U-opening instead of a V-notch.
+  const neckFront=Math.pow(Math.max(0,Math.cos(angle)),4)*.135;
+  const neckBack=Math.pow(Math.max(0,-Math.cos(angle)),4)*.048;
+  const neckY=neckFront+neckBack;
+  const y=neckY+v*(1.50-neckY)+.010*v*v*Math.cos(angle*6);
+  const ripples=v*v*.012*Math.sin(7*angle+v*8);
+  const x=Math.sin(angle)*(rx+ripples);
+  const z=Math.cos(angle)*(rz+ripples*.7)+
+    Math.cos(4*angle+v*12)*.009*v;
+  return [x,y,z];
+}
+function sleevePoint(v,angle,side){
+  const length=.43;
+  const dx=side*.34,dy=.25;
+  const magnitude=Math.hypot(dx,dy);
+  // Elliptical fabric tube around an oblique arm, open at its cuff.
+  const normalX=dy/magnitude,normalY=-dx/magnitude;
+  const radius=.152+.014*v;
+  const frontRadius=.165+.010*v;
+  const x=side*.015+dx*v+normalX*radius*Math.cos(angle);
+  const y=.01+dy*v+normalY*radius*Math.cos(angle);
+  const z=.006+frontRadius*Math.sin(angle)+
+    Math.sin(angle*6+v*4)*.005*v;
+  return [x,y,z];
+}
+function closedSeam(root,points,material,radius,name){
+  const curve=new THREE.CatmullRomCurve3(
+    points.map(p=>new THREE.Vector3(...p)),true,'centripetal');
+  return add(root,new THREE.TubeGeometry(curve,Math.max(32,points.length*2),
+    radius,6,true),material,name);
 }
 function buildShirt(jacket=false){
   const g=new THREE.Group();
-  g.name=(jacket?'Light jacket':'Sage-green tee')+' — wearable 3D prototype';
-  const fabric=standard(jacket?'#7b9b9e':'#6c937a',.03,jacket?.72:.94);
-  const edge=standard(jacket?'#526f70':'#4e735e',.06,.9);
-  const geom=new THREE.ExtrudeGeometry(shirtShape(),{
-    depth:.24,bevelEnabled:true,bevelThickness:.04,bevelSize:.028,bevelSegments:1,
-    curveSegments:5,steps:1
-  });
-  const garment=add(g,geom,fabric,jacket?'Jacket cloth volume':'Cotton jersey garment volume',0,0,-.13);
-  // Keep neutral/rest vertex positions to avoid cumulative deformation artifacts.
-  // The garment is a small dynamic 3D mesh, NOT a commercial cloth solver.
-  g.userData.garmentMesh=garment;
-  g.userData.restPositions=new Float32Array(geom.attributes.position.array);
+  g.name=(jacket?'Light jacket':'Sage-green tee')+' — rounded fabric shell demo';
+  const fabric=standard(jacket?'#426d73':'#467a5a',0,.96);
+  const rib=standard(jacket?'#294c56':'#315c43',.01,.91);
+  const seam=standard(jacket?'#6c9391':'#65947a',.01,.9);
+  const shell=parametricShell(30,36,pointOnTorso);
+  const torso=add(g,shell,fabric,jacket?'Rounded jacket body':'Rounded cotton torso',0,0,0);
+  g.userData.garmentMesh=torso;
+  g.userData.restPositions=new Float32Array(shell.attributes.position.array);
   const Motion=window.RawnakFitGarmentMotion;
   g.userData.sleeveSpring=Motion?new Motion.SleeveSpring():null;
-  line(g,[[-.24,.005,.16],[-.16,.12,.17],[0,.24,.17],[.16,.12,.17],[.24,.005,.16]],
-    .022,edge,'Ribbed neckline');
-  line(g,[[-.43,1.47,.13],[0,1.51,.13],[.43,1.47,.13]],.012,edge,'Hem stitch');
-  if(jacket){
-    line(g,[[0,.18,.18],[0,.75,.19],[0,1.50,.18]],.015,standard('#d4c6a3',.75,.36),'Zipper');
-    add(g,new THREE.BoxGeometry(.065,.07,.025),gold(),'Zipper pull',0,.75,.21);
+
+  const neckline=[],hemline=[];
+  for(let k=0;k<48;k++){
+    const angle=k/48*Math.PI*2;
+    const neck=pointOnTorso(0,angle);
+    const hem=pointOnTorso(1,angle);
+    neckline.push([neck[0],neck[1],neck[2]+Math.cos(angle)*.006]);
+    hemline.push([hem[0],hem[1]-.01,hem[2]+Math.cos(angle)*.004]);
   }
-  g.userData.modelWidth=1.8;g.userData.modelHeight=1.55;
+  closedSeam(g,neckline,rib,.018,'Soft rounded neck rib');
+  closedSeam(g,hemline,seam,.009,'Full rounded hem stitch');
+
+  // Separated tubular sleeves, each attached to a shoulder pivot.
+  // Unlike the former solid extrusion, both the sleeves and torso have
+  // front, back, and side surfaces visible during 360° rotation.
+  const sleeves={};
+  for(const side of [-1,1]){
+    const pivot=new THREE.Group();
+    pivot.name=side<0?'Left sleeve pivot':'Right sleeve pivot';
+    pivot.position.set(side*.47,.22,0);
+    g.add(pivot);
+    const sleeve=parametricShell(10,24,(v,angle)=>sleevePoint(v,angle,side));
+    add(pivot,sleeve,fabric,side<0?'Left arm fabric':'Right arm fabric');
+    const cuff=[];
+    for(let k=0;k<24;k++)cuff.push(sleevePoint(1,k/24*Math.PI*2,side));
+    closedSeam(pivot,cuff,seam,.013,'Stitched sleeve cuff');
+    sleeves[side<0?'left':'right']=pivot;
+  }
+  g.userData.sleeves=sleeves;
+
+  if(jacket){
+    // Simple front seam and hardware: still a generic placeholder product.
+    line(g,[[0,.24,.24],[0,.65,.245],[0,1.46,.25]],.012,
+      standard('#d4c6a3',.42,.38),'Jacket zipper');
+    add(g,new THREE.BoxGeometry(.05,.08,.016),gold(),
+      'Zipper pull',0,.66,.27);
+  }
+  g.userData.modelWidth=1.95;
+  g.userData.modelHeight=1.55;
   return g;
 }
 function buildShoe(){
