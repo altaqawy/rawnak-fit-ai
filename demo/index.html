@@ -24,7 +24,16 @@ h1 em{color:#327b46;font-style:normal}p{line-height:1.95;color:#506a55}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:25px 0}
 .product{background:#fff;border-radius:22px;overflow:hidden;border:1px solid #d8ddd0;box-shadow:0 10px 26px #172d1808;display:flex;flex-direction:column}
 .art{height:235px;display:flex;align-items:center;justify-content:center;position:relative;font-size:92px}
-.art:after{position:absolute;bottom:14px;right:16px;content:"ILLUSTRATIVE PRODUCT";font:700 9px 'DM Sans',sans-serif;letter-spacing:1px;color:#425c47}
+.art:after{content:none}
+.art.real-product-photo{height:auto;aspect-ratio:1/1;display:block;background:#eeefeb!important;position:relative;overflow:hidden}
+.art.real-product-photo img{display:block;width:100%;height:100%;aspect-ratio:1;object-fit:cover}
+.art.image-failed{background:#ead8d3!important}
+.ai-photo-stamp{position:absolute;top:12px;left:12px;z-index:1;background:#f4f6eae5;color:#426448;border-radius:100px;padding:5px 9px;font:700 9px 'DM Sans',sans-serif;letter-spacing:.4px;direction:ltr}
+.photo-nav{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;max-width:95%;z-index:1}
+.photo-nav button{font-size:10px;padding:7px 10px;border-radius:25px;border:1px solid #ffffff8c;color:#eff8ee;background:#122719bc;white-space:nowrap;cursor:pointer}
+.photo-nav button.active{color:#1c4227;background:#c9edb0}
+.process-link{font-size:12px;font-weight:700;color:#26693c;margin-top:13px;display:block;border-top:1px solid #e3e6dc;padding-top:12px}
+.process-link:hover{text-decoration:underline}
 .product:nth-child(1) .art{background:linear-gradient(145deg,#ecddd0,#d3e1d3)}
 .product:nth-child(2) .art{background:linear-gradient(145deg,#dfebea,#d8d7bf)}
 .product:nth-child(3) .art{background:linear-gradient(145deg,#efddd8,#ead9bd)}
@@ -55,28 +64,28 @@ footer{border-top:1px solid #36513d22;padding:24px 0 30px;color:#809485;font:10p
 <main>
 <section class="hero">
 <div><div class="eyebrow">ONE SDK · MULTIPLE MERCHANT CATEGORIES</div><h1>منتجات مختلفة، <em>مراية واحدة</em></h1>
-<p>ده متجر تجريبي بيحاكي دمج RAWNAK FIT في مواقع الملابس والإكسسوارات. كل زر بيحدد نوع التتبع من فئة المنتج، من غير نسخ كود المراية.</p></div>
-<div class="hero-note"><strong>مهم:</strong> المعاينات بتستخدم رسومات AR توضيحية من النسخة الحالية، مش مجسمات مطابقة للمنتجات. وزر إضافة السلة بيحدّث سلة تجريبية محلية، مش نظام دفع فعلي.</div>
+<p>أربع منتجات بصور AI حقيقية من الأمام وزاوية إضافية. افتح أي منتج علشان تشوف الصور، تحليل الفئة والخامة، ومرحلة 3D وTry-On اللي وصلنا لها فعلًا.</p></div>
+<div class="hero-note"><strong>منتجاتنا التجريبية:</strong> الصور الثمانية هنا مولّدة بالذكاء الاصطناعي، وكل منتج له صورتان. نقدر نشوف الزوايا ونجرب التحليل، لكن رسم الكاميرا ما زال توضيحيًا ولا يمثل المنتج نفسه.<p><a href="./process.html?sku=WATCH-DEMO-01" style="font-weight:700;color:#28683b;text-decoration:underline">شاهد المراحل والنتيجة على الساعة ↗</a></p></div>
 </section>
 <section class="grid" aria-label="منتجات تجريبية">
 <article class="product">
 <div class="art" role="img" aria-label="رمز ساعة">⌚</div>
-<div class="details"><span class="tag">WATCH · HAND TRACKING</span><h2>ساعة Classic</h2><p>مثال لمحرك الساعات وتتبع المعصم بالكاميرا.</p><span class="sku">SKU: WATCH-DEMO-01</span>
+<div class="details"><span class="tag">AI PHOTOS · WATCH TRACKING</span><h2>ساعة Classic</h2><p>مثال لمحرك الساعات وتتبع المعصم بالكاميرا.</p><span class="sku">SKU: WATCH-DEMO-01</span>
 <rawnak-fit store-id="demo-merchant" product-id="WATCH-DEMO-01" variant-id="silver-42" category="watch" product-name="ساعة Classic" button-text="جرّب الساعة"></rawnak-fit></div>
 </article>
 <article class="product">
 <div class="art" role="img" aria-label="رمز تيشيرت">👕</div>
-<div class="details"><span class="tag">FASHION · BODY TRACKING</span><h2>تيشيرت Everyday</h2><p>مثال توضيحي لتتبع الكتفين والجذع، بدون خامة واقعية.</p><span class="sku">SKU: TEE-DEMO-02</span>
+<div class="details"><span class="tag">AI PHOTOS · BODY TRACKING</span><h2>تيشيرت Everyday</h2><p>مثال توضيحي لتتبع الكتفين والجذع، بدون خامة واقعية.</p><span class="sku">SKU: TEE-DEMO-02</span>
 <rawnak-fit store-id="demo-merchant" product-id="TEE-DEMO-02" variant-id="green-m" category="tshirt" product-name="تيشيرت Everyday" button-text="جرّب التيشيرت"></rawnak-fit></div>
 </article>
 <article class="product">
 <div class="art" role="img" aria-label="رمز نظارة">🕶️</div>
-<div class="details"><span class="tag">EYEWEAR · FACE TRACKING</span><h2>نظارة Metro</h2><p>محرك تحديد موضع الوجه والعدسات في تجربة AR.</p><span class="sku">SKU: GLASSES-DEMO-03</span>
+<div class="details"><span class="tag">AI PHOTOS · FACE TRACKING</span><h2>نظارة Metro</h2><p>محرك تحديد موضع الوجه والعدسات في تجربة AR.</p><span class="sku">SKU: GLASSES-DEMO-03</span>
 <rawnak-fit store-id="demo-merchant" product-id="GLASSES-DEMO-03" variant-id="black" category="glasses" product-name="نظارة Metro" button-text="جرّب النظارة"></rawnak-fit></div>
 </article>
 <article class="product">
 <div class="art" role="img" aria-label="رمز شنطة">👜</div>
-<div class="details"><span class="tag">ACCESSORIES · BODY TRACKING</span><h2>شنطة Loop</h2><p>موضع شنطة تجريبي بناءً على اتجاه الجسم، بدون محاكاة حزام.</p><span class="sku">SKU: BAG-DEMO-04</span>
+<div class="details"><span class="tag">AI PHOTOS · BODY TRACKING</span><h2>شنطة Loop</h2><p>موضع شنطة تجريبي بناءً على اتجاه الجسم، بدون محاكاة حزام.</p><span class="sku">SKU: BAG-DEMO-04</span>
 <rawnak-fit store-id="demo-merchant" product-id="BAG-DEMO-04" variant-id="brown" category="bag" product-name="شنطة Loop" button-text="جرّب الشنطة"></rawnak-fit></div>
 </article>
 </section>
@@ -104,6 +113,7 @@ document.addEventListener("rawnak-fit:add-to-cart", (event) =&gt; {
 <footer>© RAWNAK FIT AI · INTEGRATION DEMO · NOT A COMMERCIAL TRY-ON CERTIFICATION</footer>
 </div>
 <div id="toast" hidden role="status" aria-live="polite"></div>
+<script type="module" src="./gallery.js?v=20261118-a1"></script>
 <script>
 (() => {
  const cart=[];const toast=document.getElementById('toast');
