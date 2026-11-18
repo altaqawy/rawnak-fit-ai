@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#0b1815">
   <meta name="description" content="RAWNAK FIT AI — Live AR virtual try-on prototype.">
   <title>RAWNAK FIT AI — Live Virtual Mirror</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha060">
+  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha070">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.6 · PHOTO AR LAB</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.7 · BODY CALIBRATION</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -25,11 +25,17 @@
           <div id="stage-placeholder" class="stage-placeholder"><div class="camera-glyph">◌</div><div class="eyebrow">YOUR MIRROR IS READY</div><h2>ابدأ تجربة القياس</h2><p>الكاميرا شغالة داخل المتصفح، من غير رفع فيديو لخوادمنا</p><button id="start-main" class="btn primary" type="button">فتح الكاميرا</button></div>
           <div id="live-chip" class="live-chip hidden">● LIVE</div>
           <div id="track-chip" class="track-chip hidden">جاري بدء التتبع...</div>
+          <div id="fit-guide" class="fit-guide hidden" role="status" aria-live="polite"></div>
           <div id="camera-error" class="camera-error hidden" role="alert"></div>
         </div>
         <div class="mode-selector" role="group" aria-label="طريقة عرض الكاميرا">
           <button id="mode-sync" type="button" class="mode-button active" aria-pressed="true"><strong>متزامن مع AI</strong><small>كل لقطة مع نتيجة التتبع الخاصة بها</small></button>
           <button id="mode-fast" type="button" class="mode-button" aria-pressed="false"><strong>لايف سريع</strong><small>فيديو أسرع مع تحديث موضع القطعة</small></button>
+        </div>
+        <div id="fit-calibration" class="fit-calibration" aria-label="معايرة حجم المعاينة">
+          <div><strong>معايرة نسبية حسب الجسم</strong><small>النظام يقيس مواضع الكتفين/الوجه/المعصم داخل الصورة — مش مقاس الملابس الحقيقي بالسنتيمتر</small></div>
+          <label for="fit-scale">حجم المعاينة <output id="fit-scale-value">100%</output></label>
+          <input id="fit-scale" type="range" min="70" max="130" step="5" value="100">
         </div>
         <div id="demo-asset-switch" class="demo-asset-switch hidden" role="group" aria-label="نوع تجربة صورة المنتج">
           <div><strong>PHOTO AR LAB · 2D</strong><small id="asset-status">جاري تجهيز صورة المنتج</small></div>
@@ -63,5 +69,6 @@
   </main>
   <footer>© RAWNAK GROUP · FIT AI LAB <span>ALPHA PROTOTYPE · NOT A FIT GUARANTEE</span></footer>
 </div>
-<script type="module" src="./src/app.js?v=20261118-alpha060"></script>
+<script defer src="./src/fit-calibration.js?v=20261118-alpha070"></script>
+<script type="module" src="./src/app.js?v=20261118-alpha070"></script>
 </body></html>
