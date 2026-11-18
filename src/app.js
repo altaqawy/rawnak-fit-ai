@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.100';
+  const BUILD_ID = '2026.11.18.110';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -96,7 +96,9 @@
     if (label) label.textContent = state.assetMode === '3d'
       ? (state.threeError
           ? 'محرك 3D غير متاح · افتح تفاصيل الخطأ أو اختار الوضع 2D'
-          : state.three ? 'مجسم 3D هندسي حقيقي بعمق وإضاءة، لكنه مش إعادة بناء دقيقة للمنتج' : 'جاري تحميل محرك المجسمات 3D…')
+          : state.three ? (state.selected.id==='tee'
+            ? 'المجسم المرجعي GLB منفصل وبعظام للكتف، وغير مطابق للمنتج أو لمقاسه المعتمد'
+            : 'مجسم 3D هندسي تجريبي، مش موديل منتج معتمد') : 'جاري تحميل محرك المجسمات 3D…')
       : ready ? 'الصورة 2D للتجربة القديمة فقط، بدون عمق حقيقي'
       : 'جاري تجهيز صورة المنتج للتجربة';
   }
@@ -140,10 +142,16 @@
     if (state.three || state.threeLoading) return state.threeLoading || state.three;
     state.threeError = '';
     state.threeLoading = (async () => {
-      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha100', document.baseURI).href;
+      const moduleUrl = new URL('./src/fit-3d-renderer.js?v=20261118-alpha110', document.baseURI).href;
       const mod = await import(moduleUrl);
       const renderer = new mod.Fit3DRenderer(layers);
       state.three = renderer;
+      // Load fixed first-party reference only. Never treat user SKU/URL params
+      // as permission to fetch an arbitrary GLB or approve commercial geometry.
+      if(state.selected.id==='tee')void renderer.ensureReferenceGarment().then(()=>{
+        updateUI();
+        updatePhotoControl();
+      });
       return renderer;
     })().catch(error => {
       state.threeError = error?.message || String(error);
@@ -223,6 +231,8 @@
         updatePhotoControl();
         if (state.stream) {
           if (state.assetMode === '3d' && !state.three) void ensureThree();
+          if (state.assetMode === '3d' && state.three && item.id==='tee')
+            void state.three.ensureReferenceGarment().then(updateUI);
           void loadEngine(item.engine);
         }
         updateUI();
@@ -256,6 +266,17 @@
     const garmentControls=$('#garment-controls');
     if (garmentControls) garmentControls.classList.toggle('hidden',
       state.assetMode!=='3d'||!['tee','jacket'].includes(state.selected.id));
+    const modelInfo=$('#garment-source-status');
+    if(modelInfo){
+      const active=state.assetMode==='3d'&&state.selected.id==='tee';
+      modelInfo.classList.toggle('hidden',!active);
+      const m=state.three?.referenceStatus;
+      modelInfo.textContent=!state.three ? 'جارٍ تجهيز محرك 3D' :
+        m?.status==='ready' ? 'GLB Reference ✓ · SkinnedMesh + Shoulder Rig · غير معتمد للمقاسات' :
+        m?.status==='error' ? 'تعذر تحميل GLB · النموذج الهندسي القديم ظاهر للمقارنة: '+m.message :
+        m?.status==='loading' ? 'جاري تحميل GLB مرجعي مكوّن من شبكة وعظام…' :
+        'الموديل الهندسي القديم ظاهر مؤقتًا لحين تحميل مرجع GLB';
+    }
     const hint = $('#fit-guide');
     if (hint) {
       hint.textContent = state.fitHint;
