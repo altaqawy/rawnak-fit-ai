@@ -340,7 +340,12 @@ for(const id of ['name','sku','variant','rights-confirmed','category-confirmed']
 window.addEventListener('pagehide',()=>{
   state.photos.forEach(p=>URL.revokeObjectURL(p.url));cleanScene();
 });
-selectCategory('tshirt');
+const incoming=new URLSearchParams(location.search);
+const incomingCategory=incoming.get('category');
+selectCategory(PILOTS[incomingCategory]?incomingCategory:'tshirt');
+$('name').value=String(incoming.get('name')||'').slice(0,100);
+$('sku').value=String(incoming.get('sku')||'').slice(0,64);
+refresh();
 void fetch('./asset-library-sources.json').then(res=>{
   if(!res.ok)throw new Error('registry unavailable');
   return res.json();
