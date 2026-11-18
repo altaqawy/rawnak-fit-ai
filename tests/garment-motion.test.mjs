@@ -64,9 +64,9 @@ test('deformer only bends cloth sleeve vertices and retains original collar/hem'
  assert.deepEqual([...animated],[...rest]);
 });
 function fakeCtx(){
- const calls={clip:0,drawImage:0};
+ const calls={clip:0,drawImage:0,outerCaps:0};
  const ctx={
-  save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},arc(){},closePath(){},rect(){},
+  save(){},restore(){},beginPath(){},moveTo(){},lineTo(){},arc(...args){if(args[5]===true)calls.outerCaps++;},closePath(){},rect(){},
   clip(){calls.clip++;},drawImage(){calls.drawImage++;}
  };
  return {ctx,calls};
@@ -80,6 +80,7 @@ test('same-frame arm occlusion copies only a plausible crossed forearm',()=>{
  assert.equal(count,1);
  assert.equal(calls.drawImage,1);
  assert.equal(calls.clip,2,'torso + capsule clipping');
+ assert.equal(calls.outerCaps,2,'rounded capsule caps must point outward, not self-intersect');
 });
 test('occlusion refuses hidden limbs and arms confirmed behind the torso',()=>{
  const p=body();p[13]={x:.45,y:.43,visibility:1};p[15]={x:.54,y:.53,visibility:1};
