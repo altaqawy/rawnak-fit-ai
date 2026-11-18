@@ -2,6 +2,7 @@ import {
   CATEGORIES, classifyProduct, dominantProductColor, planProduct, createRecord, normalizeCategory
 } from './engine.js';
 import { getCaptureProfile, captureProgress } from './capture-profiles.js';
+import { getDemoProduct } from '../demo/catalog.js';
 
 const BUILD = '0.5.1';
 const $ = id => document.getElementById(id);
@@ -463,4 +464,38 @@ function wireUI() {
     for (const photo of state.files) URL.revokeObjectURL(photo.url);
   });
 }
+
+async function openDemoFixture() {
+  const params = new URLSearchParams(window.location.search);
+  const product = getDemoProduct(params.get('fixture'));
+  if (!product) return;
+  const banner = document.getElementById('fixture-message');
+  if (banner) {
+    banner.hidden = false;
+    banner.textContent = 'DATASET DEMO · ' + product.name +
+      ' — صورتان AI تجريبيتان، وليستا قياسات أو نموذج 3D معتمد.';
+  }
+  info('جاري جلب صور المنتج التجريبي من GitHub...');
+  try {
+    const files = await Promise.all(product.photos.map(async (photo, idx) => {
+      const url = new URL('../demo/' + photo.src.replace(/^\.\//,''), window.location.href);
+      const result = await fetch(url, { cache: 'no-cache' });
+      if (!result.ok) throw new Error('تعذر جلب الصورة ' + (idx + 1) + ' · HTTP ' + result.status);
+      const blob = await result.blob();
+      if (!blob.type.startsWith('image/')) throw new Error('ملف الصورة غير صالح');
+      return new File([blob], product.category + '-' + photo.angle + '.webp', { type: 'image/webp' });
+    }));
+    $('product-name').value = product.name;
+    $('sku').value = product.sku;
+    await handleFiles(files);
+    setCategory(product.category,'manual');
+    $('product-color').value=product.color;
+    $('color-code').textContent=product.color;
+    updatePlan();
+    info('تم استيراد '+files.length+' صورة من GitHub. راجع اللون والخامة والقياسات الحقيقية قبل عمل 3D.', 'success');
+  } catch (error) {
+    info('تعذر استيراد عينة المنتج: ' + (error.message || error), 'error');
+  }
+}
 wireUI();
+void openDemoFixture();
