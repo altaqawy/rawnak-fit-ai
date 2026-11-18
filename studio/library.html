@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#0c1916">
 <meta name="description" content="RAWNAK FIT — local-first product photos and 3D template quality lab">
 <title>RAWNAK FIT · Asset Library Studio</title>
-<link rel="stylesheet" href="./library.css?v=20261118.1">
+<link rel="stylesheet" href="./library.css?v=20261118.2">
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
 </script>
@@ -43,6 +43,10 @@
         </label>
         <input id="upload-images" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
         <p id="capture-advice" class="muted" aria-live="polite"></p>
+        <div class="style-extract">
+          <div class="style-heading"><div><small class="eyebrow">PHOTO → MATERIAL HINT</small><strong>استخراج لون مبدئي من صورة الأمام</strong></div><button class="outline small" id="estimate-style" type="button">تحليل اللون</button></div>
+          <div class="swatch-result"><span class="swatch" id="style-swatch"></span><span id="style-status" role="status">ارفع صورة أمامية وحدد زاويتها ثم اضغط تحليل اللون</span></div>
+        </div>
         <div id="photo-list" class="photo-list"></div>
         <div class="actions"><button id="clear-photos" type="button" class="outline small">مسح الصور</button><a href="./capture.html" id="capture-guide">تعليمات التصوير لهذه الفئة ↗</a></div>
       </section>
@@ -91,6 +95,6 @@
   </div>
   <footer>RAWNAK FIT AI · ASSET PIPELINE ALPHA · NOT PRODUCT-EXACT · <a href="https://github.com/altaqawy/rawnak-fit-ai">GitHub</a></footer>
 </main>
-<script type="module" src="./library.js?v=20261118.1"></script>
+<script type="module" src="./library.js?v=20261118.2"></script>
 </body>
 </html>
