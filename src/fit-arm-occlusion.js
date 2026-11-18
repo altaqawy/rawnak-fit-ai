@@ -19,9 +19,9 @@
     ctx.beginPath();
     ctx.moveTo(a.x+normalX*radius,a.y+normalY*radius);
     ctx.lineTo(b.x+normalX*radius,b.y+normalY*radius);
-    ctx.arc(b.x,b.y,radius,direction+Math.PI/2,direction-Math.PI/2,false);
+    ctx.arc(b.x,b.y,radius,direction+Math.PI/2,direction-Math.PI/2,true);
     ctx.lineTo(a.x-normalX*radius,a.y-normalY*radius);
-    ctx.arc(a.x,a.y,radius,direction-Math.PI/2,direction+Math.PI/2,false);
+    ctx.arc(a.x,a.y,radius,direction-Math.PI/2,direction+Math.PI/2,true);
     ctx.closePath();
     return true;
   }
