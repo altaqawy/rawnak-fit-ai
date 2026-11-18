@@ -102,6 +102,11 @@ export function createAssetDraft(input){
       processing:plan.model,primary:plan.primary,secondary:plan.secondary,liveEngine:plan.liveEngine},
     images:(input.photos||[]).map(p=>({name:String(p.name||'').slice(0,150),view:p.view,width:Number(p.width),height:Number(p.height),bytes:Number(p.bytes),issues:validatePhotoMetadata(p)})),
     dimensions:report.measurements,
+    visualHint: input.visualEstimate && /^#[0-9a-f]{6}$/i.test(input.visualEstimate.color||'')
+      ? {baseColor:input.visualEstimate.color,
+          source:'approximate-photo-histogram',approved:false,
+          confidence:input.visualEstimate.confidence==='medium'?'medium':'low'}
+      : null,
     quality:{...report,blockers:[...report.blockers, 'يلزم إنشاء/استيراد GLB مطابق ثم التحقق البصري والموافقة']},
     uploadedGlb: input.localGlb ? {name:String(input.localGlb.name||'').slice(0,150),
       bytes:Number(input.localGlb.bytes)||0,previewOnly:true,includedInExport:false}:null,
