@@ -192,3 +192,12 @@ New CI contract: `node --test tests/reference-glb.test.mjs`; runtime test on act
 The new merchant-side pilot supports T-shirts, watches and bags. It accepts local images with explicit view tags, validates minimum photo coverage, original pixel resolution, manufacturer dimensions and use-rights confirmation; suggests category-specific reusable modeling routes; estimates a **non-verified product color hint** from a front image; previews a local GLB on the device with orbit controls; and exports a strict metadata-only Asset Draft JSON.
 
 This is **not yet image-to-3D generation**. Third-party reconstruction models and marketplace assets have **not** been imported or run; the vendor's exact product design is not automatically reconstructed. Asset approval stays false until a real SKU GLB has been reviewed and authorized. The original AutoFit Studio now links into the pilot without transferring image files between pages.
+
+
+## New merchant requirement — photos only (2026-11-18)
+
+**[Open Photo-Only Studio](https://altaqawy.github.io/rawnak-fit-ai/studio/library.html)** · [Implementation and limitations](docs/PHOTO_ONLY_V02.md)
+
+The merchant supplies **images only**. All manual fields (category, angle tags, measurements, GLB upload, SKU) were removed from the merchant-facing Asset Library. Local MobileNet classification picks a category and reusable 3D demo template from an 11-category registry, and a local image histogram proposes the template color. The generated preview is illustrative; it is **not** a faithful photo-to-3D product reconstruction. For unknown categories or those missing a valid template, we show a transparent unavailability message instead of misrepresenting a different shape.
+
+Previous manual measurement and QA work remains archived in code for the developer workflow, but **is not required of sellers**. The next R&D milestone is category-specific image segmentation, silhouette deformation, real product texture projection, and automated comparison before merchant publication. See [Issue #6](https://github.com/altaqawy/rawnak-fit-ai/issues/6).
