@@ -214,6 +214,7 @@ export class Fit3DRenderer {
   }
   clear(){
     Object.values(this.meshes).forEach(mesh=>{mesh.visible=false;});
+    if (this.secondShoe) this.secondShoe.visible = false;
     this.renderer.clear();
   }
   render(category,landmarks,options){
