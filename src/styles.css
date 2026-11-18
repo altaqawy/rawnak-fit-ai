@@ -83,3 +83,19 @@
 .fit-embed .fit-calibration label{font-size:10px}
 @media(max-width:520px){.fit-guide{font-size:11px;top:60px;padding:7px 10px}
 .fit-calibration{margin:7px 12px 2px}}
+
+
+/* Alpha 0.8: WebGL scene layers. In sync mode the 3D pixels are composed
+   directly onto #sync-canvas after inference of that same camera frame.
+   In fast mode the WebGL canvas is overlaid above the raw camera video. */
+.camera-layers .fit-3d-layer{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:fill;visibility:hidden;pointer-events:none;z-index:3}
+.camera-layers.three-fast:not(.synced) .fit-3d-layer{visibility:visible}
+.camera-layers.synced .fit-3d-layer{visibility:hidden!important}
+.camera-layers.three-fast:not(.synced) #ar-canvas{visibility:hidden}
+.camera-layers .fit-3d-layer{transform:none}
+.camera-layers.flipped .fit-3d-layer{transform:scaleX(-1)}
+.demo-asset-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.demo-asset-buttons .btn{flex:1;min-width:125px}
+.demo-asset-buttons #asset-3d.selected{border-color:#c7f4a3;background:#294a30;color:#e7ffd0}
+@media(max-width:600px){.demo-asset-buttons .btn{min-width:0;flex-basis:calc(50% - 8px);padding:9px 8px;font-size:11px}}
