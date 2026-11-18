@@ -99,3 +99,19 @@
 .demo-asset-buttons .btn{flex:1;min-width:125px}
 .demo-asset-buttons #asset-3d.selected{border-color:#c7f4a3;background:#294a30;color:#e7ffd0}
 @media(max-width:600px){.demo-asset-buttons .btn{min-width:0;flex-basis:calc(50% - 8px);padding:9px 8px;font-size:11px}}
+
+
+/* Alpha 0.9 — light dynamic sleeve and experimental same-frame arm overlap. */
+.garment-controls{margin:8px 18px 2px;padding:11px 13px;border:1px solid #bce6a44a;
+ border-radius:13px;background:#1e3b2b;display:grid;gap:8px}
+.garment-controls.hidden{display:none!important}
+.garment-controls>div strong,.garment-controls>div small{display:block}
+.garment-controls strong{font:700 11px system-ui;color:#c5ee9d;letter-spacing:.5px}
+.garment-controls small{color:#aabfac;line-height:1.6;font-size:10px;margin:3px 0}
+.garment-controls label{display:flex;gap:9px;align-items:center;color:#d6ebce;font-size:12px;flex-wrap:wrap}
+.garment-controls label span{color:#a7c3ae;font-size:10px}
+.garment-controls input[type=checkbox]{accent-color:#c3f09e;width:17px;height:17px}
+.fit-embed .garment-controls{margin:4px 9px;padding:8px}
+.fit-embed .garment-controls>div small{display:none}
+@media(max-width:560px){.garment-controls{margin:7px 12px 3px;padding:9px 11px}
+ .garment-controls label{font-size:11px}}
