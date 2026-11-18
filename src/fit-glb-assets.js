@@ -48,3 +48,66 @@ export async function loadReferenceGarment(category) {
     fileUrl:url.href
   };
 }
+
+/**
+ * Inspector-only local preview import. Never uploads user files.
+ * A local file is untrusted and cannot become a published merchant asset.
+ * The GLB must follow our current 3-bone demonstration naming contract.
+ */
+export async function parseLocalGarmentFile(file) {
+  const MAX_FILE_BYTES = 20 * 1024 * 1024;
+  if (!file || !/\.glb$/i.test(file.name || '')) {
+    throw new Error('Choose a .glb file (not .gltf, .zip or executable content)');
+  }
+  if (!Number.isFinite(file.size) || file.size < 24 || file.size > MAX_FILE_BYTES) {
+    throw new Error('GLB must be between 24 bytes and 20 MB');
+  }
+  const data = await file.arrayBuffer();
+  const header = new DataView(data);
+  if (header.getUint32(0, true) !== 0x46546c67 ||
+      header.getUint32(4, true) !== 2 || header.getUint32(8, true) !== data.byteLength) {
+    throw new Error('Invalid GLB v2 header');
+  }
+  const {GLTFLoader} = await import('three/addons/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  const gltf = await loader.parseAsync(data, '');
+  let skinned = null;
+  gltf.scene.traverse(obj => { if(obj.isSkinnedMesh && !skinned)skinned=obj; });
+  const left = gltf.scene.getObjectByName('Shoulder_L');
+  const right = gltf.scene.getObjectByName('Shoulder_R');
+  if(!skinned || !left?.isBone || !right?.isBone) {
+    throw new Error('Rigged garment requires SkinnedMesh and Shoulder_L / Shoulder_R bones');
+  }
+  const position = skinned.geometry?.getAttribute('position');
+  const skinIndex = skinned.geometry?.getAttribute('skinIndex');
+  const skinWeight = skinned.geometry?.getAttribute('skinWeight');
+  if (!position || !skinIndex || !skinWeight ||
+      position.count < 100 || position.count > 150000 ||
+      skinIndex.count !== position.count ||
+      skinWeight.count !== position.count) {
+    throw new Error('GLB mesh / skin weights are missing or exceed preview limits');
+  }
+  // First version: inspect raw vertex bounds in model-local coordinates.
+  // This is a scale normalization, never a physical fit measurement.
+  const coords = position.array;
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(let i=0;i<coords.length;i+=3){
+    minX=Math.min(minX,coords[i]);maxX=Math.max(maxX,coords[i]);
+    minY=Math.min(minY,coords[i+1]);maxY=Math.max(maxY,coords[i+1]);
+  }
+  const width=Math.max(.01,maxX-minX),height=Math.max(.01,maxY-minY);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width>100 || height>100) {
+    throw new Error('GLB model units invalid for the demo');
+  }
+  return {
+    source:gltf.scene,
+    id:'LOCAL-UNVERIFIED',
+    skinned,
+    joints:{left,right},
+    modelWidth:width,
+    modelHeight:height,
+    status:'local_unverified',
+    approved:false,
+    fileName:String(file.name).slice(0,90)
+  };
+}
