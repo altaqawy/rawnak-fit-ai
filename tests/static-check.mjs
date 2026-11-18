@@ -29,11 +29,11 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
-assert.ok(html.includes('ALPHA 0.5.1'), 'HTML and release version updated');
-assert.ok(html.includes('src="./src/app.js?v=20261118-alpha051"'), 'JS has explicit cache busting version');
-assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha051"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('ALPHA 0.6'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261118-alpha060"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha060"'), 'CSS has explicit cache busting version');
 assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
-assert.ok(app.includes("const BUILD_ID = '2026.11.18.051'"), 'runtime identifies compiled source');
+assert.ok(app.includes("const BUILD_ID = '2026.11.18.060'"), 'runtime identifies compiled source');
 assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 assert.ok(html.includes('id="sync-canvas"'), 'frame synchronized output exists');
 assert.ok(html.includes('id="mode-sync"') && html.includes('id="mode-fast"'), 'sync/fast mode selectors exist');
@@ -49,4 +49,10 @@ assert.ok(app.includes("items.find(item => item.id === requestedItem)"), 'catego
 assert.ok(css.includes('.fit-embed .catalog-panel'), 'embedded view hides unrelated product catalog');
 assert.ok(existsSync(path.join(root, 'sdk/rawnak-fit.js')), 'SDK shipped');
 assert.ok(existsSync(path.join(root, 'demo/index.html')), 'merchant demo shipped');
+
+assert.ok(html.includes('id="demo-asset-switch"'), 'Photo AR compare controls exist');
+assert.ok(html.includes('id="asset-photo"') && html.includes('id="asset-generic"'), 'photo/generic toggle controls exist');
+assert.ok(app.includes("demoAssetPaths = Object.freeze"), 'demo images from finite allowlist');
+assert.ok(app.includes("drawDemoPhoto(ctx, state.landmarks, w, h)"), 'real product cutout overlay implemented');
+assert.ok(existsSync(path.join(root, 'tests/demo-products.test.mjs')), 'product photo QA tests exist');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');
