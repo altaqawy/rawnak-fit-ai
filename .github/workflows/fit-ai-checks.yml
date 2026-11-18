@@ -11,12 +11,16 @@ permissions:
 jobs:
   static-and-mock-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install the pinned Studio test dependencies
+        run: npm ci --prefix studio --no-audit --no-fund
+      - name: Verify the bundled Three.js runtime against its licensed package
+        run: npm run vendor:check --prefix studio
       - name: Check application JavaScript syntax
         run: |
           node --check src/app.js
@@ -74,5 +78,13 @@ jobs:
           node --check demo/gallery.js
           node --check demo/process.js
           node --test tests/demo-products.test.mjs
-
-
+      - name: Render bag families and round-trip animated GLBs in Chromium
+        env:
+          BAG_CHROMIUM: /usr/bin/google-chrome
+        run: npm run test:bag:browser --prefix studio
+      - name: Keep WebGL comparison views and measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bag-atelier-render-checks
+          path: studio/test-results/browser/
