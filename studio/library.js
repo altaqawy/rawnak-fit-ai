@@ -1,8 +1,9 @@
 import {PILOTS,VIEW_LABELS,getPilot,evaluatePilot,createAssetDraft,selectRecommendedRoute} from './asset-pipeline.js';
 import {getCaptureProfile} from './capture-profiles.js';
+import {estimateColorFromImageFile} from './photo-style.js';
 
 const $=id=>document.getElementById(id);
-const state={category:'tshirt',photos:[],viewer:null,glb:null,registry:null};
+const state={category:'tshirt',photos:[],viewer:null,glb:null,registry:null,visualEstimate:null};
 const safeStatus=(id,text)=>{const node=$(id);if(node)node.textContent=text;};
 const safeText=(el,text)=>{el.textContent=text;return el;};
 const make=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;};
@@ -23,8 +24,31 @@ function draftInput(){
       width:p.width,height:p.height,view:p.view})),
     measurements:measureValues(),rightsConfirmed:$('rights-confirmed').checked,
     categoryConfirmed:$('category-confirmed').checked,
-    localGlb:state.glb?{name:state.glb.name,bytes:state.glb.size}:null
+    localGlb:state.glb?{name:state.glb.name,bytes:state.glb.size}:null,
+    visualEstimate:state.visualEstimate
   };
+}
+function resetStyle(){
+  state.visualEstimate=null;
+  $('style-swatch').style.background='transparent';
+  safeStatus('style-status','ارفع صورة أمامية وحدد زاويتها ثم اضغط تحليل اللون');
+}
+async function runStyleAnalysis(){
+  const photo=state.photos.find(p=>p.view==='front');
+  if(!photo){
+    safeStatus('style-status','حدد صورة واحدة على الأقل كزاوية أمامية الأول.');
+    return;
+  }
+  safeStatus('style-status','جاري تحليل الصورة محليًا…');
+  try{
+    const result=await estimateColorFromImageFile(photo.file);
+    state.visualEstimate=result;
+    $('style-swatch').style.background=result.color||'transparent';
+    safeStatus('style-status',result.color
+      ? result.color+' · ثقة '+(result.confidence==='medium'?'متوسطة':'منخفضة')+' · لون تقريبي غير معتمد'
+      : result.reason);
+    refresh();
+  }catch(error){safeStatus('style-status','تعذر تحليل اللون: '+(error?.message||error));}
 }
 function selectCategory(category){
   if(!getPilot(category))return;
@@ -46,6 +70,7 @@ function selectCategory(category){
   }
   // Avoid carrying category-specific assumptions or dimension claims across categories.
   if(category!==prior){
+    resetStyle();
     state.photos.forEach(p=>p.view='angle');
     $('category-confirmed').checked=false;
     $('upload-glb').value='';
@@ -102,13 +127,13 @@ function renderPhotos(){
       const opt=make('option',null,label);opt.value=key;select.append(opt);
     }
     select.value=photo.view;
-    select.addEventListener('change',()=>{photo.view=select.value;refresh();});
+    select.addEventListener('change',()=>{photo.view=select.value;resetStyle();refresh();});
     info.append(select);
     const remove=make('button',null,'×');remove.type='button';
     remove.setAttribute('aria-label','حذف الصورة '+photo.file.name);
     remove.addEventListener('click',()=>{
       state.photos=state.photos.filter(x=>x!==photo);
-      URL.revokeObjectURL(photo.url);renderPhotos();refresh();
+      URL.revokeObjectURL(photo.url);resetStyle();renderPhotos();refresh();
     });
     row.append(image,info,remove);list.append(row);
   }
@@ -135,7 +160,7 @@ async function handlePhotos(files){
     try{added.push(await probeImage(file));}
     catch(e){safeStatus('qa-status',e.message);}
   }
-  state.photos.push(...added);renderPhotos();refresh();
+  state.photos.push(...added);resetStyle();renderPhotos();refresh();
 }
 function refresh(){
   const input=draftInput(),report=evaluatePilot(input),p=PILOTS[state.category];
@@ -290,9 +315,10 @@ $('upload-images').addEventListener('change',async e=>{
 $('upload-glb').addEventListener('change',async e=>{await previewGlb(e.target.files?.[0]);});
 $('clear-photos').addEventListener('click',()=>{
   state.photos.forEach(p=>URL.revokeObjectURL(p.url));
-  state.photos=[];$('upload-images').value='';renderPhotos();refresh();
+  state.photos=[];$('upload-images').value='';resetStyle();renderPhotos();refresh();
 });
 $('reset-model').addEventListener('click',()=>{$('upload-glb').value='';removeModel();refresh();});
+$('estimate-style').addEventListener('click',()=>void runStyleAnalysis());
 $('download-manifest').addEventListener('click',downloadJson);
 $('copy-report').addEventListener('click',()=>void copyReport());
 for(const id of ['name','sku','variant','rights-confirmed','category-confirmed'])
