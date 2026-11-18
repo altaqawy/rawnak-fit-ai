@@ -53,7 +53,9 @@ test('3D bag is near hip, not free-floating and needs actual torso visibility',(
   assert.ok(b.y>p[11].y*opts.height);
   assert.ok(b.y<p[24].y*opts.height+15);
   p[23].visibility=.02;
-  assert.equal(compute('bag',p,opts).ok,false);
+  const partial=compute('bag',p,opts);
+  assert.equal(partial.ok,true,'bag stays attached to visible shoulder');
+  assert.equal(partial.approximate,true,'cropped hips must mark pose as approximate');
 });
 test('3D watch points to hand and scales with palm width, not viewport width',()=>{
   const p=hand();
@@ -79,9 +81,13 @@ test('3D dress-independent demo supports watch, bangle, glasses, shirt, jacket, 
   assert.equal(compute('shoes',pose(),opts).ok,true);
   assert.equal(compute('ring',hand(),opts).ok,false,'unimplemented product must be explicitly rejected');
 });
-test('missing landmarks suppress bad placement rather than drawing random model',()=>{
+test('missing hips allow explicitly approximate 3D, missing shoulders/hand suppress guess',()=>{
   const p=pose();
   p[23]={x:1.18,y:.68,visibility:.9};
+  const incomplete=compute('tee',p,opts);
+  assert.equal(incomplete.ok,true);
+  assert.equal(incomplete.approximate,true);
+  p[11].visibility=.01;
   assert.equal(compute('tee',p,opts).ok,false);
   const w=hand();w[17].visibility=.01;
   assert.equal(compute('watch',w,opts).ok,false);
