@@ -342,7 +342,7 @@ window.addEventListener('pagehide',()=>{
 });
 const incoming=new URLSearchParams(location.search);
 const incomingCategory=incoming.get('category');
-selectCategory(PILOTS[incomingCategory]?incomingCategory:'tshirt');
+selectCategory(Object.hasOwn(PILOTS,incomingCategory)?incomingCategory:'tshirt');
 $('name').value=String(incoming.get('name')||'').slice(0,100);
 $('sku').value=String(incoming.get('sku')||'').slice(0,64);
 refresh();
