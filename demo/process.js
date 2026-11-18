@@ -40,9 +40,9 @@ function render() {
     ? Math.round(product.photos.length/profile.verifiedMin*100)+'%*' : '—';
   $('result-category').textContent=categories[product.category] || product.category;
   $('result-engine').textContent=product.engine;
-  $('result-tryon').textContent=product.hasPhotoAR2D?'قصاصة الصورة مع AR · 2D':'رسم توضيحي عام';
+  $('result-tryon').textContent='مجسم هندسي 3D لايف (تقريبي) · صورة 2D اختيارية';
   $('cutout-image').src=product.cutoutSrc||'';
-  setStatus('status-tryon', product.hasPhotoAR2D?'PHOTO AR 2D':'Demo AR','done');
+  setStatus('status-tryon','3D DEMO MESH','done');
   $('result-color').textContent='اضغط تحليل';
   $('result-ai').textContent='لم يتم تشغيله';
   const parts=$('parts');parts.replaceChildren();
@@ -52,9 +52,11 @@ function render() {
     parts.append(tag);
   }
   $('quality-warning').textContent=
-    'مراجعة الجودة: '+product.photoQA+'. قصاصة الصورة الحالية بتعرض جانبًا أماميًا فقط. صور AI لا تكفي لاعتماد الشكل من جميع الزوايا أو المقاسات، ولا يوجد GLB مطابق. لازم صور مصدر موثوق وقياسات قبل نشر 360°.';
+    'مراجعة الجودة: '+product.photoQA+'. مجسم 3D الهندسي موجود للعرض والدوران، لكنه ليس إعادة بناء دقيقة من الصور. قصاصة 2D القديمة مازالت متاحة للمقارنة. لازم GLB موثوق وأبعاد المورد قبل اعتماد تجربة المنتج الحقيقي.';
   $('studio-link').href='../studio/?fixture='+encodeURIComponent(product.sku);
   $('capture-link').href='../studio/capture.html?category='+encodeURIComponent(product.category);
+  $('inspect-3d-link').href='../diagnostics/3d-preview.html?product='+
+    encodeURIComponent(product.category==='tshirt'?'tee':product.category);
   const slot=$('tryon-slot');slot.replaceChildren();
   const widget=document.createElement('rawnak-fit');
   for(const [key,value] of Object.entries({
@@ -63,7 +65,7 @@ function render() {
     'variant-id':product.variant,
     'category':previewCategory[product.category],
     'product-name':product.name,
-    'button-text':'افتح تجربة AR التوضيحية'
+    'button-text':'جرّب مجسم 3D بالكاميرا'
   })) widget.setAttribute(key,value);
   slot.append(widget);
   setStatus('status-photos','جارٍ التحقق','off');
