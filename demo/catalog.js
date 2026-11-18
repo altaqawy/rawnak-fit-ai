@@ -11,7 +11,7 @@ export const DEMO_PRODUCTS = Object.freeze({
                    {name:"المشبك",motion:"hinged",material:"steel"}],
     measurements:{label:"قطر الساعة",value:"غير متاح — يحتاج قياس المورد"},
     photoQA:"صورتان مولدتان، لا تكفيان لمجسم معتمد 360°",
-    hasAccurate3D:false,hasActualProductOverlay:false
+    hasAccurate3D:false,hasActualProductOverlay:false,hasPhotoAR2D:true,cutoutSrc:"./assets/watch-cutout.webp"
   },
   "TEE-DEMO-02": {
     sku:"TEE-DEMO-02",name:"Everyday Sage T-shirt",category:"tshirt",engine:"garment-pattern",
@@ -22,7 +22,7 @@ export const DEMO_PRODUCTS = Object.freeze({
                    {name:"الحواف والياقة",motion:"deformable",material:"rib knit"}],
     measurements:{label:"قياسات القصّة",value:"غير متاحة — يحتاج جدول مقاسات وخامة"},
     photoQA:"أمام وخلف فقط، ولا توجد قياسات GSM أو استرتش",
-    hasAccurate3D:false,hasActualProductOverlay:false
+    hasAccurate3D:false,hasActualProductOverlay:false,hasPhotoAR2D:true,cutoutSrc:"./assets/tshirt-cutout.webp"
   },
   "GLASSES-DEMO-03": {
     sku:"GLASSES-DEMO-03",name:"Metro Black Gold",category:"glasses",engine:"parametric-glasses",
@@ -33,7 +33,7 @@ export const DEMO_PRODUCTS = Object.freeze({
                    {name:"الأذرع",motion:"hinged",material:"gold metal"}],
     measurements:{label:"عرض الإطار والجسر",value:"غير متاح — يحتاج قياسات المورد"},
     photoQA:"صورتان، تفاصيل المفصل والذراع الخلفي تحتاج مراجع إضافية",
-    hasAccurate3D:false,hasActualProductOverlay:false
+    hasAccurate3D:false,hasActualProductOverlay:false,hasPhotoAR2D:true,cutoutSrc:"./assets/glasses-cutout.webp"
   },
   "BAG-DEMO-04": {
     sku:"BAG-DEMO-04",name:"Loop Brown Leather",category:"bag",engine:"bag-image-to-3d",
@@ -45,7 +45,7 @@ export const DEMO_PRODUCTS = Object.freeze({
                    {name:"حلقات الحزام والقفل",motion:"rigid",material:"gold metal"}],
     measurements:{label:"الطول والعرض والعمق",value:"غير متاحة — يحتاج قياس المورد"},
     photoQA:"صورتان، تفاصيل الظهر والقاع والداخل غير مثبتة",
-    hasAccurate3D:false,hasActualProductOverlay:false
+    hasAccurate3D:false,hasActualProductOverlay:false,hasPhotoAR2D:true,cutoutSrc:"./assets/bag-cutout.webp"
   }
 });
 export function getDemoProduct(sku) {
