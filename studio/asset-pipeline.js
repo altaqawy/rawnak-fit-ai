@@ -32,7 +32,7 @@ export function validatePhotoMetadata(photo){
   if(!Object.hasOwn(VIEW_LABELS,photo?.view))problems.push('unassigned-view');
   return problems;
 }
-export function getPilot(category){return PILOTS[category]||null;}
+export function getPilot(category){return Object.hasOwn(PILOTS,category)?PILOTS[category]:null;}
 export function evaluatePilot(input){
   const plan=getPilot(input?.category);
   if(!plan)throw new Error('الفئة غير مدعومة في التجربة الأولى');
