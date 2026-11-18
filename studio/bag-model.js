@@ -1,220 +1,166 @@
-// RAWNAK FIT modular bag preview, actual geometries separated by role.
-// This is a dimensional, part-aware reference asset — NOT accurate image-to-3D.
+// Measured construction and rig in metres. No camera or AR runtime dependency.
 import * as THREE from 'three';
-import {createBagSpec,describeBagComponents,BAG_MATERIALS,BAG_CLOSURES} from './bag-spec.js';
+import {createBagSpec,describeBagComponents} from './bag-spec.js';
+import {makePattern,clamp} from './bag-patterns.js';
+import {grid,cord,stitches,sampled} from './bag-surfaces.js';
+import {makeMaterials} from './bag-materials.js';
+import {buildShell,buildPockets} from './bag-shell.js';
+import {buildCarriers,buildClosure} from './bag-mechanisms.js';
+import {cleanEdit} from './bag-editor.js';
 
-const cm=n=>Number(n)/100;
-const clamp=(n,a,b)=>Math.min(Math.max(n,a),b);
-function makeMat(hex,roughness=.8,metalness=0,transparent=false){
-  return new THREE.MeshStandardMaterial({color:hex,roughness,metalness,side:THREE.DoubleSide,transparent});
-}
-function addPart(root,name,role,geometry,material,pos,behavior='rigid',extra={}){
-  const mesh=new THREE.Mesh(geometry,material);
-  mesh.name=name;
-  mesh.position.set(...pos);
-  mesh.userData={
-    type:'bag_component',role,behavior,
-    movable:Boolean(extra.movable),joint:extra.joint||null,
-    dimensionsCm:extra.dimensionsCm||null,
-    verifiedFromPhotos:false,physicsImplemented:false
-  };
-  root.add(mesh);return mesh;
-}
-function tubularPath(root,name,role,coords,thickness,mat,behavior='flexible'){
-  const pts=coords.map(p=>new THREE.Vector3(...p));
-  const path=new THREE.CatmullRomCurve3(pts);
-  return addPart(root,name,role,new THREE.TubeGeometry(path,48,thickness,8,false),
-    mat,[0,0,0],behavior,{movable:true,joint:'strap_anchor'});
-}
-function brandedPlane(placement,w,h,d,material){
-  const logoW=clamp(w*.30,.032,.16),logoH=logoW*.47;
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(logoW,logoH),material);
-  mesh.name='BRAND_MARK_IMAGE';
-  mesh.userData={type:'bag_component',role:'logo',behavior:'surface-attached',
-    movable:false,logoPreviewOnly:true,verifiedFromPhotos:false};
-  if(placement==='back'){
-    mesh.rotation.y=Math.PI;mesh.position.set(0,h*.07,-d*.5-.004);
-  } else if(placement==='inside'){
-    mesh.rotation.y=Math.PI;mesh.position.set(0,h*.18,d*.5-.009);
-  } else {
-    mesh.position.set(0,h*.07,d*.5+.004);
+export function buildModularBag(input={},options={}){
+  const s=createBagSpec(input), p=makePattern(s,options.fit?.widths);
+  const root=new THREE.Group();root.name='RAWNAK_MODULAR_BAG';
+  const parts=new Map(),groups=new Map(),edits={},materials=new Set(),variants=new Map();
+  const maps=options.maps||{},m=makeMaterials(s,maps);
+  Object.values(m).forEach(mat=>materials.add(mat));
+  const list=describeBagComponents(s),refs=options.images||[];
+  const motions={open:[],swing:[],pockets:[]},morphs=[],anchors={},detail=options.profile==='mobile'?10:16;
+  const profile=options.profile==='mobile'?'mobile':'detail';
+  for(const source of list){
+    const edit=cleanEdit(source,options.edits?.[source.id]);edits[source.id]=edit;
+    const hits=refs.filter(img=>source.requires.includes(img.view));
+    const part={...source,behavior:edit.behavior||source.behavior,rigidity:edit.behavior||source.behavior,
+      flexibility:source.role==='panel'?s.flexibility:null,moving:edit.moving??source.moving,
+      mobility:(edit.moving??source.moving)?'movable':'fixed',animationImplemented:source.moving&&edit.moving!==false,
+      position:[0,0,0],orientation:[0,0,0,1],dimensions:{width:0,height:0,depth:0},
+      thicknessM:['panel','side','bottom','interior_partition','interior'].includes(source.role)?p.thickness:null,
+      anchors:{},connections:source.parent?[source.parent]:[],visible:edit.visible!==false,
+      geometryConstraints:{pattern:s.style,boundedToParent:true},range:null,
+      sourceEvidence:hits.map(i=>i.id||i.name),verification:hits.length?'reference-available':'inferred',
+      confidence:null,overrides:edit};
+    parts.set(part.id,part);
+    const g=new THREE.Group();g.name=part.id;g.userData={partId:part.id};
+    groups.set(part.id,g);root.add(g);
   }
-  return mesh;
-}
-export function buildModularBag(specInput={}){
-  const spec=createBagSpec(specInput);
-  const w=cm(spec.widthCm),h=cm(spec.heightCm),d=cm(spec.depthCm);
-  const skin=makeMat(spec.bodyColor,BAG_MATERIALS[spec.material].roughness);
-  const trim=makeMat(spec.bodyColor,.71);
-  const inside=makeMat(spec.lining==='leather'?'#866148':'#cfb5a0',.94);
-  const metal=makeMat(spec.metalColor,.24,.83);
-  const root=new THREE.Group();
-  root.name='RAWNAK_MODULAR_BAG_DRAFT';
-  root.userData={source:'merchant-supplied-structure',
-    isProductExact:false,physicalClothSimulation:false,rigVersion:'bag-schema-v0.1',
-    dimensionsCm:{width:spec.widthCm,height:spec.heightCm,depth:spec.depthCm},
-    material:spec.material,style:spec.style,fitAccurate:false,
-    reviewed:false,interiorSchematic:true};
-  const geometryParts={};
-  const panelThick=clamp(Math.min(w,h,d)*.038,.002,.009);
-  const sideThick=panelThick;
-  const front=addPart(root,'FRONT_PANEL','front_panel',new THREE.BoxGeometry(w,h,panelThick),
-    skin,[0,0,d/2],'semi-rigid',{dimensionsCm:{width:spec.widthCm,height:spec.heightCm}});
-  const back=addPart(root,'BACK_PANEL','back_panel',new THREE.BoxGeometry(w,h,panelThick),
-    skin,[0,0,-d/2],'semi-rigid',{dimensionsCm:{width:spec.widthCm,height:spec.heightCm}});
-  const left=addPart(root,'LEFT_GUSSET','left_gusset',new THREE.BoxGeometry(sideThick,h,d),
-    skin,[-w/2,0,0],BAG_MATERIALS[spec.material].behavior);
-  const right=addPart(root,'RIGHT_GUSSET','right_gusset',new THREE.BoxGeometry(sideThick,h,d),
-    skin,[w/2,0,0],BAG_MATERIALS[spec.material].behavior);
-  const bottom=addPart(root,'BOTTOM_PANEL','bottom_panel',new THREE.BoxGeometry(w,panelThick,d),
-    skin,[0,-h/2,0],'semi-rigid');
-  Object.assign(geometryParts,{front,back,left,right,bottom});
-  // Lining is rendered as a separate, narrow inner surface; no fabric solver yet.
-  const lining=addPart(root,'INNER_LINING','lining',
-    new THREE.BoxGeometry(w*.98,h*.96,.0015),inside,[0,0,-d*.5+.007],'flexible');
-  const dividers=[];
-  for(let i=1;i<spec.mainCompartments;i++){
-    const z=-d/2+d*i/spec.mainCompartments;
-    dividers.push(addPart(root,'DIVIDER_'+i,'interior_partition',
-      new THREE.BoxGeometry(w*.96,h*.83,.002),inside,[0,-h*.035,z],'flexible'));
+  function mesh(id,name,geometry,material){
+    const edit=edits[id];
+    if(edit?.roughness!==undefined){
+      const key=id+'_'+material.uuid;
+      if(!variants.has(key)){
+        const mat=material.clone();mat.roughness=edit.roughness;
+        variants.set(key,mat);materials.add(mat);
+      }
+      material=variants.get(key);
+    }
+    const o=new THREE.Mesh(geometry,material);o.name=id+'__'+name;o.userData={partId:id};
+    if(material.aoMap)geometry.setAttribute('uv1',geometry.attributes.uv.clone());
+    groups.get(id).add(o);return o;
   }
-  const pockets=[];
-  const pocketW=Math.min(w*.42,.18);
-  for(let i=0;i<spec.innerOpenPockets;i++){
-    const x=spec.innerOpenPockets===1?0:
-      (-.5+i/(spec.innerOpenPockets-1))*Math.min(w*.5,.24);
-    pockets.push(addPart(root,'OPEN_POCKET_'+(i+1),'inner_open_pocket',
-      new THREE.BoxGeometry(pocketW,.062,.002),inside,[x,-h*.08,d/2-.008],'flexible'));
+  function deformable(id,name,make,mat,affected){
+    const geom=make(0);
+    if(s.closure==='drawstring'&&affected){
+      const target=make(1);
+      geom.morphAttributes.position=[target.attributes.position];
+      geom.morphAttributes.normal=[target.attributes.normal];target.dispose();
+    }
+    const obj=mesh(id,name,geom,mat);
+    if(obj.morphTargetInfluences?.length){obj.morphTargetDictionary={open:0};morphs.push(obj);}
+    return obj;
   }
-  for(let i=0;i<spec.innerZippedPockets;i++){
-    const x=spec.innerZippedPockets===1?0:
-      (-.5+i/(spec.innerZippedPockets-1))*Math.min(w*.5,.24);
-    const zip=addPart(root,'ZIP_POCKET_'+(i+1),'inner_zip_pocket',
-      new THREE.BoxGeometry(pocketW,.056,.002),inside,[x,h*.1,-d/2+.012],'flexible');
-    pockets.push(zip);
-    addPart(root,'ZIP_POCKET_PULL_'+(i+1),'zipper_slider',
-      new THREE.BoxGeometry(.009,.010,.004),metal,
-      [x+pocketW*.35,h*.128,-d/2+.016],'rigid',{movable:true,joint:'slider'});
+  const sheet=(id,name,n,k,fn,mat,reverse=false)=>deformable(id,name,
+    o=>grid(n,k,(u,v)=>fn(u,v,o),reverse),mat,fn.length>2);
+  const path=(id,name,count,fn,radius,mat,dashed=false)=>deformable(id,name,
+    o=>(dashed?stitches:cord)(sampled(count,t=>fn(t,o)),radius),mat,fn.length>1);
+  function anchor(name,point,parent=root,origin=null){
+    const node=new THREE.Object3D();node.name='anchor_'+name;
+    node.position.set(...point);if(origin)node.position.sub(origin);
+    node.userData={anchor:name};parent.add(node);anchors[name]={node:node.name,position:point};
   }
-  for(let i=0;i<spec.outerPockets;i++){
-    const pocket=addPart(root,'OUTER_POCKET_'+(i+1),'outer_pocket',
-      new THREE.BoxGeometry(w*.43,h*.21,.013),skin,
-      [(i%2===0?-.21:.21)*w,-h*.15-i*.006,d/2+.012],
-      BAG_MATERIALS[spec.material].behavior);
-    pockets.push(pocket);
+  const hardware=(id,name,r,mat)=>mesh(id,name,new THREE.SphereGeometry(r,12,8),mat);
+  const limit=id=>edits[id]?.moving===false?0:(edits[id]?.motionLimit??1);
+  const c={p,s,m,mesh,sheet,path,parts,groups,edits,detail,motions,anchor,hardware,limit};
+  buildShell(c);buildPockets(c);buildCarriers(c);buildClosure(c);
+  anchor('base',p.volume(0,0,0,0));anchor('opening',p.volume(0,0,1,0));
+  let logo=null;
+  function setLogoTexture(texture){
+    if(!parts.has('brand_mark'))return;
+    const used=s.brandLicenseConfirmed?texture:null;
+    const material=logo?.material||m.art;
+    if(material.map&&material.map!==used)material.map.dispose();
+    material.map=used;material.needsUpdate=true;
+    if(logo){groups.get('brand_mark').remove(logo);logo.geometry.dispose();logo=null;}
+    if(!used)return;
+    const aspect=(used.image?.width||2)/(used.image?.height||1);
+    const width=Math.min(p.w*.25,p.h*.14*aspect), height=width/aspect;
+    const back=s.logoPlacement!=='front',inside=s.logoPlacement==='inside';
+    const angle=back?Math.PI:0,t=inside?.64:.30, center=p.surface(angle,t,inside?p.thickness*2:-p.thickness);
+    logo=mesh('brand_mark','BRAND_MARK_IMAGE',new THREE.PlaneGeometry(width,height),material);
+    logo.position.set(...center);if(back&&!inside)logo.rotation.y=Math.PI;
+    logo.renderOrder=1;
   }
-
-  const flapPivot=new THREE.Group();
-  flapPivot.name='CLOSURE_HINGE';
-  flapPivot.position.set(0,h/2,-d/2);
-  flapPivot.userData={type:'bag_component',role:'flap_joint',
-    behavior:'hinged',moving:true,rangeDegrees:[0,125],
-    physicsImplemented:false};
-  root.add(flapPivot);
-  if(['flap','magnetic','clasp'].includes(spec.closure)){
-    addPart(flapPivot,'FLAP_PANEL','flap',
-      new THREE.BoxGeometry(w*.97,h*.3,.007),skin,[0,-h*.15,d*.52],
-      BAG_MATERIALS[spec.material].behavior,{movable:true,joint:'hinge'});
-    addPart(flapPivot,'FLAP_HARDWARE','closure_hardware',
-      new THREE.BoxGeometry(.019,.014,.008),metal,
-      [0,-h*.29,d*.52+.009],'rigid',{movable:true,joint:'hinge'});
+  if(parts.has('brand_mark')){
+    if(['metal','patch'].includes(s.logoType)){
+      const inside=s.logoPlacement==='inside',angle=s.logoPlacement==='front'?0:Math.PI;
+      sheet('brand_mark','BRAND_BACKING',10,4,(u,v)=>p.surface(angle+(u-.5)*.40,.24+v*.12,
+        inside?p.thickness*1.8:-p.thickness*.72),s.logoType==='metal'?m.metal:m.trim);
+    }
+    setLogoTexture(maps.logo);
   }
-  const sliderGroup=new THREE.Group();sliderGroup.name='ZIPPER_SLIDER';
-  sliderGroup.userData={type:'bag_component',role:'zipper_slider',
-    behavior:'rigid',movable:true,joint:'translation'};
-  root.add(sliderGroup);
-  if(spec.closure==='zipper'){
-    addPart(root,'ZIPPER_TRACK','zipper',new THREE.BoxGeometry(w*.84,.003,.012),
-      metal,[0,h/2+.003,0],'semi-rigid',{movable:false});
-    addPart(sliderGroup,'ZIPPER_HANDLE','zipper_slider',
-      new THREE.BoxGeometry(.017,.012,.018),metal,
-      [0,h/2+.009,0],'rigid',{movable:true,joint:'translation'});
+  const closed=new Set();let cut=false;
+  function visibility(){
+    for(const part of parts.values()){
+      let v=true,up=part;
+      while(up){if(!up.visible){v=false;break;}up=parts.get(up.parent);}
+      if(cut&&['front_panel','piping','opening','closure','brand_mark'].includes(part.id))v=false;
+      if(cut&&(part.role==='outer_pocket'||part.id.startsWith('handle_')||part.id.startsWith('strap_')))v=false;
+      groups.get(part.id).visible=v;
+    }
+    // Front shell and front lining are cut together. Other cavity surfaces stay intact.
+    for(const mat of materials){
+      mat.clippingPlanes=cut?[new THREE.Plane(new THREE.Vector3(0,0,-1),p.d*.16)]:null;
+      mat.clipIntersection=false;
+    }
   }
-
-  const strapPivots=[];
-  const strapColor=makeMat(spec.bodyColor,.8);
-  for(let i=0;i<spec.strapCount;i++){
-    const attachment=new THREE.Group();
-    attachment.name='STRAP_ANCHOR_'+(i+1);
-    const rootY=h/2-.025;
-    attachment.position.set(0,rootY,0);
-    attachment.userData={type:'bag_component',role:'strap_anchor',
-      behavior:'hinged',moving:true,axis:'x'};
-    root.add(attachment);
-    const hStrap=clamp(cm(spec.strapLengthCm)*.44,w*.24,w*2.0);
-    const leftX=-w*.43,rightX=w*.43;
-    tubularPath(attachment,'STRAP_'+(i+1),'strap',
-      [[leftX,0,0],[leftX-.012,hStrap*.54,0],
-        [0,hStrap*.98,0],[rightX+.012,hStrap*.54,0],[rightX,0,0]],
-      cm(spec.strapWidthCm)*.17,strapColor);
-    strapPivots.push(attachment);
-    for(const x of [leftX,rightX])
-      addPart(root,'STRAP_ANCHOR_RING','hardware',
-        new THREE.TorusGeometry(.014,.0025,8,18),metal,[x,rootY,.008],
-        'rigid',{movable:false});
+  const unit=n=>clamp(Number(n)||0,0,1);
+  function setOpening(value){
+    const n=unit(value);
+    for(const fn of motions.open)fn(n);
+    for(const o of morphs)o.morphTargetInfluences[0]=n*limit('closure');
   }
-  const handlePivots=[];
-  for(let i=0;i<spec.handlesCount;i++){
-    const pivot=new THREE.Group();pivot.name='HANDLE_ANCHOR_'+(i+1);
-    pivot.position.set(0,h/2-.008,d*.34);root.add(pivot);
-    pivot.userData={type:'bag_component',role:'handle_anchor',
-      behavior:'semi-rigid',moving:true};
-    const span=Math.min(w*.32,.15);
-    tubularPath(pivot,'HANDLE_'+(i+1),'handle',
-      [[-span,0,0],[-span,.07,0],[0,.13,0],[span,.07,0],[span,0,0]],
-      .007,strapColor,'semi-rigid');
-    handlePivots.push(pivot);
+  const setSwing=n=>motions.swing.forEach(fn=>fn(clamp(Number(n)||0,-1,1)));
+  const setPockets=n=>motions.pockets.forEach(fn=>fn(unit(n)));
+  setOpening(0);setSwing(0);setPockets(0);visibility();root.updateMatrixWorld(true);
+  let triangles=0,draws=0;
+  for(const part of parts.values()){
+    const group=groups.get(part.id), bounds=new THREE.Box3();
+    group.traverse(o=>{
+      if(!o.isMesh||o.userData.partId!==part.id)return;
+      o.geometry.computeBoundingBox();bounds.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+      triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;draws++;
+    });
+    if(!bounds.isEmpty()){
+      const size=bounds.getSize(new THREE.Vector3());
+      part.dimensions={width:size.x,height:size.y,depth:size.z};
+      part.position=bounds.getCenter(new THREE.Vector3()).toArray();
+    }
+    part.orientation=group.getWorldQuaternion(new THREE.Quaternion()).toArray();
+    group.userData={partId:part.id,role:part.role,semanticParent:part.parent,joint:part.joint,
+      range:part.range,rigidity:part.rigidity,animationImplemented:part.animationImplemented};
+    if(part.role==='pocket_slider')part.range={unit:'path-fraction',min:0,max:limit(part.id)};
   }
-  const logoMaterial=new THREE.MeshBasicMaterial({
-    color:0xffffff,transparent:true,opacity:1,side:THREE.DoubleSide,depthWrite:false
-  });
-  const logo=brandedPlane(spec.logoPlacement,w,h,d,logoMaterial);
-  logo.visible=spec.logoPlacement!=='none';
-  root.add(logo);
-  const parts=describeBagComponents(spec);
-  root.userData.parts=parts;
-  const model={
-    root,parts,spec,geometryParts,logo,logoMaterial,strapPivots,handlePivots,
-    flapPivot,sliderGroup,lining,dividers,pockets,
-    setOpening(amount){
-      const n=clamp(Number(amount)||0,0,1);
-      flapPivot.rotation.x=-n*Math.PI*.66;
-      sliderGroup.position.x=(n-.5)*w*.78;
-      model.openAmount=n;
-    },
-    setSwing(amount){
-      const n=clamp(Number(amount)||0,-1,1);
-      for(const [i,p] of strapPivots.entries())p.rotation.z=n*.28*(i%2?-.85:1);
-      for(const [i,p] of handlePivots.entries())p.rotation.z=n*.13*(i%2?-.85:1);
-    },
-    setInterior(show){
-      // The outer front panel hides to expose the *schematic* partitions;
-      // this is an inspector X-ray, NOT a physically sewn flap/opening.
-      const enabled=Boolean(show);
-      front.visible=!enabled;
-      lining.visible=enabled;
-      dividers.forEach(x=>x.visible=enabled);
-      pockets.forEach(x=>{if(x.name.includes('OUTER'))x.visible=!enabled;else x.visible=enabled;});
-      model.insideShown=enabled;
-    },
-    setLogoTexture(texture){
-      if(logoMaterial.map && logoMaterial.map!==texture)logoMaterial.map.dispose();
-      logoMaterial.map=texture||null;
-      logoMaterial.color.set('#ffffff');
-      logoMaterial.needsUpdate=true;
-      logo.visible=Boolean(texture)&&spec.logoPlacement!=='none';
-    },
+  const body=parts.get('body');body.dimensions={width:p.w,height:p.h,depth:p.d};body.position=[0,p.h/2,0];
+  root.userData={schema:'rawnak.fit.bag/2',units:'m',style:s.style,profile,physicalSimulation:false,
+    merchantReview:options.approval||'unreviewed',photoGeometryVerified:false,retailARReady:false};
+  const carries=[];
+  for(const part of parts.values())if(['handle','strap'].includes(part.role)){
+    const mode=part.role==='handle'||s.strapType==='hand'?'handheld':s.strapType;
+    carries.push({mode,part:part.id,anchor:'anchor_'+part.id+'_carry',attachments:['a','b'].map(k=>'anchor_'+part.id+'_'+k)});
+  }
+  const graph={schema:'rawnak.fit.bag/2',units:'m',frame:{up:'+Y',front:'+Z',origin:'base-center',handedness:'right'},
+    style:s.style,parts:[...parts.values()],anchors,carryingModes:carries,profile,
+    performance:{triangles,draws,textureLimit:profile==='mobile'?512:1024},pose:'closed-neutral',
+    materials:{outer:s.material,lining:s.lining,baseColor:s.bodyColor,metalColor:s.metalColor,
+      source:Object.keys(maps).filter(k=>maps[k]),fallback:'procedural-PBR'},
+    verification:{merchantReview:options.approval||'unreviewed',photoGeometryVerified:false,physicalSimulation:false,retailARReady:false}};
+  return {root,spec:s,parts:graph.parts,graph,groups,pattern:p,setOpening,setSwing,setPockets,setLogoTexture,
+    setInterior(enabled){cut=Boolean(enabled);visibility();},
     dispose(){
-      root.traverse(o=>{
-        o.geometry?.dispose?.();
-      });
-      for(const material of new Set([skin,trim,inside,metal,strapColor,logoMaterial]))
-        {material.map?.dispose?.();material.dispose();}
+      if(closed.has(root))return;closed.add(root);
+      const geometries=new Set(),textures=new Set(Object.values(maps).filter(Boolean));
+      root.traverse(o=>{if(o.geometry)geometries.add(o.geometry);});
+      for(const mat of materials){for(const prop of Object.values(mat))if(prop?.isTexture)textures.add(prop);mat.dispose();}
+      for(const tex of textures)tex.dispose();for(const geo of geometries)geo.dispose();root.clear();
     }
   };
-  model.setOpening(0);
-  model.setSwing(0);
-  model.setInterior(false);
-  logo.visible=false;
-  return model;
 }

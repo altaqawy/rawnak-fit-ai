@@ -5,13 +5,13 @@
  * Parts and joints define what may move; physical simulation is a later gate.
  */
 export const BAG_STYLES=Object.freeze({
-  structured:{name:'Structured / Satchel',shape:'box',family:'structured'},
+  structured:{name:'Structured / Satchel',shape:'tailored',family:'structured'},
   tote:{name:'Tote / Shopper',shape:'tapered',family:'structured'},
   baguette:{name:'Baguette / Shoulder',shape:'wide',family:'structured'},
   hobo:{name:'Hobo / Crescent',shape:'soft-curve',family:'soft'},
   bucket:{name:'Bucket / Drawstring',shape:'bucket',family:'soft'},
   clutch:{name:'Clutch / Pouch',shape:'compact',family:'structured'},
-  backpack:{name:'Backpack',shape:'box',family:'structured'},
+  backpack:{name:'Mini Backpack',shape:'domed',family:'structured'},
   saddle:{name:'Saddle / Rounded',shape:'curve',family:'structured'}
 });
 export const BAG_MATERIALS=Object.freeze({
@@ -29,13 +29,15 @@ export const BAG_CLOSURES=Object.freeze({
  magnetic:{name:'مغناطيس/كبّاس',mechanism:'snap'},
  drawstring:{name:'رباط شد',mechanism:'pull'},
  open:{name:'مفتوحة',mechanism:'none'},
- clasp:{name:'قفل معدني',mechanism:'hinge'}
+ clasp:{name:'قفل معدني',mechanism:'hinge'},
+ buckle:{name:'إبزيم',mechanism:'hinge'},button:{name:'زر',mechanism:'snap'}
 });
 export const VIEW_LABELS=Object.freeze({
  front:'الأمام',back:'الخلف',left:'الجانب الأيسر',right:'الجانب الأيمن',
  bottom:'القاعدة',top:'الأعلى/فتحة الشنطة',open:'وهي مفتوحة',inside:'التقسيم الداخلي',
  pockets:'الجيوب من الداخل',strap:'الحزام/اليد',closure:'القفل أو السوستة',
- logo:'صورة الشعار/اللوجو',detail:'تفاصيل/خياطة'
+ logo:'صورة الشعار/اللوجو',detail:'تفاصيل/خياطة',outer:'الجيوب الخارجية',handles:'الأيدي',compartments:'الفواصل',
+ material:'عينة لون وخامة',normal:'خريطة السطح',roughness:'خريطة الخشونة',metalness:'خريطة المعدن',ao:'خريطة الظلال'
 });
 const defaults=Object.freeze({
  widthCm:28,heightCm:20,depthCm:11,
@@ -45,6 +47,8 @@ const defaults=Object.freeze({
  mainCompartments:2,innerOpenPockets:1,innerZippedPockets:1,outerPockets:0,
  lining:'polyester',logoPlacement:'front',logoType:'print',logoText:'',
  bodyColor:'#996247',metalColor:'#d9be80',
+ panelThicknessMm:2.2,roundness:50,gussetWidth:100,sideTaper:0,openingScale:100,baseCurve:50,
+ handleDropCm:9,flapLength:42,cardSlots:0,accessoryPockets:0,reinforced:true,detachable:true,adjustable:true,
  brandLicenseConfirmed:false
 });
 const inRange=(v,min,max)=>Number.isFinite(Number(v))&&Number(v)>=min&&Number(v)<=max;
@@ -54,6 +58,8 @@ const yes=(v)=>v===true;
 const color=(v,fallback)=>/^#[a-f\d]{6}$/i.test(String(v||''))?v:fallback;
 const BOUNDS=Object.freeze({
  widthCm:[8,85],heightCm:[6,70],depthCm:[2,45],
+ panelThicknessMm:[.5,6],roundness:[0,100],gussetWidth:[45,100],sideTaper:[-60,60],openingScale:[55,100],baseCurve:[0,90],
+ handleDropCm:[2,40],flapLength:[15,70],cardSlots:[0,5],accessoryPockets:[0,3],
  strapCount:[0,2],strapLengthCm:[0,210],strapWidthCm:[.4,12],
  handlesCount:[0,2],flexibility:[0,100],
  mainCompartments:[1,5],innerOpenPockets:[0,8],innerZippedPockets:[0,8],outerPockets:[0,8]
@@ -66,7 +72,7 @@ export function createBagSpec(patch={}){
  x.strapCount=Math.round(x.strapCount);
  x.handlesCount=Math.round(x.handlesCount);
  x.mainCompartments=Math.round(x.mainCompartments);
- for(const k of ['innerOpenPockets','innerZippedPockets','outerPockets'])x[k]=Math.round(x[k]);
+ for(const k of ['innerOpenPockets','innerZippedPockets','outerPockets','cardSlots','accessoryPockets'])x[k]=Math.round(x[k]);
  x.style=select(patch.style,BAG_STYLES,defaults.style);
  x.material=select(patch.material,BAG_MATERIALS,defaults.material);
  x.closure=select(patch.closure,BAG_CLOSURES,defaults.closure);
@@ -77,6 +83,7 @@ export function createBagSpec(patch={}){
  x.logoText=String(patch.logoText||'').slice(0,100);
  x.bodyColor=color(patch.bodyColor,defaults.bodyColor);
  x.metalColor=color(patch.metalColor,defaults.metalColor);
+ for(const key of ['reinforced','detachable','adjustable'])x[key]=typeof patch[key]==='boolean'?patch[key]:defaults[key];
  x.brandLicenseConfirmed=yes(patch.brandLicenseConfirmed);
  // Crossbody is a carrying mode, not a unique geometric body.
  if(x.strapType==='none')x.strapCount=0;
@@ -88,13 +95,16 @@ export function requiredBagViews(specInput={}){
  if(s.innerOpenPockets+s.innerZippedPockets+s.outerPockets>0)required.push('pockets');
  if(s.strapCount>0 || s.handlesCount>0)required.push('strap');
  if(s.closure!=='open')required.push('closure');
- if(s.logoPlacement!=='none')required.push('logo');
+ if(s.logoPlacement!=='none'&&s.logoType!=='none')required.push('logo');
+ if(s.outerPockets)required.push('outer');
+ if(s.cardSlots+s.accessoryPockets>0&&!required.includes('pockets'))required.push('pockets');
  return required;
 }
 export function detectViewFromName(name){
  const str=String(name||'');
  const patterns={
-  front:/(?:front|واجهة|امام|أمام)/i,back:/(?:back|rear|خلف|ظهر)/i,
+  outer:/(?:outer.?pocket|external.?pocket|جيب خارجي)/i,handles:/(?:handles?|مقبض)/i,compartments:/(?:compartments?|divider|فواصل)/i,
+  material:/(?:swatch|material|خامة)/i,front:/(?:front|واجهة|امام|أمام)/i,back:/(?:back|rear|خلف|ظهر)/i,
   left:/(?:left|يسار|شمال)/i,right:/(?:right|يمين)/i,
   bottom:/(?:bottom|under|قاعد|اسفل|أسفل)/i,top:/(?:top|opening|اعلى|أعلى|فوق)/i,
   open:/(?:open|opened|مفتوح)/i,inside:/(?:interior|inside|lining|داخل|بطان)/i,
@@ -103,44 +113,59 @@ export function detectViewFromName(name){
   logo:/(?:brand|logo|شعار|لوجو)/i,
   detail:/(?:details?|seam|stitch|تفاصيل|خياط)/i
  };
- for(const view of ['logo','pockets','inside','open','closure','strap','bottom','top','front','back','left','right','detail']){
+ for(const view of ['logo','outer','handles','compartments','material','pockets','inside','open','closure','strap','bottom','top','front','back','left','right','detail']){
    if(patterns[view].test(str))return {view,confidence:'low',source:'filename'};
  }
  return {view:'unknown',confidence:'none',source:'unresolved'};
 }
 export function describeBagComponents(specInput={}){
- const s=createBagSpec(specInput),kind=BAG_MATERIALS[s.material].behavior;
- const components=[
-  {id:'front_panel',role:'panel',behavior:kind,moving:false,material:s.material,requires:['front']},
-  {id:'back_panel',role:'panel',behavior:kind,moving:false,material:s.material,requires:['back']},
-  {id:'left_gusset',role:'side',behavior:kind,moving:false,requires:['left']},
-  {id:'right_gusset',role:'side',behavior:kind,moving:false,requires:['right']},
-  {id:'bottom_panel',role:'bottom',behavior:'semi-rigid',moving:false,requires:['bottom']},
-  {id:'lining',role:'interior',behavior:'flexible',moving:false,requires:['inside']},
-  {id:'opening',role:'opening',behavior:'rigid',moving:false,requires:['open']}
- ];
- for(let i=0;i<s.mainCompartments-1;i++)
-   components.push({id:'divider_'+(i+1),role:'interior_partition',behavior:'flexible',
-     moving:false,requires:['inside']});
- for(let i=0;i<s.innerOpenPockets;i++)
-   components.push({id:'inner_open_pocket_'+(i+1),role:'open_pocket',behavior:'flexible',moving:false,requires:['pockets']});
- for(let i=0;i<s.innerZippedPockets;i++)
-   components.push({id:'inner_zip_pocket_'+(i+1),role:'zip_pocket',behavior:'flexible',moving:false,requires:['pockets']});
- for(let i=0;i<s.outerPockets;i++)
-   components.push({id:'outer_pocket_'+(i+1),role:'outer_pocket',behavior:kind,moving:false,requires:['front']});
- for(let i=0;i<s.strapCount;i++)
-   components.push({id:'strap_'+(i+1),role:'strap',behavior:'flexible',moving:true,
-     joint:'strap_anchor',degreesOfFreedom:['swing'],requires:['strap']});
- for(let i=0;i<s.handlesCount;i++)
-   components.push({id:'handle_'+(i+1),role:'handle',behavior:'semi-rigid',moving:true,
-     joint:'handle_anchor',degreesOfFreedom:['swing'],requires:['strap']});
- if(s.closure!=='open')components.push({id:'closure',role:s.closure,
-   behavior:'rigid',moving:true,joint:BAG_CLOSURES[s.closure].mechanism,
-   degreesOfFreedom:[BAG_CLOSURES[s.closure].mechanism==='hinge'?'rotation':'translation'],
-   requires:['closure','open']});
- if(s.logoPlacement!=='none')components.push({id:'brand_mark',role:'logo',behavior:'surface-attached',
-   moving:false,requires:['logo']});
- return components;
+ const s=createBagSpec(specInput),skin=BAG_MATERIALS[s.material].behavior,parts=[];
+ const add=(id,role,parent,requires,material=s.material,behavior=skin,joint=null) => {
+   parts.push({id,role,type:role,parent,requires,material,behavior,moving:Boolean(joint),
+     joint,verifiedFromPhotos:false});
+ };
+ add('body','assembly',null,[]);
+ for(const [id,role,view] of [['front_panel','panel','front'],['back_panel','panel','back'],
+   ['left_gusset','side','left'],['right_gusset','side','right'],['bottom_panel','bottom','bottom']])
+   add(id,role,'body',[view]);
+ add('opening','opening','body',['top','open']);
+ add('piping','piping','body',['front','back','detail']);
+ if(s.reinforced)add('base_insert','reinforcement','bottom_panel',['bottom','inside']);
+ if(s.lining!=='none')add('lining','interior','body',['inside'],s.lining,'flexible');
+ const interior=s.lining==='none'?'body':'lining';
+ for(let i=1;i<=s.mainCompartments;i++){
+   add('compartment_'+i,'compartment',interior,['inside'], 'air','fixed');
+   if(i<s.mainCompartments)add('divider_'+i,'interior_partition',interior,['inside'],s.lining==='none'?s.material:s.lining,'flexible');
+ }
+ for(const [prefix,count,role,view] of [
+   ['inner_open_pocket',s.innerOpenPockets,'open_pocket','pockets'],
+   ['inner_zip_pocket',s.innerZippedPockets,'zip_pocket','pockets'],
+   ['outer_pocket',s.outerPockets,'outer_pocket','outer'],
+   ['card_slot',s.cardSlots,'card_slot','pockets'],
+   ['accessory',s.accessoryPockets,'accessory_pocket','pockets']]){
+   for(let i=1;i<=count;i++){
+     const id=prefix+'_'+i,outside=role==='outer_pocket';
+     add(id,role,outside?'front_panel':interior,[view],outside?s.material:(s.lining==='none'?s.material:s.lining),'flexible');
+     if(role==='zip_pocket')add(id+'_slider','pocket_slider',id,['pockets'],'hardware','rigid','slider');
+   }
+ }
+ for(const [prefix,count] of [['strap',s.strapCount],['handle',s.handlesCount]]){
+   for(let i=1;i<=count;i++){
+     const id=prefix+'_'+i;
+     for(const side of ['a','b']){
+       add(id+'_tab_'+side,'attachment_loop','body',['strap']);
+       add(id+'_ring_'+side,'ring',id+'_tab_'+side,['strap'],'hardware','rigid');
+     }
+     add(id,prefix,'body',['strap'],s.material,prefix==='strap'?'flexible':'semi-rigid',prefix+'_anchor');
+     if(prefix==='strap'&&s.adjustable)add(id+'_buckle','adjuster',id,['strap'],'hardware','rigid');
+     if(prefix==='strap'&&s.detachable)add(id+'_clips','connector',id,['strap'],'hardware','rigid');
+   }
+ }
+ if(s.closure!=='open')add('closure',s.closure,'opening',['closure','open'],
+   s.closure==='zipper'?'hardware':s.material,'rigid',BAG_CLOSURES[s.closure].mechanism);
+ if(s.logoPlacement!=='none'&&s.logoType!=='none')add('brand_mark','logo',
+   s.logoPlacement==='back'?'back_panel':s.logoPlacement==='inside'?interior:'front_panel',['logo'],s.logoType,'surface-attached');
+ return parts;
 }
 export function evaluateBagCapture(specInput={},images=[]){
  const spec=createBagSpec(specInput);
@@ -165,14 +190,14 @@ export function evaluateBagCapture(specInput={},images=[]){
 }
 export function makeBagDraft(specInput={},images=[]){
  const spec=createBagSpec(specInput),report=evaluateBagCapture(spec,images);
- return {schemaVersion:1,kind:'rawnak-modular-bag',units:'cm',spec,
+ return {schemaVersion:2,kind:'rawnak-modular-bag',units:'cm',spec,
   parts:describeBagComponents(spec),capture:report,
   images:(Array.isArray(images)?images:[]).map(p=>({
     name:String(p.name||'').slice(0,140),view:p.view||'unknown',
     width:Number(p.width)||0,height:Number(p.height)||0,bytes:Number(p.bytes)||0
   })),
   output:{generatedGeometry:'parametric-preview-only',photoTo3DFaithful:false,
-    articulatedParts:true,physicalSimulation:false,insideMode:'schematic',
+    articulatedParts:true,physicalSimulation:false,insideMode:'bounded-parametric-cavity',
     brandImageEmbedded:false,commerciallyApproved:false,retailARReady:false},
   provenance:{merchantMeasurementsProvided:true,photoClaimsUnverified:true,
     inferenceMayBeWrong:true}
