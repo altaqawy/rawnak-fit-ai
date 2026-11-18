@@ -46,6 +46,8 @@ jobs:
         run: node --test tests/fit-3d.test.mjs
       - name: Test garment motion and same-frame arm overlap
         run: node --test tests/garment-motion.test.mjs
+      - name: Test rounded garment geometry and interactive sleeve pivots
+        run: node --test tests/garment-surface.test.mjs
       - name: Check SDK script syntax
         run: |
           node --check sdk/rawnak-fit.js
