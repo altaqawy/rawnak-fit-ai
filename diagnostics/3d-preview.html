@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#10231c">
-<title>RAWNAK FIT — 3D Model Inspector</title>
+<title>RAWNAK FIT — Rigged Garment GLB Lab</title>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
+</script>
 <style>
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 10% 15%,#254b33,#0e1f17 52%);color:#edf7e9;font:14px system-ui,'Segoe UI',sans-serif}
 main{max-width:1050px;margin:auto;padding:22px 16px 46px}
@@ -33,7 +36,7 @@ button:disabled{opacity:.5}
 <body>
 <main>
 <nav><strong>✳ RAWNAK FIT / 3D ENGINE</strong><a href="../demo/">العودة للمتجر التجريبي</a></nav>
-<div class="kicker">ALPHA 1.0 · ROUNDED GARMENT 3D · NO CAMERA REQUIRED</div>
+<div class="kicker">ALPHA 1.1 · RIGGED GLB GARMENT LAB · NO CAMERA REQUIRED</div>
 <h1>لف المجسم من كل الاتجاهات <span style="color:#bdeb9f">بدون كاميرا</span></h1>
 <p>التجربة الجديدة فيها جسم قماش منحني ورقبة دائرية وأكمام منفصلة بتتحرك مع الذراعين. اسحب بإصبعك فوق المجسم عشان تلفه من أي زاوية، وبعدها جرّبه على الكاميرا.</p>
 <div class="layout">
@@ -59,6 +62,11 @@ button:disabled{opacity:.5}
     <div class="control"><label for="zoom">حجم المجسم: <output id="zoom-value">110%</output></label>
       <input id="zoom" type="range" min="70" max="145" value="110" step="5">
     </div>
+    <div class="control" id="glb-row">
+      <label><input id="use-glb" type="checkbox" checked> استخدام GLB مرجعي بعظام للكتفين</label>
+      <small id="asset-load-status" role="status" aria-live="polite" style="color:#bfe5a4;line-height:1.7">جارٍ تجهيز تحميل ملف GLB…</small>
+      <small style="color:#bdc8b4">المجسم المرجعي أصلي للتجربة، لم يُستخرج من صور التيشيرت ولم تتم مراجعة قياساته.</small>
+    </div>
     <div class="control" id="sleeve-row">
        <label for="sleeve">رفع الأكمام: <output id="sleeve-value">0°</output></label>
        <input id="sleeve" type="range" min="-60" max="60" value="0" step="5">
@@ -83,8 +91,16 @@ if (query.has('product') && [...$('category').options].some(x=>x.value===query.g
 try {
   const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha100');
   scene=new Fit3DRenderer($('preview'));
-  $('status').textContent='WebGL جاهز ✓ — اسحب بإصبعك لتدوير المجسم، أو حرّك شريط الأكمام';
+  $('status').textContent='WebGL جاهز ✓ — جارٍ تحميل Skinned GLB مرجعي…';
   $('capture').disabled=false;
+  scene.ensureReferenceGarment().then((model)=>{
+    if(!active || !scene)return;
+    $('asset-load-status').textContent=model
+      ? '✓ GLB محمّل · 3 Shoulder Joints · عرض تجريبي غير معتمد'
+      : 'تعذر تحميل GLB — المعروض هو المجسم القديم للمقارنة · '+
+        (scene.referenceStatus.message||'تحقق من الاتصال وملف GLB');
+    lastCategory=null;
+  });
 } catch(error) {
   $('status').textContent='محرك 3D فشل على الجهاز: '+(error?.message||error);
   console.error('[RAWNAK FIT 3D INSPECTOR]',error);
@@ -101,15 +117,21 @@ function loop(now){
     $('tilt-value').textContent=$('tilt').value+'°';
     $('zoom-value').textContent=$('zoom').value+'%';
     const category=$('category').value;
+    $('glb-row').classList.toggle('hidden',category!=='tee');
+    const wantReference=$('use-glb').checked;
+    if(scene.useReferenceGLB!==wantReference)scene.setUseReferenceGLB(wantReference);
     if(category!==lastCategory){
       lastCategory=category;
       const mesh=scene.meshes?.[category]?.userData?.garmentMesh;
       const geo=mesh?.geometry;
       const n=geo?.attributes?.position?.count || 0;
       const triangles=geo?.index?.count ? geo.index.count/3 : (geo?.index?.length||0)/3;
-      $('status').textContent=n
-        ? 'Smooth Fabric Mesh ✓ · '+n+' vertices · '+Math.round(triangles)+' triangles · كمّين متحركين'
-        : '3D WebGL ✓ · مجسم هندسي توضيحي، مش أصل المنتج المعتمد';
+      const imported=category==='tee' && scene.useReferenceGLB && scene.referenceTee;
+      $('status').textContent=imported
+        ? 'GLB / SkinnedMesh ✓ · 3 Joint Rig · دي تجربة عظام مش قياس ملابس معتمد'
+        : n
+          ? 'Procedural Legacy · '+n+' vertices · '+Math.round(triangles)+' triangles'
+          : '3D WebGL ✓ · مجسم هندسي توضيحي';
     }
     $('sleeve-row').classList.toggle('hidden',category!=='tee'&&category!=='jacket');
     $('sleeve-value').textContent=$('sleeve').value+'°';
@@ -128,6 +150,7 @@ $('capture').addEventListener('click',()=>{
  anchor.click();
 });
 $('yaw').addEventListener('input',()=>{$('auto').checked=false;});
+$('use-glb').addEventListener('change',()=>{lastCategory=null;});
 const surface=$('preview');
 surface.addEventListener('pointerdown',event=>{
   if(event.button!==0 && event.pointerType==='mouse')return;
