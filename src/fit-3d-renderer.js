@@ -173,10 +173,38 @@ function closedSeam(root,points,material,radius,name){
   return add(root,new THREE.TubeGeometry(curve,Math.max(32,points.length*2),
     radius,6,true),material,name);
 }
+function cottonWeaveTexture() {
+  // 64px procedural swatch tiled on the mesh; no online image generation, tiny GPU cost.
+  // Material is illustrative and deliberately not a claim about an actual merchant fabric.
+  if(!THREE.CanvasTexture || !document?.createElement)return null;
+  try {
+    const canvas=document.createElement('canvas');
+    canvas.width=64;canvas.height=64;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)return null;
+    ctx.fillStyle='#eeeeee';
+    ctx.fillRect(0,0,64,64);
+    for(let i=0;i<64;i+=4){
+      ctx.fillStyle='rgba(85,85,85,.12)';
+      ctx.fillRect(i,0,1,64);
+      ctx.fillStyle='rgba(255,255,255,.17)';
+      ctx.fillRect(0,i,64,1);
+    }
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.wrapS=THREE.RepeatWrapping;
+    tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(6,9);
+    tex.colorSpace=THREE.SRGBColorSpace;
+    tex.needsUpdate=true;
+    return tex;
+  } catch {return null;}
+}
 function buildShirt(jacket=false){
   const g=new THREE.Group();
   g.name=(jacket?'Light jacket':'Sage-green tee')+' — rounded fabric shell demo';
   const fabric=standard(jacket?'#426d73':'#467a5a',0,.96);
+  const fabricMap=cottonWeaveTexture();
+  if(fabricMap){fabric.map=fabricMap;fabric.needsUpdate=true;}
   const rib=standard(jacket?'#294c56':'#315c43',.01,.91);
   const seam=standard(jacket?'#6c9391':'#65947a',.01,.9);
   const shell=parametricShell(30,36,pointOnTorso);
@@ -242,10 +270,16 @@ function buildShoe(){
   return g;
 }
 function disposeGroup(node){
+  const materials=new Set();
   node.traverse(x=>{
     x.geometry?.dispose?.();
-    if(x.material)(Array.isArray(x.material)?x.material:[x.material]).forEach(m=>m.dispose?.());
+    if(x.material)(Array.isArray(x.material)?x.material:[x.material])
+      .forEach(m=>materials.add(m));
   });
+  for(const material of materials){
+    material.map?.dispose?.();
+    material.dispose?.();
+  }
 }
 const makers={
   watch:buildWatch,bracelet:buildBracelet,glasses:buildGlasses,
