@@ -425,6 +425,16 @@ function wireUI() {
       updatePlan();
     });
   }
+  $('open-library').addEventListener('click',()=>{
+    const category=$('category').value;
+    const mapped=category==='tee'?'tshirt':category;
+    const target=new URL('./library.html',location.href);
+    if(['tshirt','watch','bag'].includes(mapped))target.searchParams.set('category',mapped);
+    if($('product-name').value.trim())target.searchParams.set('name',$('product-name').value.trim().slice(0,100));
+    if($('sku').value.trim())target.searchParams.set('sku',$('sku').value.trim().slice(0,64));
+    // Current selected File objects never leave this page or enter a URL.
+    location.assign(target.href);
+  });
   $('analyze').addEventListener('click', analyze);
   $('build-model').addEventListener('click', async () => {
     if (!getPlan().canBuild) return;
