@@ -220,7 +220,10 @@
         state.lastInference = 0;
         drawCatalog();
         updatePhotoControl();
-        if (state.stream) void loadEngine(item.engine);
+        if (state.stream) {
+          if (state.assetMode === '3d' && !state.three) void ensureThree();
+          void loadEngine(item.engine);
+        }
         updateUI();
       });
       productsNode.append(button);
@@ -885,7 +888,13 @@
   });
   mainStart.addEventListener('click', startCamera);
   cameraToggle.addEventListener('click', () => { if (state.stream || state.starting) stopCamera(); else void startCamera(); });
-  retryButton.addEventListener('click', () => { if (state.stream) { state.engine = 'idle'; void loadEngine(state.selected.engine); } });
+  retryButton.addEventListener('click', () => {
+    if (state.stream) {
+      if (state.assetMode === '3d' && !state.three) void ensureThree();
+      state.engine = 'idle';
+      void loadEngine(state.selected.engine);
+    }
+  });
   captureButton.addEventListener('click', saveSnapshot);
   $('#copy-debug')?.addEventListener('click', async () => {
     try {
