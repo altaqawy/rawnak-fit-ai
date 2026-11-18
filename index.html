@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#0b1815">
   <meta name="description" content="RAWNAK FIT AI — Live AR virtual try-on prototype.">
   <title>RAWNAK FIT AI — Live Virtual Mirror</title>
-  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha051">
+  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha060">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.5.1 · EMBED SDK</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 0.6 · PHOTO AR LAB</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -30,6 +30,13 @@
         <div class="mode-selector" role="group" aria-label="طريقة عرض الكاميرا">
           <button id="mode-sync" type="button" class="mode-button active" aria-pressed="true"><strong>متزامن مع AI</strong><small>كل لقطة مع نتيجة التتبع الخاصة بها</small></button>
           <button id="mode-fast" type="button" class="mode-button" aria-pressed="false"><strong>لايف سريع</strong><small>فيديو أسرع مع تحديث موضع القطعة</small></button>
+        </div>
+        <div id="demo-asset-switch" class="demo-asset-switch hidden" role="group" aria-label="نوع تجربة صورة المنتج">
+          <div><strong>PHOTO AR LAB · 2D</strong><small id="asset-status">جاري تجهيز صورة المنتج</small></div>
+          <div class="demo-asset-buttons">
+            <button id="asset-photo" class="btn selected" type="button" aria-pressed="true" disabled>صورة المنتج</button>
+            <button id="asset-generic" class="btn ghost" type="button" aria-pressed="false">الرسم القديم</button>
+          </div>
         </div>
         <div class="toolbar">
           <div class="toolbar-main"><button id="camera-toggle" class="btn" type="button">تشغيل الكاميرا</button><button id="mirror-toggle" class="btn ghost" type="button" title="عكس الكاميرا">عكس الصورة</button><button id="retry-tracking" class="btn ghost" type="button">إعادة التتبع</button></div>
@@ -56,5 +63,5 @@
   </main>
   <footer>© RAWNAK GROUP · FIT AI LAB <span>ALPHA PROTOTYPE · NOT A FIT GUARANTEE</span></footer>
 </div>
-<script type="module" src="./src/app.js?v=20261118-alpha051"></script>
+<script type="module" src="./src/app.js?v=20261118-alpha060"></script>
 </body></html>
