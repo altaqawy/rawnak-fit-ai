@@ -113,6 +113,19 @@
    </div>
    <div class="motion-title">الأجزاء الموجودة في النموذج</div>
    <div class="parts" id="parts"></div>
+   <div class="part-review">
+     <div class="motion-title">مراجعة الأجزاء يدويًا (اختياري)</div>
+     <div class="fields">
+       <label>الجزء<select id="part-select"></select></label>
+       <label>السلوك<select id="part-behavior">
+         <option value="rigid">صلب</option><option value="semi-rigid">نصف صلب</option>
+         <option value="flexible">مرن</option><option value="surface-attached">مثبت على السطح</option>
+       </select></label>
+       <label class="wide check"><input id="part-movable" type="checkbox"> الجزء متحرك وله مفصل أو نقطة ربط</label>
+     </div>
+     <button id="save-part-correction" type="button" class="ghost">حفظ تصحيح الجزء</button>
+     <small class="fine" id="part-feedback" role="status">التصحيحات تحفظ داخل Parts JSON فقط. لا يوجد تدريب تلقائي للنموذج الآن.</small>
+   </div>
    <div class="status" id="capture-status"></div>
    <div class="actions"><button id="download-glb" class="secondary" disabled type="button">تحميل GLB التجريبي</button><button id="download-json" class="secondary" disabled type="button">تحميل Parts JSON</button></div>
    <p class="fine caution">المعاينة الداخلية رسم توضيحي لتوزيع الجيوب والفواصل وليست شكل تقفيل مصنع أو خياطة حقيقية. المرونة وحركة الحزام تقريبية، ولا يوجد Cloth Physics أو Image-to-3D مطابق بعد. لازم مراجعة النموذج والصور قبل النشر في أي متجر.</p>
