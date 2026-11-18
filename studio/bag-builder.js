@@ -1,315 +1,949 @@
-import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
-import {createBagSpec,requiredBagViews,detectViewFromName,describeBagComponents,
-  evaluateBagCapture,makeBagDraft,VIEW_LABELS} from './bag-spec.js';
-import {buildModularBag} from './bag-model.js';
+import {
+  createBagSpec,
+  describeBagComponents,
+  requiredBagViews,
+  evaluateBagCapture,
+  detectViewFromName,
+} from './bag-spec.js';
+import { FAMILY_PRESETS } from './bag-patterns.js';
+import {
+  newProject,
+  EditHistory,
+  changeStructure,
+  correctPart,
+  editLimits,
+  approveProject,
+  interpretCommand,
+} from './bag-editor.js';
+import {
+  fitFromEvidence,
+  reconstructDraft,
+  readLocalPhoto,
+  sourceMetadata,
+  STAGES,
+} from './bag-evidence.js';
+import {
+  steps,
+  families,
+  views,
+  cameras,
+  fields,
+  roles,
+  editLabels,
+  behaviors,
+  commands,
+} from './bag-fields.js';
 
-const $=id=>document.getElementById(id);
-const inputKeys=['widthCm','heightCm','depthCm','style','material','closure','strapType',
-  'strapCount','strapLengthCm','strapWidthCm','handlesCount','flexibility',
-  'mainCompartments','innerOpenPockets','innerZippedPockets','outerPockets',
-  'lining','bodyColor','logoPlacement','logoType','logoText'];
-const state={photos:[],model:null,scene:null,renderer:null,camera:null,controls:null,
-  raf:0,observer:null,renderReady:false,hasChanges:false,modelVersion:0,
-  logoFile:null,logoObjectUrl:null,logoTexture:null,corrections:{}};
-function gather(){
- const raw={};
- for(const key of inputKeys)raw[key]=$(key).value;
- raw.brandLicenseConfirmed=$('brand-rights').checked;
- return createBagSpec(raw);
-}
-function selectedPhotos(){
- return state.photos.map(p=>({name:p.file.name,bytes:p.file.size,
-  width:p.width,height:p.height,view:p.view}));
-}
-function releaseImages(){
- for(const p of state.photos)URL.revokeObjectURL(p.url);
- state.photos=[];
-}
-function renderPhotoRequirements(){
- const spec=gather(),required=requiredBagViews(spec);
- const report=evaluateBagCapture(spec,selectedPhotos());
- const box=$('photo-requirements');box.textContent='';
- for(const view of required){
-  const badge=document.createElement('span');
-  badge.className='view-tag'+(report.viewsMissing.includes(view)?'':' ok');
-  badge.textContent=(report.viewsMissing.includes(view)?'○ ':'✓ ')+VIEW_LABELS[view];
-  box.append(badge);
- }
- $('photo-progress').textContent=(required.length-report.viewsMissing.length)+' / '+required.length;
- $('photo-quality').textContent=report.viewsMissing.length
-  ? 'ناقص صور: '+report.viewsMissing.map(x=>VIEW_LABELS[x]).join('، ')
-  : 'زوايا مكتملة كمدخلات، لكن المنتج لا يزال بحاجة لمراجعة هندسية';
- const missing=report.unobservedParts.length;
- $('capture-status').textContent='اكتمال الزوايا: '+report.completeness+'% · '+missing+
-  ' أجزاء بدون مرجع بصري كافٍ · تقفيل الداخل والحركة ليسا موثقين/معتمدين تلقائيًا';
-}
-function renderPhotos(){
- const host=$('photos-list');host.textContent='';
- for(const photo of state.photos){
-  const row=document.createElement('div');row.className='photo-row';
-  const image=document.createElement('img');image.src=photo.url;
-  image.alt=photo.file.name;image.loading='lazy';
-  const detail=document.createElement('div');detail.className='photo-info';
-  const title=document.createElement('strong');title.textContent=photo.file.name;
-  const subtitle=document.createElement('small');
-  subtitle.textContent=photo.width+'×'+photo.height;
-  const select=document.createElement('select');
-  select.setAttribute('aria-label','حدد زاوية '+photo.file.name);
-  for(const [view,label]of Object.entries(VIEW_LABELS)){
-   const opt=document.createElement('option');opt.value=view;opt.textContent=label;
-   select.append(opt);
+const $ = (id) => document.getElementById(id);
+const el = (tag, text) => {
+  const n = document.createElement(tag);
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const stored = (k) => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
   }
-  const unknown=document.createElement('option');unknown.value='unknown';unknown.textContent='غير محدد';
-  select.append(unknown);select.value=photo.view;
-  select.addEventListener('change',()=>{photo.view=select.value;renderPhotoRequirements();scheduleRebuild();});
-  detail.append(title,subtitle,select);
-  const remove=document.createElement('button');remove.type='button';remove.textContent='×';
-  remove.setAttribute('aria-label','حذف '+photo.file.name);
-  remove.addEventListener('click',()=>{
-   URL.revokeObjectURL(photo.url);
-   state.photos=state.photos.filter(p=>p!==photo);
-   renderPhotos();renderPhotoRequirements();scheduleRebuild();
+};
+const store = (k, v) => {
+  try {
+    localStorage.setItem(k, v);
+    return true;
+  } catch {
+    return false;
+  }
+};
+let lang = stored('bag-language') === 'en' ? 'en' : 'ar',
+  theme = stored('bag-theme') === 'dark' ? 'dark' : 'light';
+const tr = (ar, en) => (lang === 'ar' ? ar : en);
+const label = (pair) => (pair ? tr(...pair) : '');
+let history = new EditHistory(newProject(FAMILY_PRESETS.structured));
+const current = () => history.present;
+let photos = [],
+  selection = 'front_panel',
+  step = 0,
+  version = 0,
+  photoEpoch = 0,
+  viewer = null,
+  viewerModule = null,
+  model = null;
+let reconstruction = null;
+let dirtyFields = new Set(),
+  rebuildTimer = 0,
+  busy = false,
+  uploadQueue = Promise.resolve();
+const note = (ar, en) => {
+  $('notice').textContent = tr(ar, en);
+};
+const native = new Map([...document.querySelectorAll('[data-en]')].map((n) => [n, n.textContent]));
+const setOptions = (select, dict, value) => {
+  select.replaceChildren(...Object.entries(dict).map(([k, word]) => new Option(label(word), k)));
+  if (value !== undefined) select.value = value;
+};
+function pretty(p) {
+  const title = label(roles[p.id] || roles[p.role]) || p.id;
+  if (roles[p.id]) return title;
+  const number = p.id.match(/\d+/)?.[0] || '';
+  const suffix = p.id.endsWith('_a') ? ' A' : p.id.endsWith('_b') ? ' B' : '';
+  const family =
+    p.id.startsWith('handle_') && p.role !== 'handle'
+      ? label(roles.handle) + ' '
+      : p.id.startsWith('strap_') && p.role !== 'strap'
+        ? label(roles.strap) + ' '
+        : '';
+  return family + title + ' ' + number + suffix;
+}
+function formFields() {
+  const spec = current().spec;
+  setOptions($('style'), families, spec.style);
+  for (const [container, definitions] of Object.entries(fields)) {
+    const host = $(container);
+    host.replaceChildren();
+    for (const [key, ar, en, kind, max, stepSize] of definitions) {
+      const l = el('label'),
+        name = el('span', tr(ar, en)),
+        input = el(typeof kind === 'object' ? 'select' : 'input');
+      input.id = key;
+      if (typeof kind === 'object') setOptions(input, kind, spec[key]);
+      else if (kind === 'check') {
+        input.type = 'checkbox';
+        input.checked = spec[key];
+        l.className = 'check wide';
+      } else {
+        input.type = typeof kind === 'number' ? 'number' : kind;
+        if (typeof kind === 'number') {
+          input.min = kind;
+          input.max = max;
+          input.step = stepSize;
+          input.inputMode = 'decimal';
+        }
+        if (kind === 'text') input.maxLength = 100;
+        input.value = spec[key];
+      }
+      if (kind === 'check') l.append(input, name);
+      else l.append(name, input);
+      host.append(l);
+      input.addEventListener('change', () => {
+        if (!input.checkValidity() || (input.type === 'number' && input.value === '')) {
+          input.reportValidity();
+          input.value = current().spec[key];
+          return;
+        }
+        apply(
+          changeStructure(
+            current(),
+            { [key]: kind === 'check' ? input.checked : input.value },
+            references().map((r) => r.id),
+          ),
+          true,
+        );
+      });
+    }
+  }
+}
+function references() {
+  return photos.filter((p) => p.url).map(sourceMetadata);
+}
+function syncInputs() {
+  const s = current().spec;
+  $('style').value = s.style;
+  for (const defs of Object.values(fields))
+    for (const [key] of defs) {
+      const input = $(key);
+      if (input.type === 'checkbox') input.checked = s[key];
+      else input.value = s[key];
+    }
+  $('family-name').textContent = label(families[s.style]);
+  $('measure-summary').textContent = [s.widthCm, s.heightCm, s.depthCm].join(' × ') + ' cm';
+}
+function setStep(i) {
+  if (i < 0 || i > 4) return;
+  step = i;
+  document.querySelectorAll('.page').forEach((n) => {
+    n.hidden = Number(n.dataset.page) !== i;
   });
-  row.append(image,detail,remove);host.append(row);
- }
- renderPhotoRequirements();
-}
-async function loadImageInfo(file){
- const url=URL.createObjectURL(file);
- try {
-  const img=new Image();img.src=url;await img.decode();
-  return {file,url,width:img.naturalWidth,height:img.naturalHeight,
-   view:detectViewFromName(file.name).view};
- }catch(err){URL.revokeObjectURL(url);return null;}
-}
-async function addPhotos(files){
- const known=new Set(state.photos.map(p=>p.file.name+'|'+p.file.size+'|'+p.file.lastModified));
- let skipped=0;
- for(const file of files){
-  if(state.photos.length>=36){skipped++;continue;}
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)
-    ||file.size<=0||file.size>10*1024*1024){skipped++;continue;}
-  const key=file.name+'|'+file.size+'|'+file.lastModified;
-  if(known.has(key))continue;
-  known.add(key);
-  const info=await loadImageInfo(file);
-  if(info)state.photos.push(info);else skipped++;
- }
- renderPhotos();
- $('photo-quality').textContent=skipped?skipped+' صور تم تجاهلها، راجع نوع الملف/الحجم/الصلاحية':'تمت إضافة الصور محليًا';
- scheduleRebuild();
-}
-function getReviewedParts(){
- const parts=describeBagComponents(gather());
- const ids=new Set(parts.map(p=>p.id));
- for(const id of Object.keys(state.corrections))if(!ids.has(id))delete state.corrections[id];
- return parts.map(p=>{
-  const correction=state.corrections[p.id];
-  return correction ? {...p,behavior:correction.behavior,moving:correction.moving,
-    joint:correction.moving?(p.joint||'manual-unassigned'):null,
-    reviewedByMerchant:true,physicsImplemented:false}:p;
- });
-}
-function showPartProperties(){
- const p=getReviewedParts().find(v=>v.id===$('part-select').value);
- if(!p)return;
- $('part-behavior').value=['rigid','semi-rigid','flexible','surface-attached'].includes(p.behavior)
-  ?p.behavior:'semi-rigid';
- $('part-movable').checked=p.moving===true;
-}
-function showParts(){
- const box=$('parts'),select=$('part-select');
- const selected=select.value;box.textContent='';select.textContent='';
- for(const p of getReviewedParts()){
-  const element=document.createElement('span');element.className=p.moving?'movable':'';
-  element.textContent=(p.moving?'↝ ':'■ ')+p.id+' · '+p.behavior+
-   (p.reviewedByMerchant?' ✓':'');
-  element.title=p.role+(p.joint?' / '+p.joint:'');
-  box.append(element);
-  const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.id;
-  select.append(opt);
- }
- if([...select.options].some(o=>o.value===selected))select.value=selected;
- showPartProperties();
-}
-let rebuildTimer=null;
-function scheduleRebuild(){
- $('flexibility-value').textContent=$('flexibility').value+'%';
- showParts();renderPhotoRequirements();
- if(!state.renderReady)return;
- clearTimeout(rebuildTimer);
- rebuildTimer=setTimeout(()=>{void buildAndRender();},180);
-}
-function ensureScene(){
- if(state.renderer)return;
- const host=$('stage');
- const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
- renderer.setClearColor(0x000000,0);
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- host.append(renderer.domElement);
- const scene=new THREE.Scene();
- scene.add(new THREE.HemisphereLight(0xe9f7ee,0x344e40,3));
- const key=new THREE.DirectionalLight(0xffffff,3);
- key.position.set(2,4,5);scene.add(key);
- const fill=new THREE.DirectionalLight(0xd8edff,1.7);
- fill.position.set(-3,1,-2);scene.add(fill);
- const camera=new THREE.PerspectiveCamera(44,1,.01,100);
- camera.position.set(.48,.32,.75);camera.lookAt(0,0,0);
- const controls=new OrbitControls(camera,renderer.domElement);
- controls.enableDamping=true;controls.enablePan=false;
- controls.minDistance=.15;controls.maxDistance=5;
- state.scene=scene;state.renderer=renderer;state.camera=camera;state.controls=controls;
- const size=()=>{if(!state.renderer)return;
-  const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
- state.observer=new ResizeObserver(size);state.observer.observe(host);size();
- const tick=()=>{if(!state.renderer)return;
-  controls.update();renderer.render(scene,camera);
-  state.raf=requestAnimationFrame(tick);
- };
- tick();
-}
-function resetCamera(){
- if(!state.camera||!state.model)return;
- const bounds=new THREE.Box3().setFromObject(state.model.root);
- const middle=bounds.getCenter(new THREE.Vector3()),dim=bounds.getSize(new THREE.Vector3());
- const size=Math.max(dim.x,dim.y,dim.z,.2);
- state.controls.target.copy(middle);
- state.camera.position.set(middle.x+size*1.15,middle.y+size*.72,middle.z+size*1.75);
- state.camera.near=Math.max(.001,size*.001);state.camera.far=Math.max(20,size*40);
- state.camera.updateProjectionMatrix();
- state.controls.minDistance=size*.35;state.controls.maxDistance=size*8;
- state.controls.update();
-}
-async function getLogoTexture(){
- const match=state.photos.find(p=>p.view==='logo');
- if(!match||gather().logoPlacement==='none')return null;
- const loader=new THREE.TextureLoader();
- const texture=await loader.loadAsync(match.url);
- texture.colorSpace=THREE.SRGBColorSpace;texture.flipY=false;
- return texture;
-}
-async function buildAndRender(){
- const id=++state.modelVersion;
- ensureScene();
- const spec=gather();
- if(state.model){state.scene.remove(state.model.root);state.model.dispose();}
- state.model=buildModularBag(spec);
- state.model.parts=getReviewedParts();
- state.model.root.userData.parts=state.model.parts;
- state.model.root.userData.corrections=Object.entries(state.corrections).map(([id,value])=>({id,...value}));
- state.scene.add(state.model.root);
- $('stage-message').hidden=true;
- state.renderReady=true;
- state.model.setOpening(Number($('opening').value)/100);
- state.model.setSwing(Number($('swing').value)/100);
- state.model.setInterior($('show-inside').checked);
- resetCamera();
- showParts();renderPhotoRequirements();
- $('download-glb').disabled=false;$('download-json').disabled=false;
- const report=evaluateBagCapture(spec,selectedPhotos());
- $('model-status').textContent='المجسم مبني من '+state.model.parts.length+
-  ' جزء طبقًا لأبعاد الهيكل. '+report.viewsMissing.length+
-  ' زوايا ناقصة. الحركة توضيحية وليست محاكاة فيزيائية.';
- try{
-  const logo=await getLogoTexture();
-  if(id!==state.modelVersion){logo?.dispose();return;}
-  state.model.setLogoTexture(logo);
- }catch(err){if(id===state.modelVersion)
-  $('model-status').textContent+=' · صورة الشعار لم تُحمّل: '+err.message;}
-}
-function saveBlob(blob,name){
- const url=URL.createObjectURL(blob);
- const anchor=document.createElement('a');
- anchor.href=url;anchor.download=name;document.body.append(anchor);anchor.click();anchor.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1500);
-}
-async function exportGLB(){
- if(!state.model)return;
- const el=$('download-glb');el.disabled=true;
- $('model-status').textContent='جاري تجهيز GLB التجريبي على جهازك…';
- try{
-  const exporter=new GLTFExporter();
-  const data=await exporter.parseAsync(state.model.root,{
-    binary:true,onlyVisible:false,trs:false,
-    maxTextureSize:1024
+  [...$('steps').children].forEach((b, j) => {
+    if (i === j) b.setAttribute('aria-current', 'step');
+    else b.removeAttribute('aria-current');
   });
-  if(!(data instanceof ArrayBuffer))throw new Error('لم يتم إنشاء ملف GLB');
-  saveBlob(new Blob([data],{type:'model/gltf-binary'}),'rawnak-bag-structure-draft.glb');
-  $('model-status').textContent='تم تصدير GLB · نموذج هيكلي تجريبي مع بيانات الأجزاء، وليس نسخة مطابقة للصور';
- }catch(err){
-  $('model-status').textContent='تعذر تصدير GLB: '+err.message;
- }finally{el.disabled=false;}
+  $('step-count').textContent = String(i + 1).padStart(2, '0') + ' / 05';
+  $('next').hidden = i === 4;
+  $('next').textContent =
+    i === 2
+      ? tr('ابدأ المراجعة', 'Start review')
+      : tr('التالي', 'Continue') + ' · ' + label(steps[Math.min(4, i + 1)]);
+  if (i !== 3) viewer?.highlight(null);
+  else showEditor();
+  updateComparison(i === 3);
+  renderReports();
 }
-function exportJSON(){
- const draft=makeBagDraft(gather(),selectedPhotos());
- draft.parts=getReviewedParts();
- draft.partCorrections=Object.entries(state.corrections).map(([id,value])=>({
-   id,...value,source:'merchant-review',trainingAllowed:false,
-   simulationImplemented:false
- }));
- draft.review={
-  source:'merchant-structured-input+photos',
-  userSuppliedPhotos:state.photos.length,
-  brandImageAvailable:state.photos.some(p=>p.view==='logo'),
-  rightsConfirmed:$('brand-rights').checked,
-  hasLivePreview:Boolean(state.model),
-  reportedMovingParts:draft.parts.filter(x=>x.moving).map(x=>({id:x.id,joint:x.joint})),
-  approved:false,merchantReviewPending:true,AIModelTrainingConsent:false,
-  note:'هذه البيانات غير مخصصة لتدريب أي نموذج تلقائيًا'
- };
- saveBlob(new Blob([JSON.stringify(draft,null,2)],{type:'application/json'}),
-  'rawnak-bag-parts-draft.json');
+function translate() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.dataset.theme = theme;
+  for (const [n, ar] of native) n.textContent = tr(ar, n.dataset.en);
+  $('language').textContent = tr('English', 'العربية');
+  $('theme').textContent =
+    theme === 'dark' ? tr('الوضع الفاتح', 'Light mode') : tr('الوضع الداكن', 'Dark mode');
+  $('steps').replaceChildren(
+    ...steps.map((name, i) => {
+      const b = el('button');
+      b.append(el('i', '0' + (i + 1)), el('span', label(name)));
+      b.onclick = () => setStep(i);
+      return b;
+    }),
+  );
+  $('commands').replaceChildren(...commands.map((c) => new Option(label(c), label(c))));
+  setOptions($('camera'), cameras, viewer?.view || 'orbit');
+  formFields();
+  syncInputs();
+  renderPhotos();
+  showEditor();
+  setStep(step);
+  status();
 }
-for(const key of inputKeys)$(key).addEventListener('input',scheduleRebuild);
-$('brand-rights').addEventListener('change',renderPhotoRequirements);
-$('photos-input').addEventListener('change',async event=>{
- await addPhotos([...event.target.files]);event.target.value='';
+function status() {
+  $('model-status').textContent = model
+    ? tr('مجسم بارامتري', 'Parametric model') +
+      ' · ' +
+      tr('مراجعة التاجر', 'Merchant review') +
+      ' ' +
+      (current().approval === 'merchant-reviewed'
+        ? tr('مكتملة', 'complete')
+        : tr('مطلوبة', 'pending'))
+    : tr('جارٍ تجهيز المجسم', 'Preparing model');
+}
+function results() {
+  return fitFromEvidence(references());
+}
+function fitMessage(result) {
+  return result.status === 'inconsistent-views'
+    ? tr(
+        'حدود الصور الأمامية والخلفية مختلفة. راجع زاوية التصوير.',
+        'Front and back outlines disagree. Check the assigned views.',
+      )
+    : result.fit
+      ? tr('حدود صالحة للملاءمة من', 'Usable outline from') +
+        ' ' +
+        result.fit.sources.length +
+        ' ' +
+        tr('صورة', 'view(s)')
+      : tr(
+          'تحتاج الملاءمة صورة أمامية أو خلفية مؤكدة بخلفية بسيطة أو شفافة.',
+          'Fitting needs a confirmed front or back view on a plain or transparent background.',
+        );
+}
+function renderReports() {
+  const spec = current().spec,
+    required = requiredBagViews(spec),
+    refs = references(),
+    report = evaluateBagCapture(spec, refs);
+  $('photo-progress').textContent =
+    required.length - report.viewsMissing.length + ' / ' + required.length;
+  $('photo-requirements').replaceChildren(
+    ...required.map((id) => {
+      const ok = !report.viewsMissing.includes(id),
+        n = el('span', (ok ? '✓ ' : '○ ') + label(views[id]));
+      if (ok) n.className = 'ok';
+      return n;
+    }),
+  );
+  const result = results();
+  $('construction-report').textContent = [
+    label(families[spec.style]) + ' · ' + tr('باترون بحسب المقاسات', 'Measured pattern'),
+    spec.mainCompartments +
+      ' ' +
+      tr('أقسام داخلية بحسب الوصف', 'compartment(s) from the specification'),
+    fitMessage(result),
+    tr(
+      'التعرف الآلي على الجيوب والتقفيل الداخلي غير متاح.',
+      'Automatic pocket and interior identification is unavailable.',
+    ),
+  ].join('\n');
+  $('use-color').hidden = !result.color;
+  const feedback = current().feedback.filter((f) => f.approval === 'merchant-approved').length;
+  const unlinked = photos.filter((p) => !p.url).length;
+  $('capture-status').textContent = [
+    tr('تغطية المراجع', 'Reference coverage') + ' ' + $('photo-progress').textContent,
+    tr('تصحيحات معتمدة', 'Approved corrections') + ' · ' + feedback,
+    unlinked ? tr('صور تحتاج إعادة ربط', 'Photos to reattach') + ' · ' + unlinked : '',
+    tr(
+      'دقة المنتج وتجربة الارتداء التجارية لم تُتحقّق.',
+      'Product fidelity and retail try-on remain unverified.',
+    ),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  $('approve').disabled = current().approval === 'merchant-reviewed';
+  $('undo').disabled = !history.past.length;
+  $('redo').disabled = !history.future.length;
+  status();
+}
+function changedReferences() {
+  reconstruction = null;
+  const p = current(),
+    fit = p.fit;
+  const valid = fit?.sources.every((id) =>
+    photos.some(
+      (img) => img.id === id && ['front', 'back'].includes(img.view) && img.source === 'merchant',
+    ),
+  );
+  // Reference assignments are outside parameter history. A removed source
+  // invalidates its fit in every history frame, including after Undo.
+  const clean = (item) => ({
+    ...item,
+    fit: item.fit?.sources.every((id) =>
+      photos.some(
+        (img) => img.id === id && ['front', 'back'].includes(img.view) && img.source === 'merchant',
+      ),
+    )
+      ? item.fit
+      : null,
+    approval: 'unreviewed',
+  });
+  history.present = { ...p, fit: valid ? fit : null, approval: 'unreviewed' };
+  history.past = history.past.map(clean);
+  history.future = [];
+  renderPhotos();
+  showEditor();
+  schedule();
+}
+function renderPhotos() {
+  $('photos-list').replaceChildren(
+    ...photos.map((p) => {
+      const row = el('div');
+      row.className = 'photo-row';
+      const img = p.url ? el('img') : el('small', tr('أعد الربط', 'Relink'));
+      if (p.url) {
+        img.src = p.url;
+        img.alt = '';
+        img.loading = 'lazy';
+      }
+      const info = el('div'),
+        select = el('select');
+      setOptions(select, views, p.view);
+      select.setAttribute('aria-label', tr('زاوية ', 'View for ') + p.name);
+      select.onchange = () => {
+        p.view = select.value;
+        p.source = 'merchant';
+        changedReferences();
+      };
+      const assigned = p.source === 'merchant';
+      const confirm = el('button', tr('تأكيد الزاوية', 'Confirm view'));
+      confirm.hidden = assigned || p.view === 'unknown';
+      confirm.onclick = () => {
+        p.source = 'merchant';
+        changedReferences();
+      };
+      info.append(
+        el('strong', p.name),
+        select,
+        confirm,
+        el(
+          'small',
+          !p.url
+            ? tr('اختار الملف الأصلي', 'Choose the original file')
+            : !assigned
+              ? tr('اقتراح من اسم الملف', 'Filename hint')
+              : p.analysis?.status === 'candidate'
+                ? tr('حدود مرشحة · زاوية مؤكدة', 'Outline candidate · assigned view')
+                : tr('مرجع بصري · زاوية مؤكدة', 'Visual reference · assigned view'),
+        ),
+      );
+      const remove = el('button', '×');
+      remove.setAttribute('aria-label', tr('احذف ', 'Remove ') + p.name);
+      remove.onclick = () => {
+        if (p.url) URL.revokeObjectURL(p.url);
+        photos = photos.filter((f) => f !== p);
+        changedReferences();
+      };
+      row.append(img, info, remove);
+      return row;
+    }),
+  );
+  $('remove-photos').disabled = !photos.length;
+  renderReports();
+  updateComparison(false);
+}
+async function addPhotos(files, epoch) {
+  let skipped = 0,
+    added = 0,
+    fresh = false;
+  for (const f of files) {
+    if (epoch !== photoEpoch) return;
+    try {
+      const info = await readLocalPhoto(f);
+      if (epoch !== photoEpoch) {
+        URL.revokeObjectURL(info.url);
+        return;
+      }
+      const old = photos.find(
+        (p) => p.id === info.id || (!p.id && p.name === info.name && p.bytes === info.bytes),
+      );
+      if (old?.url || (!old && photos.length >= 36)) {
+        URL.revokeObjectURL(info.url);
+        skipped++;
+        continue;
+      }
+      if (old) Object.assign(old, info);
+      else {
+        fresh = true;
+        const hint = detectViewFromName(f.name);
+        photos.push({ ...info, ...hint });
+      }
+      added++;
+    } catch {
+      skipped++;
+    }
+  }
+  if (fresh) changedReferences();
+  else if (added) {
+    renderPhotos();
+    schedule();
+  }
+  $('photo-quality').textContent =
+    tr('مضافة', 'Added') +
+    ' ' +
+    added +
+    ' · ' +
+    tr('متجاهلة أو متكررة', 'Skipped or duplicate') +
+    ' ' +
+    skipped;
+}
+function updateComparison(align) {
+  const visible = photos.filter((p) => p.url),
+    select = $('compare-photo'),
+    old = select.value;
+  $('comparison').hidden = visible.length === 0 || ![1, 3].includes(step);
+  if ($('comparison').hidden) return;
+  select.replaceChildren(
+    ...visible.map((p) => new Option(label(views[p.view]) + ' · ' + p.name, p.id)),
+  );
+  if (visible.some((p) => p.id === old)) select.value = old;
+  const p = visible.find((p) => p.id === select.value) || visible[0];
+  $('compare-img').src = p.url;
+  $('compare-img').alt = p.name;
+  const cam = cameras[p.view] ? p.view : p.view === 'open' ? 'inside' : null;
+  if (align && cam) setCamera(cam);
+  $('compare-note').textContent =
+    label(views[p.view]) +
+    ' · ' +
+    (p.source === 'merchant'
+      ? tr('زاوية اختارها التاجر', 'Merchant-assigned view')
+      : tr('تحتاج تأكيد الزاوية', 'View awaiting confirmation'));
+}
+function showEditor() {
+  const rows = model?.parts || describeBagComponents(current().spec);
+  if (!rows.some((p) => p.id === selection)) selection = 'front_panel';
+  const select = $('part-select');
+  select.replaceChildren(...rows.map((p) => new Option(pretty(p), p.id)));
+  select.value = selection;
+  const selected = rows.find((p) => p.id === selection);
+  if (!selected) return;
+  const source = describeBagComponents(current().spec).find((p) => p.id === selection) || selected;
+  const edits = current().edits[selection] || {},
+    limits = editLimits(source);
+  $('parts').replaceChildren(
+    ...rows.map((p) => {
+      const b = el('button', pretty(p));
+      let depth = 0,
+        parent = p.parent;
+      while (parent && depth < 6) {
+        depth++;
+        parent = rows.find((x) => x.id === parent)?.parent;
+      }
+      b.style.paddingInlineStart = 8 + depth * 11 + 'px';
+      b.setAttribute('aria-pressed', p.id === selection);
+      b.onclick = () => selectPart(p.id);
+      return b;
+    }),
+  );
+  $('part-info').textContent = [
+    selected.parent
+      ? tr('متصل بـ ', 'Attached to ') +
+        (selected.connections || [selected.parent])
+          .map((id) => pretty(rows.find((p) => p.id === id) || { id }))
+          .join(' · ')
+      : '',
+    selected.sourceEvidence?.length
+      ? tr('مراجع', 'References') +
+        ' · ' +
+        selected.sourceEvidence.map((id) => photos.find((p) => p.id === id)?.name || id).join(', ')
+      : tr('شكل مستنتج من الباترون', 'Inferred from pattern'),
+    selected.range
+      ? tr('حدود الحركة', 'Joint limits') +
+        ' · ' +
+        selected.range.min +
+        ' … ' +
+        selected.range.max +
+        ' ' +
+        (selected.range.unit === 'degrees' ? '°' : '')
+      : '',
+    selected.dimensions
+      ? [selected.dimensions.width, selected.dimensions.height, selected.dimensions.depth]
+          .map((v) => (100 * v).toFixed(1))
+          .join(' × ') + ' cm'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' / ');
+  const host = $('edit-fields');
+  host.replaceChildren();
+  dirtyFields = new Set();
+  const add = (key, input) => {
+    input.id = 'edit-' + key;
+    input.oninput = () => dirtyFields.add(key);
+    const l = el('label');
+    if (input.type === 'checkbox') {
+      l.className = 'check';
+      l.append(input, el('span', label(editLabels[key])));
+    } else l.append(el('span', label(editLabels[key])), input);
+    host.append(l);
+  };
+  const linked =
+    {
+      body: ['widthCm', 'heightCm', 'depthCm'],
+      front_panel: ['widthCm', 'roundness'],
+      back_panel: ['widthCm', 'roundness'],
+      left_gusset: ['depthCm', 'gussetWidth'],
+      right_gusset: ['depthCm', 'gussetWidth'],
+      bottom_panel: ['depthCm', 'baseCurve'],
+      opening: ['openingScale'],
+    }[selection] || [];
+  for (const key of linked) {
+    const def = Object.values(fields)
+        .flat()
+        .find((f) => f[0] === key),
+      input = el('input'),
+      l = el('label');
+    input.type = 'number';
+    input.id = 'shared-' + key;
+    input.min = def[3];
+    input.max = def[4];
+    input.step = def[5];
+    input.value = current().spec[key];
+    input.oninput = () => dirtyFields.add('shared-' + key);
+    l.append(el('span', tr(def[1], def[2]) + ' · ' + tr('مشترك', 'linked')), input);
+    host.append(l);
+  }
+  for (const [key, [lo, hi]] of Object.entries(limits)) {
+    const input = el('input');
+    if (key === 'visible') {
+      input.type = 'checkbox';
+      input.checked = edits.visible !== false;
+    } else {
+      input.type = 'number';
+      input.min = lo;
+      input.max = hi;
+      input.step = 'any';
+      const mat = model?.groups.get(selection)?.children.find((o) => o.isMesh)?.material;
+      input.value =
+        edits[key] ??
+        (key === 'roughness'
+          ? (mat?.roughness ?? 0.65)
+          : ['offsetX', 'anchorShift'].includes(key)
+            ? 0
+            : 1);
+    }
+    add(key, input);
+  }
+  if (source.role !== 'assembly' && source.role !== 'compartment') {
+    const input = el('select');
+    setOptions(input, behaviors, edits.behavior || source.behavior);
+    add('behavior', input);
+    const toggle = el('input');
+    toggle.type = 'checkbox';
+    toggle.checked = edits.moving ?? source.moving;
+    add('moving', toggle);
+    if (!source.moving)
+      host.append(el('small', tr('الحركة هنا توصيف فقط', 'Movement here is metadata only')));
+  }
+  $('save-part-correction').disabled = !host.children.length;
+  $('reset-part').disabled = !Object.keys(edits).length;
+  if (step === 3) viewer?.highlight(selection);
+}
+function selectPart(id) {
+  selection = id;
+  if (step !== 3) setStep(3);
+  else showEditor();
+}
+function apply(next, reframe = false) {
+  if (!next || !history.apply(next)) return false;
+  reconstruction = null;
+  syncInputs();
+  renderReports();
+  schedule(reframe);
+  return true;
+}
+function setCamera(id) {
+  if (!cameras[id]) return;
+  $('camera').value = id;
+  if (id === 'inside') {
+    $('opening').value = 100;
+    $('opening-out').value = '100%';
+    model?.setOpening(1);
+    // Interior camera cuts a closed shell only when explicitly requested.
+  }
+  viewer?.frame(id);
+}
+function schedule(frame = false) {
+  version++;
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => {
+    void build(version, frame);
+  }, 45);
+}
+async function api() {
+  return (viewerModule ||= await import('./bag-viewer.js'));
+}
+async function build(id, frame) {
+  try {
+    const a = await api();
+    if (id !== version) return;
+    if (!viewer)
+      viewer = new a.BagViewer($('stage'), selectPart, (code) => {
+        if (code === 'restored') {
+          schedule(true);
+          return;
+        }
+        $('stage-message').hidden = false;
+        $('stage-message').textContent = tr(
+          'فُقد اتصال الرسوميات مؤقتًا',
+          'Graphics context temporarily lost',
+        );
+      });
+    const next = await a.assemble(
+      current(),
+      photos.map((p) => ({ ...p })),
+      matchMedia('(max-width:670px)').matches ? 'mobile' : 'detail',
+    );
+    if (id !== version) {
+      next.dispose();
+      return;
+    }
+    model = next;
+    viewer.replace(next, frame);
+    model.setOpening(+$('opening').value / 100);
+    model.setSwing(+$('swing').value / 100);
+    model.setPockets(+$('pocket-motion').value / 100);
+    viewer.inspect($('show-inside').checked);
+    $('stage-message').hidden = true;
+    showEditor();
+    renderReports();
+  } catch {
+    if (id !== version) return;
+    $('stage-message').hidden = false;
+    $('stage-message').textContent = tr(
+      'تعذّر عرض المجسم. تقدر تحفظ المشروع وتعيد المحاولة.',
+      'Preview unavailable. Save your project or retry construction.',
+    );
+    $('model-status').textContent = tr('تعذرت المعاينة', 'Preview unavailable');
+  }
+}
+function projectRecord() {
+  return {
+    kind: 'rawnak-modular-bag',
+    schemaVersion: 2,
+    units: 'cm',
+    project: current(),
+    images: photos.map(sourceMetadata),
+    reconstruction,
+    capture: evaluateBagCapture(current().spec, references()),
+    stages: STAGES,
+    privacy: { imageBytesIncluded: false, trainingConsent: false },
+    output: { photoTo3DFaithful: false, physicalSimulation: false, retailARReady: false },
+  };
+}
+function save(blob, name) {
+  const url = URL.createObjectURL(blob),
+    a = el('a');
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+const json = (value, name) =>
+  save(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }), name);
+function readProject(record) {
+  if (!record || record.kind !== 'rawnak-modular-bag' || ![1, 2].includes(record.schemaVersion))
+    throw Error('schema');
+  const raw = record.project || record;
+  if (!raw.spec || typeof raw.spec !== 'object') throw Error('spec');
+  const edits =
+    raw.edits ||
+    Object.fromEntries((record.partCorrections || []).filter((x) => x?.id).map((x) => [x.id, x]));
+  const project = newProject(raw.spec, { ...raw, edits });
+  const saved = (Array.isArray(record.images) ? record.images : [])
+    .slice(0, 36)
+    .filter((p) => p && typeof p.name === 'string')
+    .map((p) => ({
+      id: typeof p.id === 'string' ? p.id.slice(0, 128) : '',
+      name: p.name.slice(0, 180),
+      bytes: Number(p.bytes) || 0,
+      width: Number(p.width) || 0,
+      height: Number(p.height) || 0,
+      view: Object.hasOwn(views, p.view) ? p.view : 'unknown',
+      source: p.source === 'merchant' ? 'merchant' : 'filename',
+      analysis: null,
+      url: null,
+    }));
+  photoEpoch++;
+  photos.forEach((p) => {
+    if (p.url) URL.revokeObjectURL(p.url);
+  });
+  photos = saved;
+  history = new EditHistory(project);
+  reconstruction = null;
+  selection = 'front_panel';
+  syncInputs();
+  renderPhotos();
+  setStep(0);
+  schedule(true);
+  note(
+    'المشروع مفتوح. أعد اختيار الصور الأصلية لربط مراجعها.',
+    'Project opened. Reselect original files to relink references.',
+  );
+}
+async function exportFile(kind) {
+  if (busy) return;
+  busy = true;
+  const controls = ['download-glb', 'download-json', 'download-project'];
+  controls.forEach((k) => ($(k).disabled = true));
+  try {
+    const name = 'rawnak-' + current().spec.style;
+    if (kind === 'project') {
+      json(projectRecord(), name + '.fit.json');
+      return;
+    }
+    const a = await api(),
+      profile = $('profile').value,
+      p = current(),
+      refs = photos.map((p) => ({ ...p }));
+    if (kind === 'glb') {
+      const { data } = await a.exportAsset(p, refs, profile);
+      save(new Blob([data], { type: 'model/gltf-binary' }), name + '-' + profile + '.glb');
+    } else {
+      const assembled = await a.assemble(p, refs, profile);
+      try {
+        json(assembled.graph, name + '-' + profile + '.parts.json');
+      } finally {
+        assembled.dispose();
+      }
+    }
+    note('تم تجهيز ملف التصدير', 'Export ready');
+  } catch {
+    note(
+      'تعذّر تجهيز الملف. راجع الصور وأعد المحاولة.',
+      'Export failed. Check the references and retry.',
+    );
+  } finally {
+    busy = false;
+    controls.forEach((k) => ($(k).disabled = false));
+  }
+}
+$('style').onchange = (e) => {
+  const style = e.target.value;
+  const previous = current().spec;
+  const oldTemplate = createBagSpec({ ...FAMILY_PRESETS[previous.style], style: previous.style });
+  const newTemplate = createBagSpec({ ...FAMILY_PRESETS[style], style });
+  const changes = { style };
+  for (const key of Object.keys(newTemplate)) {
+    if (previous[key] === oldTemplate[key] && oldTemplate[key] !== newTemplate[key])
+      changes[key] = newTemplate[key];
+  }
+  apply(changeStructure(current(), changes), true);
+};
+$('language').onclick = () => {
+  lang = lang === 'ar' ? 'en' : 'ar';
+  store('bag-language', lang);
+  translate();
+  savedButton();
+};
+$('theme').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  store('bag-theme', theme);
+  translate();
+};
+$('next').onclick = () => setStep(step + 1);
+$('camera').onchange = (e) => setCamera(e.target.value);
+$('reset-view').onclick = () => setCamera('orbit');
+$('photos-input').onchange = (e) => {
+  const files = [...e.target.files],
+    epoch = photoEpoch;
+  e.target.value = '';
+  uploadQueue = uploadQueue.then(() => addPhotos(files, epoch));
+};
+$('remove-photos').onclick = () => {
+  photoEpoch++;
+  photos.forEach((p) => {
+    if (p.url) URL.revokeObjectURL(p.url);
+  });
+  photos = [];
+  changedReferences();
+};
+$('compare-photo').onchange = () => updateComparison(true);
+$('generate').onclick = async () => {
+  const p = current(),
+    epoch = photoEpoch,
+    r = await reconstructDraft(p.spec, references());
+  if (p !== current() || epoch !== photoEpoch) return;
+  if (r.fit && JSON.stringify(r.fit) !== JSON.stringify(p.fit)) {
+    const feedback = {
+      componentId: 'body',
+      componentType: 'assembly',
+      bagFamily: p.spec.style,
+      category: 'silhouette-fit',
+      original: p.fit,
+      corrected: r.fit,
+      sourceEvidence: r.fit.sources,
+      approval: 'pending',
+      trainingConsent: false,
+    };
+    apply({ ...p, fit: r.fit, approval: 'unreviewed', feedback: [...p.feedback, feedback] }, true);
+  } else schedule(true);
+  reconstruction = { stages: r.stages, evidence: r.evidence, photoGeometryVerified: false };
+  $('fit-status').textContent = r.fit
+    ? tr(
+        'طُبقت حدود الجسم على العرض. المقاسات المدخلة محفوظة.',
+        'Applied body outline within the entered measurements.',
+      )
+    : fitMessage(r);
+};
+$('use-color').onclick = () => {
+  const r = results();
+  if (r.color) apply(changeStructure(current(), { bodyColor: r.color }, r.fit.sources));
+};
+$('part-select').onchange = (e) => selectPart(e.target.value);
+$('save-part-correction').onclick = () => {
+  const patch = {},
+    shared = {},
+    sources = model?.parts.find((p) => p.id === selection)?.sourceEvidence || [];
+  for (const key of dirtyFields) {
+    const isShared = key.startsWith('shared-'),
+      n = $(isShared ? key : 'edit-' + key);
+    if (!n.checkValidity() || (n.type === 'number' && n.value === '')) {
+      n.reportValidity();
+      return;
+    }
+    if (isShared) shared[key.slice(7)] = Number(n.value);
+    else
+      patch[key] =
+        n.type === 'checkbox' ? n.checked : n.type === 'number' ? Number(n.value) : n.value;
+  }
+  apply(correctPart(changeStructure(current(), shared, sources), selection, patch, sources));
+};
+$('reset-part').onclick = () =>
+  apply(
+    correctPart(
+      current(),
+      selection,
+      {},
+      model?.parts.find((p) => p.id === selection)?.sourceEvidence || [],
+      true,
+    ),
+  );
+$('run-command').onclick = () => {
+  const next = interpretCommand(
+    $('command').value,
+    current(),
+    selection,
+    model?.parts.find((p) => p.id === selection)?.sourceEvidence || [],
+  );
+  $('part-feedback').textContent = next
+    ? tr('تمت معالجة الأمر', 'Command processed')
+    : tr(
+        'اختار أمرًا من القائمة وحدد الجزء المناسب',
+        'Choose a supported command and its component',
+      );
+  if (next) apply(next);
+};
+for (const [button, action] of [
+  ['undo', 'undo'],
+  ['redo', 'redo'],
+])
+  $(button).onclick = () => {
+    if (history[action]()) {
+      reconstruction = null;
+      syncInputs();
+      renderReports();
+      schedule(true);
+    }
+  };
+for (const [slider, out, fn] of [
+  ['opening', 'opening-out', 'setOpening'],
+  ['swing', 'swing-out', 'setSwing'],
+  ['pocket-motion', 'pocket-out', 'setPockets'],
+]) {
+  $(slider).oninput = () => {
+    $(out).value = $(slider).value + '%';
+    model?.[fn](+$(slider).value / 100);
+    viewer?.draw();
+  };
+}
+$('show-inside').onchange = (e) => {
+  viewer?.inspect(e.target.checked);
+  if (e.target.checked) setCamera('inside');
+  else setCamera('orbit');
+};
+$('approve').onclick = () => {
+  apply(approveProject(current()));
+  const ok = store('rawnak-approved-bag', JSON.stringify(projectRecord()));
+  note(
+    ok ? 'اتحفظت المراجعة على الجهاز.' : 'نزّل المشروع للاحتفاظ بالمراجعة.',
+    ok ? 'Review saved on this device.' : 'Download the project to keep this review.',
+  );
+  savedButton();
+};
+function savedButton() {
+  let b = $('open-saved');
+  if (!b) {
+    b = el('button');
+    b.id = 'open-saved';
+    b.className = 'plain';
+    $('import').before(b);
+    b.onclick = () => {
+      try {
+        readProject(JSON.parse(stored('rawnak-approved-bag')));
+      } catch {
+        note('تعذّر فتح الحفظ المحلي', 'Saved review could not be opened');
+      }
+    };
+  }
+  b.hidden = !stored('rawnak-approved-bag');
+  b.textContent = tr('آخر اعتماد', 'Last approval');
+}
+$('import').onclick = () => $('project-file').click();
+$('project-file').onchange = async (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    if (f.size > 8e6) throw Error('size');
+    readProject(JSON.parse(await f.text()));
+  } catch {
+    note('ملف المشروع غير صالح', 'Invalid project file');
+  }
+};
+for (const [id, kind] of [
+  ['download-glb', 'glb'],
+  ['download-json', 'graph'],
+  ['download-project', 'project'],
+])
+  $(id).onclick = () => void exportFile(kind);
+window.addEventListener('pagehide', (e) => {
+  if (e.persisted) return;
+  version++;
+  photoEpoch++;
+  clearTimeout(rebuildTimer);
+  viewer?.dispose();
+  photos.forEach((p) => {
+    if (p.url) URL.revokeObjectURL(p.url);
+  });
 });
-$('remove-photos').addEventListener('click',()=>{
- releaseImages();$('photos-input').value='';renderPhotos();scheduleRebuild();
-});
-$('generate').addEventListener('click',()=>void buildAndRender());
-$('reset-view').addEventListener('click',resetCamera);
-$('opening').addEventListener('input',()=>{
- $('opening-out').textContent=$('opening').value+'%';
- state.model?.setOpening(Number($('opening').value)/100);
-});
-$('swing').addEventListener('input',()=>{
- $('swing-out').textContent=$('swing').value+'%';
- state.model?.setSwing(Number($('swing').value)/100);
-});
-$('show-inside').addEventListener('change',()=>{
- state.model?.setInterior($('show-inside').checked);
-});
-$('part-select').addEventListener('change',showPartProperties);
-$('save-part-correction').addEventListener('click',()=>{
- const id=$('part-select').value;
- if(!getReviewedParts().some(p=>p.id===id))return;
- state.corrections[id]={
-   behavior:$('part-behavior').value,
-   moving:$('part-movable').checked
- };
- if(state.model){
-   state.model.parts=getReviewedParts();
-   state.model.root.userData.parts=state.model.parts;
-   state.model.root.userData.corrections=Object.entries(state.corrections)
-     .map(([partId,data])=>({id:partId,...data}));
- }
- showParts();
- $('part-feedback').textContent='تم حفظ تصحيح '+id+
-   ' كبيانات مراجعة فقط؛ تغيير المرونة هنا لا يشغّل فيزياء القماش أو يحرك مفصلًا غير مجهّز.';
-});
-$('download-json').addEventListener('click',exportJSON);
-$('download-glb').addEventListener('click',()=>void exportGLB());
-window.addEventListener('pagehide',()=>{
- clearTimeout(rebuildTimer);releaseImages();state.model?.dispose();
- if(state.raf)cancelAnimationFrame(state.raf);
- state.observer?.disconnect();state.controls?.dispose();state.renderer?.dispose();
- state.renderer?.domElement?.remove();state.renderer=null;
-});
-showParts();renderPhotoRequirements();
+translate();
+savedButton();
+schedule(true);

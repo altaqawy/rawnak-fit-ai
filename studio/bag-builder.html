@@ -1,138 +1,247 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#111d19">
-<title>RAWNAK FIT — Modular Bag Builder</title>
-<meta name="description" content="تكوين الشنطة من هيكل بأبعاد حقيقية وصور الخارج والداخل والشعار ثم معاينة 3D قابلة للتعديل">
-<link rel="stylesheet" href="./bag-builder.css?v=20261118-bag01">
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
-</script>
-</head>
-<body>
-<header class="navigation">
- <a href="./" class="brand">✳ RAWNAK <b>FIT</b><small> / BAG ENGINE</small></a>
- <nav><a href="./library.html">Photo-Only Studio</a><a href="../demo/">Live Try-On</a><a href="https://github.com/altaqawy/rawnak-fit-ai" target="_blank" rel="noopener noreferrer">GitHub</a></nav>
-</header>
-<main>
- <section class="hero"><p class="eyebrow">MODULAR 3D · STRUCTURE → PHOTOS → PREVIEW</p>
-  <h1>كل جزء من الشنطة<br><em>يتبني ويتحرك لوحده.</em></h1>
-  <p>حدد الهيكل والأبعاد، وارفع صور الخارج والداخل والتقفيل والشعار. اعمل معاينة 3D للأجزاء ومفاصل الحركة، وصدّر مجسمًا تجريبيًا وملفًا يصف كل جزء. الصور لسه مش بتعيد بناء التفاصيل تلقائيًا في النسخة دي.</p>
-  <div class="pill-row"><span>أبعاد بالسنتيمتر</span><span>أجزاء مستقلة</span><span>داخل وجيوب</span><span>حركة الحزام والغطاء</span><span>GLB + Parts JSON</span></div>
- </section>
- <section class="steps" aria-label="المراحل">
-  <a href="#structure"><b>01</b> الهيكل</a>
-  <a href="#photos"><b>02</b> الصور</a>
-  <a href="#builder"><b>03</b> المجسم والتعديل</a>
- </section>
- <div class="layout">
- <div class="forms">
-  <section class="panel" id="structure">
-   <div class="heading"><div><span class="eyebrow">STEP 01 · STRUCTURE</span><h2>بناء هيكل الشنطة</h2></div><span class="tag">مقاسات حقيقية</span></div>
-   <div class="fields">
-    <label>عائلة الشنطة<select id="style">
-      <option value="structured">Structured / Satchel</option><option value="tote">Tote / Shopper</option>
-      <option value="baguette">Baguette</option><option value="hobo">Hobo / Crescent</option>
-      <option value="bucket">Bucket</option><option value="clutch">Clutch</option>
-      <option value="backpack">Backpack</option><option value="saddle">Saddle</option>
-    </select></label>
-    <label>الخامة<select id="material">
-      <option value="faux_leather">جلد صناعي</option><option value="leather">جلد طبيعي</option>
-      <option value="canvas">قماش Canvas</option><option value="suede">شمواه</option>
-      <option value="nylon">نايلون</option><option value="woven">منسوج</option>
-      <option value="rigid_case">جسم صلب</option>
-    </select></label>
-    <label>العرض (سم)<input id="widthCm" type="number" min="8" max="85" step=".5" value="28" inputmode="decimal"></label>
-    <label>الارتفاع (سم)<input id="heightCm" type="number" min="6" max="70" step=".5" value="20" inputmode="decimal"></label>
-    <label>العمق (سم)<input id="depthCm" type="number" min="2" max="45" step=".5" value="11" inputmode="decimal"></label>
-    <label>مرونة جسم الشنطة <span id="flexibility-value">30%</span><input id="flexibility" type="range" min="0" max="100" value="30"></label>
-    <label>طريقة القفل<select id="closure">
-      <option value="flap">غطاء مفصلي</option><option value="zipper">سوستة</option>
-      <option value="magnetic">مغناطيس/كبّاس</option><option value="drawstring">رباط</option>
-      <option value="clasp">قفل معدني</option><option value="open">بدون قفل</option>
-    </select></label>
-    <label>نوع الحزام<select id="strapType">
-      <option value="shoulder">كتف</option><option value="crossbody">Crossbody</option>
-      <option value="hand">يد</option><option value="backpack">ظهر</option>
-      <option value="none">بدون حزام</option>
-    </select></label>
-    <label>عدد الأحزمة<input id="strapCount" type="number" min="0" max="2" step="1" value="1"></label>
-    <label>طول الحزام (سم)<input id="strapLengthCm" type="number" min="0" max="210" step="1" value="82"></label>
-    <label>عرض الحزام (سم)<input id="strapWidthCm" type="number" min=".4" max="12" step=".1" value="2.4"></label>
-    <label>عدد الأيدي<input id="handlesCount" type="number" min="0" max="2" step="1" value="1"></label>
-   </div>
-   <div class="heading subhead"><h3>التقفيل الداخلي والتقسيمات</h3><span class="tag">يتحوّل لأجزاء 3D</span></div>
-   <div class="fields">
-    <label>عدد الأقسام الرئيسية<input id="mainCompartments" type="number" min="1" max="5" step="1" value="2"></label>
-    <label>جيوب داخلية مفتوحة<input id="innerOpenPockets" type="number" min="0" max="8" step="1" value="1"></label>
-    <label>جيوب داخلية بسوستة<input id="innerZippedPockets" type="number" min="0" max="8" step="1" value="1"></label>
-    <label>جيوب خارجية<input id="outerPockets" type="number" min="0" max="8" step="1" value="0"></label>
-    <label>نوع البطانة<select id="lining">
-      <option value="polyester">بوليستر</option><option value="cotton">قطن</option>
-      <option value="leather">جلد</option><option value="none">بدون بطانة</option>
-    </select></label>
-    <label>لون جسم الشنطة<input id="bodyColor" type="color" value="#996247"></label>
-   </div>
-   <div class="heading subhead"><h3>الشعار وتفاصيل الهوية</h3></div>
-   <div class="fields">
-    <label>مكان الشعار<select id="logoPlacement">
-      <option value="front">الأمام</option><option value="back">الخلف</option>
-      <option value="inside">البطانة الداخلية</option><option value="none">بدون شعار</option>
-    </select></label>
-    <label>نوع الشعار<select id="logoType">
-      <option value="print">طباعة</option><option value="embossed">حفر / بارز</option>
-      <option value="metal">شعار معدني</option><option value="patch">رقعة مثبتة</option>
-      <option value="none">لا يوجد</option>
-    </select></label>
-    <label class="wide">وصف الشعار (اختياري)<input id="logoText" type="text" maxlength="100" placeholder="نص الشعار أو الاسم الموجود في الصورة"></label>
-   </div>
-  </section>
-  <section class="panel" id="photos">
-   <div class="heading"><div><span class="eyebrow">STEP 02 · MULTI-VIEW CAPTURE</span><h2>صور الخارج والداخل والشعار</h2></div><span class="tag" id="photo-progress">0 / 0</span></div>
-   <p class="fine">الزوايا المطلوبة بتتغير حسب الأقسام والأحزمة ونوع القفل والشعار. تقدر ترفع الصور كلها مرة واحدة؛ أسماء الملفات هتساعدنا نخمن الزاوية، وتقدر تصحح التخمين لو لزم.</p>
-   <label class="upload" for="photos-input"><span class="symbol">↑</span><strong>ارفع صور الشنطة الحقيقية</strong><small>JPG / PNG / WEBP · حتى 36 صورة · حتى 10MB للصورة</small></label>
-   <input id="photos-input" type="file" multiple accept="image/jpeg,image/png,image/webp" hidden>
-   <div id="photo-requirements" class="view-tags"></div>
-   <div id="photos-list" class="photos-list"></div>
-   <label class="check"><input id="brand-rights" type="checkbox"> أملك حق استخدام صور المنتج والشعار أو لدي إذن صاحب الحقوق</label>
-   <div class="actions"><button id="remove-photos" type="button" class="ghost">مسح كل الصور</button><span class="muted" id="photo-quality">الصور لم تُراجع بعد</span></div>
-  </section>
- </div>
- <div class="result">
-  <section class="panel sticky-panel" id="builder">
-   <div class="heading"><div><span class="eyebrow">STEP 03 · PARTS & MOTION</span><h2>الموديل الناتج</h2></div><span class="tag">3D DEMO</span></div>
-   <div class="stage" id="stage"><div class="stage-message" id="stage-message">اضغط إنشاء نموذج 3D لتجميع الأجزاء هندسيًا</div></div>
-   <div class="status" id="model-status" role="status">المجسم الناتج هيعتمد على الهيكل والأبعاد، وليس إعادة بناء مطابقة للصور.</div>
-   <div class="actions"><button id="generate" type="button" class="primary">إنشاء نموذج 3D تجريبي</button><button id="reset-view" type="button" class="ghost">إعادة الكاميرا</button></div>
-   <div class="motion">
-     <div class="motion-title">تجربة الميكانيزم</div>
-     <label>فتح الغطاء أو السوستة <output id="opening-out">0%</output><input id="opening" type="range" min="0" max="100" value="0"></label>
-     <label>حركة الحزام <output id="swing-out">0%</output><input id="swing" type="range" min="-100" max="100" value="0"></label>
-     <label class="check"><input id="show-inside" type="checkbox"> معاينة الأجزاء الداخلية (X-Ray توضيحي)</label>
-   </div>
-   <div class="motion-title">الأجزاء الموجودة في النموذج</div>
-   <div class="parts" id="parts"></div>
-   <div class="part-review">
-     <div class="motion-title">مراجعة الأجزاء يدويًا (اختياري)</div>
-     <div class="fields">
-       <label>الجزء<select id="part-select"></select></label>
-       <label>السلوك<select id="part-behavior">
-         <option value="rigid">صلب</option><option value="semi-rigid">نصف صلب</option>
-         <option value="flexible">مرن</option><option value="surface-attached">مثبت على السطح</option>
-       </select></label>
-       <label class="wide check"><input id="part-movable" type="checkbox"> الجزء متحرك وله مفصل أو نقطة ربط</label>
-     </div>
-     <button id="save-part-correction" type="button" class="ghost">حفظ تصحيح الجزء</button>
-     <small class="fine" id="part-feedback" role="status">التصحيحات تحفظ داخل Parts JSON فقط. لا يوجد تدريب تلقائي للنموذج الآن.</small>
-   </div>
-   <div class="status" id="capture-status"></div>
-   <div class="actions"><button id="download-glb" class="secondary" disabled type="button">تحميل GLB التجريبي</button><button id="download-json" class="secondary" disabled type="button">تحميل Parts JSON</button></div>
-   <p class="fine caution">المعاينة الداخلية رسم توضيحي لتوزيع الجيوب والفواصل وليست شكل تقفيل مصنع أو خياطة حقيقية. المرونة وحركة الحزام تقريبية، ولا يوجد Cloth Physics أو Image-to-3D مطابق بعد. لازم مراجعة النموذج والصور قبل النشر في أي متجر.</p>
-  </section>
- </div>
- </div>
- <footer>RAWNAK FIT AI · MODULAR BAG BUILDER ALPHA 0.1 <a href="https://github.com/altaqawy/rawnak-fit-ai">GitHub</a></footer>
-</main>
-<script type="module" src="./bag-builder.js?v=20261118-bag01"></script>
-</body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f4f3ed" />
+    <meta
+      name="description"
+      content="مشغل حقائب رونق لبناء شنطة قابلة للتعديل من المقاسات وصور المنتج"
+    />
+    <title>Bag Atelier · RAWNAK FIT</title>
+    <link rel="stylesheet" href="./bag-builder.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three/build/three.module.min.js",
+          "three/addons/": "./vendor/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="nav">
+      <a class="wordmark" href="./" dir="ltr"><i aria-hidden="true">✳</i> RAWNAK <b>FIT</b></a>
+      <nav>
+        <a href="./library.html" data-en="Photo studio">استوديو الصور</a
+        ><a href="../demo/" data-en="Try-on">تجربة الارتداء</a>
+      </nav>
+      <div class="nav-tools">
+        <button id="language" type="button" lang="en">English</button
+        ><button id="theme" type="button" data-en="Dark mode">الوضع الداكن</button>
+      </div>
+    </header>
+    <main>
+      <div class="heading">
+        <div>
+          <div class="overline" dir="ltr">RAWNAK FIT / ATELIER</div>
+          <h1 data-en="Bag atelier">مشغل الحقائب</h1>
+        </div>
+        <button id="import" class="outline" data-en="Open project">فتح مشروع</button
+        ><input id="project-file" type="file" accept=".json,application/json" hidden />
+      </div>
+      <nav class="steps" id="steps" aria-label="Workflow"></nav>
+      <div class="workspace">
+        <section class="viewer" aria-label="3D">
+          <div class="stage" id="stage">
+            <div class="stage-caption">
+              <span class="overline" data-en="Model view">عرض المجسم</span
+              ><strong id="family-name"></strong>
+            </div>
+            <div
+              class="stage-message"
+              id="stage-message"
+              role="status"
+              data-en="Preparing the workspace…"
+            >
+              جارٍ تجهيز مساحة العمل…
+            </div>
+            <div class="stage-tools">
+              <label
+                ><span class="sr" data-en="Camera">الكاميرا</span
+                ><select id="camera"></select></label
+              ><button id="reset-view" data-en="Reset view">ضبط المنظور</button>
+            </div>
+          </div>
+          <div class="caption">
+            <div><span class="dot"></span><span id="model-status" role="status"></span></div>
+            <output id="measure-summary" dir="ltr"></output>
+          </div>
+          <div id="comparison" hidden>
+            <div class="compare-head">
+              <strong data-en="Source photograph">الصورة المرجعية</strong
+              ><select id="compare-photo" aria-label="Source photo"></select>
+            </div>
+            <img id="compare-img" alt="" />
+            <p class="fine" id="compare-note"></p>
+          </div>
+        </section>
+        <section class="panel" id="controls">
+          <div class="page" data-page="0">
+            <h2 data-en="Structure">الهيكل</h2>
+            <div class="fields">
+              <label class="wide"
+                ><span data-en="Bag family">عائلة الشنطة</span
+                ><select id="style"></select
+              ></label>
+            </div>
+            <h3 data-en="Body measurements">مقاسات الجسم</h3>
+            <div class="fields three" id="dimensions"></div>
+            <div class="fields" id="finishes"></div>
+            <details>
+              <summary data-en="Pattern and construction">الباترون والتقفيل</summary>
+              <div class="fields" id="pattern-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Straps and handles">الأحزمة والأيدي</summary>
+              <div class="fields" id="carry-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Compartments and pockets">الداخل والجيوب</summary>
+              <div class="fields" id="inside-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Branding and hardware">الشعار والإكسسوارات</summary>
+              <div class="fields" id="brand-fields"></div>
+            </details>
+          </div>
+          <div class="page" data-page="1" hidden>
+            <h2 data-en="Product photos">صور المنتج</h2>
+            <p
+              class="intro"
+              data-en="Assign each view. Confirm a straight front or back view to fit the body outline."
+            >
+              حدد زاوية كل صورة. أكّد صورة أمامية أو خلفية مستقيمة لاستخدام حدود الجسم في البناء.
+            </p>
+            <label class="upload"
+              ><span aria-hidden="true">＋</span
+              ><strong data-en="Choose photos">اختار صور المنتج</strong
+              ><small>JPG · PNG · WebP · 10 MB</small
+              ><input
+                id="photos-input"
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp"
+            /></label>
+            <div id="photos-list"></div>
+            <p class="fine" id="photo-quality" role="status"></p>
+            <details>
+              <summary>
+                <span data-en="Reference coverage">تغطية الصور المطلوبة</span>
+                <output id="photo-progress"></output>
+              </summary>
+              <div id="photo-requirements" class="tags"></div>
+            </details>
+            <button id="remove-photos" class="plain" data-en="Remove all references">
+              إزالة كل المراجع
+            </button>
+          </div>
+          <div class="page" data-page="2" hidden>
+            <h2 data-en="Construct the model">بناء المجسم</h2>
+            <p
+              class="intro"
+              data-en="Use your measurements, construction details and any confirmed silhouettes to assemble an editable bag."
+            >
+              اجمع المقاسات وتفاصيل التقفيل وأي حدود خارجية مؤكدة في مجسم تقدر تعدّل أجزاءه.
+            </p>
+            <div class="readout" id="construction-report"></div>
+            <button id="generate" class="primary" data-en="Build from measurements and photos">
+              ابنِ من المقاسات والصور
+            </button>
+            <button id="use-color" class="outline" hidden data-en="Apply sampled body color">
+              استخدم لون الجسم من الصورة
+            </button>
+            <p class="fine" id="fit-status" role="status"></p>
+          </div>
+          <div class="page" data-page="3" hidden>
+            <h2 data-en="Inspect and correct">مراجعة الأجزاء</h2>
+            <div class="toolbar">
+              <button id="undo" data-en="Undo">تراجع</button
+              ><button id="redo" data-en="Redo">إعادة</button>
+            </div>
+            <label class="field"
+              ><span data-en="Selected component">الجزء المحدد</span
+              ><select id="part-select"></select
+            ></label>
+            <div id="part-info" class="fine"></div>
+            <div class="fields" id="edit-fields"></div>
+            <div class="toolbar">
+              <button id="save-part-correction" class="primary" data-en="Apply edit">
+                تطبيق التعديل</button
+              ><button id="reset-part" data-en="Reset part">إرجاع الجزء لأصله</button>
+            </div>
+            <details open>
+              <summary data-en="Motion and interior">الحركة والداخل</summary>
+              <label class="range"
+                ><span data-en="Main closure">فتح الشنطة</span><output id="opening-out">0%</output
+                ><input id="opening" type="range" min="0" max="100" value="0"
+              /></label>
+              <label class="range"
+                ><span data-en="Carrier swing">حركة الأيدي والأحزمة</span
+                ><output id="swing-out">0%</output
+                ><input id="swing" type="range" min="-100" max="100" value="0"
+              /></label>
+              <label class="range"
+                ><span data-en="Pocket zippers">سوست الجيوب</span><output id="pocket-out">0%</output
+                ><input id="pocket-motion" type="range" min="0" max="100" value="0"
+              /></label>
+              <label class="check"
+                ><input id="show-inside" type="checkbox" /><span data-en="Cut through the front"
+                  >مقطع يكشف الداخل</span
+                ></label
+              >
+            </details>
+            <details>
+              <summary data-en="Command and component tree">الأوامر وشجرة الأجزاء</summary>
+              <label class="field"
+                ><span data-en="Edit command">أمر تعديل</span
+                ><input id="command" list="commands" /></label
+              ><datalist id="commands"></datalist>
+              <button id="run-command" data-en="Apply command">تنفيذ الأمر</button>
+              <div id="parts" class="tree"></div>
+            </details>
+            <p id="part-feedback" class="fine" role="status"></p>
+          </div>
+          <div class="page" data-page="4" hidden>
+            <h2 data-en="Review and export">الاعتماد والتصدير</h2>
+            <div id="capture-status" class="readout"></div>
+            <label class="field"
+              ><span data-en="Mesh detail">دقة المجسم</span
+              ><select id="profile">
+                <option value="mobile" data-en="Mobile">موبايل</option>
+                <option value="detail" data-en="Detailed">تفصيلي</option>
+              </select></label
+            >
+            <button class="outline" id="approve" data-en="Approve my design corrections">
+              اعتماد تعديلاتي على التصميم
+            </button>
+            <p
+              class="fine"
+              data-en="The project stores references and correction history locally. Reattach original photos when reopening. The GLB embeds assigned materials and permitted artwork."
+            >
+              ملف المشروع يحفظ مراجع الصور وسجل التعديلات. عند فتحه اختار الصور الأصلية مرة تانية.
+              ملف GLB يضم الخامات المحددة والشعار المصرّح به.
+            </p>
+            <div class="export-list">
+              <button id="download-glb">
+                <b>GLB</b><span data-en="3D asset">المجسم ثلاثي الأبعاد</span>
+              </button>
+              <button id="download-json">
+                <b>JSON</b
+                ><span data-en="Part graph and AR contract">الأجزاء وعقد الربط بـ AR</span>
+              </button>
+              <button id="download-project">
+                <b>FIT</b><span data-en="Editable project">المشروع القابل للتعديل</span>
+              </button>
+            </div>
+          </div>
+          <div class="step-footer">
+            <button id="next" class="primary"></button><span id="step-count" dir="ltr"></span>
+          </div>
+        </section>
+      </div>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </main>
+    <script type="module" src="./bag-builder.js"></script>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+import { BAG_STYLES, VIEW_LABELS } from './bag-spec.js';
+
+export const steps = [
+  ['الهيكل', 'Structure'],
+  ['الصور', 'Photos'],
+  ['البناء', 'Construct'],
+  ['المراجعة', 'Review'],
+  ['التصدير', 'Export'],
+];
+const names = ['ساتشل', 'توت', 'باغيت', 'هوبو', 'باكيت', 'كلاتش', 'حقيبة ظهر صغيرة', 'سرج'];
+export const families = Object.fromEntries(
+  Object.entries(BAG_STYLES).map(([k, v], i) => [k, [names[i], v.name]]),
+);
+export const views = Object.fromEntries(
+  Object.entries(VIEW_LABELS).map(([id, ar]) => [
+    id,
+    [
+      ar,
+      {
+        open: 'Opened bag',
+        inside: 'Interior',
+        pockets: 'Inner pockets',
+        strap: 'Straps',
+        logo: 'Logo artwork',
+        outer: 'Outer pockets',
+        handles: 'Handles',
+        compartments: 'Compartments',
+        material: 'Base-color swatch',
+        normal: 'Normal map',
+        metalness: 'Metalness map',
+        roughness: 'Roughness map',
+        ao: 'Occlusion map',
+      }[id] || id[0].toUpperCase() + id.slice(1),
+    ],
+  ]),
+);
+views.unknown = ['غير محدد', 'Unassigned'];
+export const cameras = {
+  orbit: ['منظور حر', 'Perspective'],
+  front: views.front,
+  back: views.back,
+  left: views.left,
+  right: views.right,
+  top: views.top,
+  bottom: views.bottom,
+  inside: ['كاميرا الداخل', 'Interior camera'],
+};
+export const fields = {
+  dimensions: [
+    ['widthCm', 'العرض · سم', 'Width · cm', 8, 85, 0.5],
+    ['heightCm', 'الارتفاع · سم', 'Height · cm', 6, 70, 0.5],
+    ['depthCm', 'العمق · سم', 'Depth · cm', 2, 45, 0.5],
+  ],
+  finishes: [
+    [
+      'material',
+      'الخامة',
+      'Material',
+      {
+        faux_leather: ['جلد صناعي', 'Faux leather'],
+        leather: ['جلد طبيعي', 'Leather'],
+        suede: ['شمواه', 'Suede'],
+        canvas: ['كانفاس', 'Canvas'],
+        nylon: ['نايلون', 'Nylon'],
+        woven: ['منسوج', 'Woven fabric'],
+        rigid_case: ['بلاستيك صلب', 'Rigid plastic'],
+      },
+    ],
+    [
+      'closure',
+      'آلية الفتح',
+      'Closure',
+      {
+        flap: ['غطاء', 'Flap'],
+        zipper: ['سوستة', 'Zipper'],
+        drawstring: ['رباط شد', 'Drawstring'],
+        magnetic: ['مغناطيس', 'Magnet'],
+        clasp: ['قفل معدني', 'Turn lock'],
+        buckle: ['إبزيم', 'Buckle'],
+        button: ['زر', 'Button'],
+        open: ['مفتوحة', 'Open top'],
+      },
+    ],
+    ['bodyColor', 'لون الجسم', 'Body color', 'color'],
+  ],
+  'pattern-fields': [
+    ['roundness', 'استدارة الجوانب', 'Corner roundness', 0, 100, 1],
+    ['gussetWidth', 'عرض الجنب ٪', 'Gusset width %', 45, 100, 1],
+    ['sideTaper', 'ميل الجوانب', 'Side taper', -60, 60, 1],
+    ['openingScale', 'اتساع الفتحة ٪', 'Opening width %', 55, 100, 1],
+    ['baseCurve', 'انحناء القاعدة', 'Base curvature', 0, 90, 1],
+    ['panelThicknessMm', 'سمك اللوح · مم', 'Panel thickness · mm', 0.5, 6, 0.1],
+    ['flapLength', 'طول الغطاء ٪', 'Flap drop %', 15, 70, 1],
+    ['flexibility', 'مرونة الجسم · توصيف', 'Body flexibility · metadata', 0, 100, 1],
+    ['reinforced', 'تدعيم القاعدة', 'Base reinforcement', 'check'],
+  ],
+  'carry-fields': [
+    [
+      'strapType',
+      'نوع الحمل',
+      'Carrying mode',
+      {
+        shoulder: ['كتف', 'Shoulder'],
+        crossbody: ['كروس', 'Crossbody'],
+        hand: ['باليد', 'Handheld'],
+        backpack: ['على الظهر', 'Backpack'],
+        none: ['بدون سير', 'No strap'],
+      },
+    ],
+    ['strapCount', 'عدد الأحزمة', 'Strap count', 0, 2, 1],
+    ['strapLengthCm', 'طول السير · سم', 'Strap length · cm', 0, 210, 1],
+    ['strapWidthCm', 'عرض السير · سم', 'Strap width · cm', 0.4, 12, 0.1],
+    ['handlesCount', 'عدد الأيدي', 'Handles', 0, 2, 1],
+    ['handleDropCm', 'ارتفاع اليد · سم', 'Handle drop · cm', 2, 40, 0.5],
+    ['adjustable', 'إبزيم لضبط الطول', 'Strap adjuster', 'check'],
+    ['detachable', 'مشابك قابلة للفصل', 'Detachable clips', 'check'],
+  ],
+  'inside-fields': [
+    ['mainCompartments', 'عدد الأقسام', 'Compartments', 1, 5, 1],
+    ['innerOpenPockets', 'جيوب داخلية مفتوحة', 'Slip pockets', 0, 8, 1],
+    ['innerZippedPockets', 'جيوب بسوستة', 'Zip pockets', 0, 8, 1],
+    ['outerPockets', 'جيوب خارجية', 'Outer pockets', 0, 8, 1],
+    ['cardSlots', 'فتحات كروت', 'Card slots', 0, 5, 1],
+    ['accessoryPockets', 'جيوب إكسسوارات', 'Accessory pouches', 0, 3, 1],
+    [
+      'lining',
+      'البطانة',
+      'Lining',
+      {
+        polyester: ['بوليستر', 'Polyester'],
+        cotton: ['قطن', 'Cotton'],
+        leather: ['جلد', 'Leather'],
+        none: ['بدون', 'Unlined'],
+      },
+    ],
+  ],
+  'brand-fields': [
+    ['metalColor', 'لون المعدن', 'Hardware color', 'color'],
+    [
+      'logoPlacement',
+      'مكان الشعار',
+      'Logo placement',
+      { front: views.front, back: views.back, inside: views.inside, none: ['بدون', 'None'] },
+    ],
+    [
+      'logoType',
+      'تنفيذ الشعار',
+      'Brand finish',
+      {
+        print: ['طباعة', 'Printed'],
+        embossed: ['بصمة بارزة', 'Embossed'],
+        debossed: ['بصمة غائرة', 'Debossed'],
+        metal: ['لوحة معدنية', 'Metal plate'],
+        patch: ['رقعة مخيطة', 'Sewn patch'],
+        none: ['بدون', 'None'],
+      },
+    ],
+    ['logoText', 'نص الشعار', 'Brand lettering', 'text'],
+    ['brandLicenseConfirmed', 'أملك حق استخدام الشعار', 'I have rights to this artwork', 'check'],
+  ],
+};
+export const roles = {
+  body: ['مجموعة الجسم', 'Body assembly'],
+  front_panel: ['اللوح الأمامي', 'Front panel'],
+  back_panel: ['اللوح الخلفي', 'Back panel'],
+  left_gusset: ['الجنب الأيسر', 'Left gusset'],
+  right_gusset: ['الجنب الأيمن', 'Right gusset'],
+  bottom_panel: ['القاعدة', 'Bottom panel'],
+  lining: ['البطانة', 'Lining'],
+  opening: ['حافة الفتحة', 'Opening binding'],
+  piping: ['الحواف والخياطة', 'Piping and stitches'],
+  base_insert: ['تدعيم القاعدة', 'Base insert'],
+  closure: ['آلية القفل', 'Closure'],
+  brand_mark: ['الشعار', 'Brand mark'],
+  compartment: ['قسم داخلي', 'Compartment'],
+  interior_partition: ['فاصل', 'Divider'],
+  open_pocket: ['جيب مفتوح', 'Slip pocket'],
+  zip_pocket: ['جيب بسوستة', 'Zip pocket'],
+  outer_pocket: ['جيب خارجي', 'Outer pocket'],
+  card_slot: ['فتحة كارت', 'Card slot'],
+  accessory_pocket: ['جيب إكسسوارات', 'Accessory pouch'],
+  seam: ['خياطة جانبية', 'Side seam'],
+  pocket_slider: ['سحّاب الجيب', 'Pocket slider'],
+  closure_slider: ['سحّاب الفتحة', 'Closure slider'],
+  attachment_loop: ['عروة تثبيت', 'Mounting tab'],
+  ring: ['حلقة معدنية', 'Mounting ring'],
+  strap: ['سير', 'Strap'],
+  handle: ['يد', 'Handle'],
+  adjuster: ['إبزيم ضبط', 'Adjuster'],
+  connector: ['مشبك قابل للفصل', 'Detachable clip'],
+};
+export const editLabels = {
+  visible: ['إظهار الجزء', 'Show part'],
+  roughness: ['خشونة السطح', 'Surface roughness'],
+  lengthScale: ['معامل الطول', 'Length factor'],
+  widthScale: ['معامل العرض', 'Width factor'],
+  anchorShift: ['موضع التثبيت', 'Mount offset'],
+  offsetX: ['إزاحة أفقية', 'Horizontal offset'],
+  motionLimit: ['مدى الحركة', 'Motion fraction'],
+  behavior: ['الصلابة · توصيف', 'Stiffness · metadata'],
+  moving: ['السماح بالحركة', 'Allow movement'],
+};
+export const behaviors = {
+  rigid: ['صلب', 'Rigid'],
+  'semi-rigid': ['شبه صلب', 'Semi-rigid'],
+  flexible: ['مرن', 'Flexible'],
+  'surface-attached': ['مثبت بالسطح', 'Surface mounted'],
+};
+export const commands = [
+  ['طول السير', 'Make the shoulder strap longer'],
+  ['دور زوايا القاعدة', 'Round the bottom corners'],
+  ['خلي الجلد أطرى', 'Make the leather softer'],
+  ['حرك الجيب لليمين', 'Move the pocket to the right'],
+  ['زود عمق الشنطة', 'Increase the bag depth'],
+];
