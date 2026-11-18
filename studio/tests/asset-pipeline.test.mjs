@@ -89,19 +89,19 @@ test('export includes metadata only and cannot smuggle images or approved status
  assert.ok(!json.includes('data:image'));
  assert.throws(()=>createAssetDraft({...record,sku:''}));
 });
-test('merchant UI wires all pilot inputs without pushing photos to an API',()=>{
+test('public merchant UI accepts photos only; legacy intake evaluator stays tested as a helper',()=>{
  const html=readFileSync(path.join(root,'library.html'),'utf8');
- const app=readFileSync(path.join(root,'library.js'),'utf8');
+ const auto=readFileSync(path.join(root,'auto.js'),'utf8');
  const studio=readFileSync(path.join(root,'index.html'),'utf8');
- for(const id of ['upload-images','photo-list','measurements','rights-confirmed','category-confirmed',
-  'qa-blockers','upload-glb','model-stage','download-manifest','copy-report']){
-   assert.ok(html.includes('id="'+id+'"'),id);
-  }
- assert.ok(html.includes('type="importmap"'),'Three.js addon import map');
- assert.ok(app.includes('evaluatePilot(input)'));
- assert.ok(app.includes("await new GLTFLoader().parseAsync(data,'')"));
- assert.ok(app.includes('URL.revokeObjectURL'));
- assert.ok(app.includes('createAssetDraft(draftInput())'));
- assert.ok(!app.includes('fetch(file'),'photo upload cannot be hidden in fetch');
+ assert.ok(html.includes('id="product-photos"'));
+ assert.ok(html.includes('id="viewer"'));
+ assert.ok(!html.includes('id="measurements"'));
+ assert.ok(!html.includes('id="upload-glb"'));
+ assert.ok(!html.includes('id="rights-confirmed"'));
+ assert.ok(!html.includes('id="category-confirmed"'));
+ assert.ok(auto.includes('void runAnalysis(current)'));
+ assert.ok(auto.includes('createAutoDraft('));
+ assert.ok(auto.includes('URL.revokeObjectURL'));
+ assert.ok(!auto.includes('fetch(file'));
  assert.ok(studio.includes('href="./library.html"'));
 });
