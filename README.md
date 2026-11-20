@@ -205,6 +205,6 @@ Previous manual measurement and QA work remains archived in code for the develop
 
 ## Bag Atelier
 
-Build an editable handbag from its construction, dimensions and reference photographs. Eight family patterns share sewn components, an inspectable cavity and constrained carrying and closure mechanisms. The local editor exports the editable project, a component graph for AR integration and an animated GLB. Frontal silhouettes can guide the body outline. Merchant review and product-fidelity verification are recorded separately.
+Build an editable handbag from its construction, dimensions and reference photographs. Nine family patterns share sewn components, an inspectable cavity and constrained carrying and closure mechanisms. The local editor exports the editable project, a component graph for AR integration and an animated GLB. Frontal silhouettes can guide the body outline. Merchant review and product-fidelity verification are recorded separately.
 
-[Open the Bag Builder](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html) · [Capabilities, limitations and integration contract](docs/BAG_ATELIER.md) · [Family renders](docs/bag-qa/families.webp) · [Inspection views](docs/bag-qa/inspection.webp)
+[Open the Bag Builder](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html) · [Try the coiled-cord bag](https://altaqawy.github.io/rawnak-fit-ai/studio/bag-builder.html?family=coiled) · [Capabilities, limitations and integration contract](docs/BAG_ATELIER.md) · [Family renders](docs/bag-qa/families.webp) · [Inspection views](docs/bag-qa/inspection.webp)

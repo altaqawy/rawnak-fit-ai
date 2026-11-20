@@ -1,0 +1,1841 @@
+{
+  "schema": "rawnak.fit.bag/2",
+  "units": "m",
+  "frame": {
+    "up": "+Y",
+    "front": "+Z",
+    "origin": "base-center",
+    "handedness": "right"
+  },
+  "style": "coiled",
+  "parts": [
+    {
+      "id": "body",
+      "role": "assembly",
+      "type": "assembly",
+      "parent": null,
+      "requires": [],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.11,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.3,
+        "height": 0.22,
+        "depth": 0.1
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "body",
+      "includedInGLB": true
+    },
+    {
+      "id": "front_panel",
+      "role": "panel",
+      "type": "panel",
+      "parent": "body",
+      "requires": [
+        "front"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": 30,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.10907003778265789,
+        0.03869642037898302
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2488548755645752,
+        "height": 0.22185992205049843,
+        "depth": 0.02631632797420025
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "courseCount": 24,
+        "cordDiameterMm": 6
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "front_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "back_panel",
+      "role": "panel",
+      "type": "panel",
+      "parent": "body",
+      "requires": [
+        "back"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": 30,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.10907003778265789,
+        -0.03869642037898302
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2488548755645752,
+        "height": 0.22185992205049843,
+        "depth": 0.02631632797420025
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "courseCount": 24,
+        "cordDiameterMm": 6
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "back_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "left_gusset",
+      "role": "side",
+      "type": "side",
+      "parent": "body",
+      "requires": [
+        "left"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.130986500531435,
+        0.07308296312112361,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.041746996343135834,
+        "height": 0.13955609104596078,
+        "depth": 0.08291641622781754
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "courseCount": 8,
+        "cordDiameterMm": 6
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "left_gusset",
+      "includedInGLB": true
+    },
+    {
+      "id": "right_gusset",
+      "role": "side",
+      "type": "side",
+      "parent": "body",
+      "requires": [
+        "right"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.130986500531435,
+        0.07308296312112361,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.041746996343135834,
+        "height": 0.13955609104596078,
+        "depth": 0.08291641622781754
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "courseCount": 8,
+        "cordDiameterMm": 6
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "right_gusset",
+      "includedInGLB": true
+    },
+    {
+      "id": "bottom_panel",
+      "role": "bottom",
+      "type": "bottom",
+      "parent": "body",
+      "requires": [
+        "bottom"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.00494999997317791,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.27300000190734863,
+        "height": 0.00989999994635582,
+        "depth": 0.07000000029802322
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "bottom_panel",
+      "includedInGLB": true
+    },
+    {
+      "id": "opening",
+      "role": "opening",
+      "type": "opening",
+      "parent": "body",
+      "requires": [
+        "top",
+        "open"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.16180679574608803,
+        -0.001804674044251442
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2760438024997711,
+        "height": 0.1181797906756401,
+        "depth": 0.07539765164256096
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "opening",
+      "includedInGLB": true
+    },
+    {
+      "id": "piping",
+      "role": "piping",
+      "type": "piping",
+      "parent": "body",
+      "requires": [
+        "front",
+        "back",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.0032674422254785895,
+        -2.9243528842926025e-7
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2800579369068146,
+        "height": 0.01174345170147717,
+        "depth": 0.07710267975926399
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "piping",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_front_left",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "front",
+        "left",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.1180267371237278,
+        0.07441299234051257,
+        0.03480505384504795
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01658763736486435,
+        "height": 0.14228876284323633,
+        "depth": 0.017678972333669662
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "front_panel",
+        "left_gusset"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_front_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_front_right",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "front",
+        "right",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.11922456696629524,
+        0.07343544100876898,
+        0.034709720872342587
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01704125851392746,
+        "height": 0.14023736049421132,
+        "depth": 0.01772584207355976
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "right_gusset",
+        "front_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_front_right",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_back_right",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "back",
+        "right",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.11817559227347374,
+        0.07443706726189703,
+        -0.034709720872342587
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01688534766435623,
+        "height": 0.14224061300046742,
+        "depth": 0.01772584207355976
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "back_panel",
+        "right_gusset"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_back_right",
+      "includedInGLB": true
+    },
+    {
+      "id": "seam_back_left",
+      "role": "seam",
+      "type": "seam",
+      "parent": "piping",
+      "requires": [
+        "back",
+        "left",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.11906903609633446,
+        0.07343868736643344,
+        -0.03480505384504795
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01735232025384903,
+        "height": 0.14034015289507806,
+        "depth": 0.017678972333669662
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "left_gusset",
+        "back_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "seam_back_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "lining",
+      "role": "interior",
+      "type": "interior",
+      "parent": "body",
+      "requires": [
+        "inside"
+      ],
+      "material": "cotton",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.10842459602281451,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2944999933242798,
+        "height": 0.20228518638759851,
+        "depth": 0.09449480473995209
+      },
+      "thicknessM": 0.0022,
+      "anchors": {},
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "lining",
+      "includedInGLB": true
+    },
+    {
+      "id": "insert_pouch",
+      "role": "insert_pouch",
+      "type": "insert_pouch",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "open",
+        "pockets"
+      ],
+      "material": "lining",
+      "behavior": "flexible",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.08177399635314941,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2346607893705368,
+        "height": 0.13714799284934998,
+        "depth": 0.05585017055273056
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining",
+        "compartment_1"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "boundedToParent": true,
+        "compartment": "compartment_1",
+        "construction": "zippered-pouch"
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "insert_pouch",
+      "includedInGLB": true
+    },
+    {
+      "id": "insert_slider",
+      "role": "pocket_slider",
+      "type": "pocket_slider",
+      "parent": "insert_pouch",
+      "requires": [
+        "inside",
+        "pockets"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": true,
+      "joint": "slider",
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        -0.11691521166496689,
+        0.11866056243204048,
+        1.734723475976807e-18
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.02033794003084302,
+        "height": 0.005601704917546357,
+        "depth": 0.010127550922334194
+      },
+      "thicknessM": null,
+      "anchors": {
+        "start": [
+          -0.113361241728,
+          0.11811370999999998,
+          1.6833316129785386e-18
+        ],
+        "end": [
+          0.113361241728,
+          0.11811370999999998,
+          1.6833316129785386e-18
+        ]
+      },
+      "connections": [
+        "insert_pouch"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": {
+        "unit": "path-fraction",
+        "min": 0,
+        "max": 1,
+        "points": [
+          [
+            -0.113361241728,
+            0.11811370999999998,
+            1.6833316129785386e-18
+          ],
+          [
+            -0.0982464094976,
+            0.12987438199999998,
+            1.4588873979147335e-18
+          ],
+          [
+            -0.0831315772672,
+            0.14163505399999998,
+            1.2344431828509283e-18
+          ],
+          [
+            -0.0685306446086112,
+            0.15003999999999998,
+            1.0380469938518159e-18
+          ],
+          [
+            -0.05453399749787382,
+            0.15003999999999995,
+            8.753772199226873e-19
+          ],
+          [
+            -0.039601778030309634,
+            0.15003999999999998,
+            6.640882866960285e-19
+          ],
+          [
+            -0.024010509810284526,
+            0.15003999999999998,
+            4.163594793808246e-19
+          ],
+          [
+            -0.008065602218138748,
+            0.15003999999999998,
+            1.4414991922159288e-19
+          ],
+          [
+            0.008065602218138748,
+            0.15003999999999998,
+            1.4414991922159288e-19
+          ],
+          [
+            0.024010509810284526,
+            0.15003999999999998,
+            4.163594793808246e-19
+          ],
+          [
+            0.03960177803030962,
+            0.15003999999999995,
+            6.640882866960284e-19
+          ],
+          [
+            0.054533997497873805,
+            0.15003999999999995,
+            8.75377219922687e-19
+          ],
+          [
+            0.0685306446086112,
+            0.15003999999999998,
+            1.0380469938518159e-18
+          ],
+          [
+            0.0831315772672,
+            0.14163505399999998,
+            1.2344431828509283e-18
+          ],
+          [
+            0.0982464094976,
+            0.12987438199999998,
+            1.4588873979147335e-18
+          ],
+          [
+            0.113361241728,
+            0.11811370999999998,
+            1.6833316129785386e-18
+          ]
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "insert_slider",
+      "includedInGLB": true
+    },
+    {
+      "id": "compartment_1",
+      "role": "compartment",
+      "type": "compartment",
+      "parent": "lining",
+      "requires": [
+        "inside",
+        "compartments"
+      ],
+      "material": "air",
+      "behavior": "fixed",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "fixed",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.08937500000000001,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.255,
+        "height": 0.1496,
+        "depth": 0.1
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "lining"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "kind": "empty-lined-volume",
+        "normalizedDepthInterval": [
+          -1,
+          1
+        ]
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "compartment_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_tab_a",
+      "role": "attachment_loop",
+      "type": "attachment_loop",
+      "parent": "body",
+      "requires": [
+        "strap"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.14510912639999998,
+        0.08679500222206116,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.00583200016990304,
+        "height": 0.03693599998950958,
+        "depth": 0.01761939935386181
+      },
+      "thicknessM": null,
+      "anchors": {
+        "sewn": [
+          -0.14100512639999999,
+          0.094787,
+          2.353100329667468e-18
+        ],
+        "loop": [
+          -0.1458651264,
+          0.10936699999999999,
+          2.6506895018602748e-18
+        ]
+      },
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_tab_a",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_ring_a",
+      "role": "ring",
+      "type": "ring",
+      "parent": "strap_1_tab_a",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.1458651264,
+        0.11057934636753797,
+        3.469446951953614e-18
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.0036720000207424164,
+        "height": 0.02251269295811653,
+        "depth": 0.025272000581026077
+      },
+      "thicknessM": null,
+      "anchors": {
+        "center": [
+          -0.1458651264,
+          0.10936699999999999,
+          2.6506895018602748e-18
+        ],
+        "attachment": [
+          -0.1458651264,
+          0.11930299999999999,
+          2.6506895018602748e-18
+        ]
+      },
+      "connections": [
+        "strap_1_tab_a"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_ring_a",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_tab_b",
+      "role": "attachment_loop",
+      "type": "attachment_loop",
+      "parent": "body",
+      "requires": [
+        "strap"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.14510912639999998,
+        0.08679500222206116,
+        0
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.00583200016990304,
+        "height": 0.03693599998950958,
+        "depth": 0.01761939935386181
+      },
+      "thicknessM": null,
+      "anchors": {
+        "sewn": [
+          0.14100512639999999,
+          0.094787,
+          2.353100329667468e-18
+        ],
+        "loop": [
+          0.1458651264,
+          0.10936699999999999,
+          2.6506895018602748e-18
+        ]
+      },
+      "connections": [
+        "body"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_tab_b",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_ring_b",
+      "role": "ring",
+      "type": "ring",
+      "parent": "strap_1_tab_b",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.1458651264,
+        0.11057934636753797,
+        3.469446951953614e-18
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.0036720000207424164,
+        "height": 0.02251269295811653,
+        "depth": 0.025272000581026077
+      },
+      "thicknessM": null,
+      "anchors": {
+        "center": [
+          0.1458651264,
+          0.10936699999999999,
+          2.6506895018602748e-18
+        ],
+        "attachment": [
+          0.1458651264,
+          0.11930299999999999,
+          2.6506895018602748e-18
+        ]
+      },
+      "connections": [
+        "strap_1_tab_b"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_ring_b",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1",
+      "role": "strap",
+      "type": "strap",
+      "parent": "body",
+      "requires": [
+        "strap"
+      ],
+      "material": "leather",
+      "behavior": "flexible",
+      "moving": true,
+      "joint": "strap_anchor",
+      "verifiedFromPhotos": false,
+      "rigidity": "flexible",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        7.563525306064633e-9,
+        0.24960315389813342,
+        0.00006722612306475986
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.2970098424702883,
+        "height": 0.2609580961725442,
+        "depth": 0.02427354734390974
+      },
+      "thicknessM": null,
+      "anchors": {
+        "a": [
+          -0.1458651264,
+          0.11930299999999999,
+          2.6506895018602748e-18
+        ],
+        "b": [
+          0.1458651264,
+          0.11930299999999999,
+          2.6506895018602748e-18
+        ],
+        "carry": [
+          -4.128641872824801e-16,
+          0.37743265393066416,
+          2.6506895018602748e-18
+        ]
+      },
+      "connections": [
+        "strap_1_ring_a",
+        "strap_1_ring_b"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "requestedLengthM": 0.68,
+        "actualCenterlineM": 0.6800003826816349,
+        "minimumSpanM": 0.2917302528,
+        "widthM": 0.023,
+        "construction": "bound-flat-strap",
+        "handleDropM": 0.2581296539306641
+      },
+      "range": {
+        "unit": "degrees",
+        "min": -92,
+        "max": 92,
+        "axis": [
+          1,
+          0,
+          0
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "STRAP_ANCHOR_1",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_buckle",
+      "role": "adjuster",
+      "type": "adjuster",
+      "parent": "strap_1",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.1388316532528559,
+        0.24853333284696497,
+        3.469446951953614e-18
+      ],
+      "orientation": [
+        -0.06518086723229206,
+        -0.7040961969410474,
+        -0.06518086723229206,
+        0.7040961969410475
+      ],
+      "dimensions": {
+        "width": 0.0094087618259385,
+        "height": 0.03594435785588607,
+        "depth": 0.030975034460425377
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "strap_1"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_buckle",
+      "includedInGLB": true
+    },
+    {
+      "id": "strap_1_clips",
+      "role": "connector",
+      "type": "connector",
+      "parent": "strap_1",
+      "requires": [
+        "strap"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -1.3877787807814457e-17,
+        0.12743359404005675,
+        2.6020852139652106e-18
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.30918101571320467,
+        "height": 0.030067199468612874,
+        "depth": 0.0033671066630631685
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "strap_1"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "strap_1_clips",
+      "includedInGLB": true
+    },
+    {
+      "id": "closure",
+      "role": "scroll_snap",
+      "type": "scroll_snap",
+      "parent": "opening",
+      "requires": [
+        "closure",
+        "open"
+      ],
+      "material": "braid",
+      "behavior": "rigid",
+      "moving": true,
+      "joint": "hinge_and_snap",
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        1.3877787807814457e-17,
+        0.16910139819930986,
+        0.014749999910593031
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.08951926976442337,
+        "height": 0.10391638458058747,
+        "depth": 0.09549999982118607
+      },
+      "thicknessM": null,
+      "anchors": {
+        "hinge": [
+          1.653273178848927e-17,
+          0.22,
+          -0.033
+        ],
+        "snap": [
+          -0.000021940397602987843,
+          0.12914320601332424,
+          0.055625087180400844
+        ]
+      },
+      "connections": [
+        "opening",
+        "snap_receiver"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": {
+        "unit": "degrees",
+        "min": 0,
+        "max": 146,
+        "axis": [
+          -1,
+          0,
+          0
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "SCROLL_HINGE",
+      "includedInGLB": true
+    },
+    {
+      "id": "scroll_left",
+      "role": "scroll_lobe",
+      "type": "scroll_lobe",
+      "parent": "closure",
+      "requires": [
+        "front",
+        "open",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.020866811275482164,
+        0.16500476866960526,
+        0.059587887542322276
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.17810069024562836,
+        "height": 0.11954164505004883,
+        "depth": 0.1797372712753713
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "closure"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "scroll_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "scroll_right",
+      "role": "scroll_lobe",
+      "type": "scroll_lobe",
+      "parent": "closure",
+      "requires": [
+        "front",
+        "open",
+        "detail"
+      ],
+      "material": "braid",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.027889834716916098,
+        0.16342574989423156,
+        0.06449701200053096
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.16932423040270805,
+        "height": 0.12352443765848875,
+        "depth": 0.1801110291853547
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "closure"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "scroll_right",
+      "includedInGLB": true
+    },
+    {
+      "id": "snap_receiver",
+      "role": "snap_receiver",
+      "type": "snap_receiver",
+      "parent": "front_panel",
+      "requires": [
+        "front",
+        "open",
+        "closure"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.000021940397602988534,
+        0.12914320601332424,
+        0.055398539575955474
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01679999940097332,
+        "height": 0.01679999940097332,
+        "depth": 0.0030269047953560974
+      },
+      "thicknessM": null,
+      "anchors": {
+        "center": [
+          -0.000021940397602987843,
+          0.12914320601332424,
+          0.055625087180400844
+        ]
+      },
+      "connections": [
+        "front_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "snap_receiver",
+      "includedInGLB": true
+    },
+    {
+      "id": "brand_mark",
+      "role": "logo",
+      "type": "logo",
+      "parent": "back_panel",
+      "requires": [
+        "logo"
+      ],
+      "material": "round_patch",
+      "behavior": "surface-attached",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "surface-attached",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        1.9081958235744878e-17,
+        0.06357375,
+        -0.05343943275493185
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.028200000524520874,
+        "height": 0.028200000524520874,
+        "depth": 0.0020789988342563293
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "back_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "coiled",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "brand_mark",
+      "includedInGLB": true
+    }
+  ],
+  "anchors": {
+    "strap_1_a": {
+      "node": "anchor_strap_1_a",
+      "position": [
+        -0.1458651264,
+        0.11930299999999999,
+        2.6506895018602748e-18
+      ]
+    },
+    "strap_1_b": {
+      "node": "anchor_strap_1_b",
+      "position": [
+        0.1458651264,
+        0.11930299999999999,
+        2.6506895018602748e-18
+      ]
+    },
+    "strap_1_carry": {
+      "node": "anchor_strap_1_carry",
+      "position": [
+        -4.128641872824801e-16,
+        0.37743265393066416,
+        2.6506895018602748e-18
+      ]
+    },
+    "base": {
+      "node": "anchor_base",
+      "position": [
+        0,
+        0,
+        0
+      ]
+    },
+    "opening": {
+      "node": "anchor_opening",
+      "position": [
+        0,
+        0.22,
+        0
+      ]
+    }
+  },
+  "carryingModes": [
+    {
+      "mode": "shoulder",
+      "part": "strap_1",
+      "anchor": "anchor_strap_1_carry",
+      "attachments": [
+        "anchor_strap_1_a",
+        "anchor_strap_1_b"
+      ]
+    }
+  ],
+  "profile": "mobile",
+  "animations": [
+    {
+      "name": "Closure",
+      "channel": "opening",
+      "seconds": 1,
+      "range": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "Carriers",
+      "channel": "swing",
+      "seconds": 1,
+      "range": [
+        -1,
+        1
+      ]
+    },
+    {
+      "name": "Pocket zippers",
+      "channel": "pockets",
+      "seconds": 1,
+      "range": [
+        0,
+        1
+      ]
+    }
+  ],
+  "performance": {
+    "triangles": 43356,
+    "draws": 79,
+    "textureLimit": 512
+  },
+  "pose": "closed-neutral",
+  "materials": {
+    "outer": "braid",
+    "lining": "cotton",
+    "baseColor": "#a48c78",
+    "metalColor": "#d9be80",
+    "source": [],
+    "fallback": "procedural-PBR",
+    "finishes": {
+      "skin": {
+        "color": "#a48c78",
+        "roughness": 0.94,
+        "metalness": 0
+      },
+      "trim": {
+        "color": "#947e6c",
+        "roughness": 0.94,
+        "metalness": 0
+      },
+      "lining": {
+        "color": "#4e4239",
+        "roughness": 0.85,
+        "metalness": 0
+      },
+      "edge": {
+        "color": "#705f51",
+        "roughness": 0.6,
+        "metalness": 0
+      },
+      "thread": {
+        "color": "#d2b58f",
+        "roughness": 0.87,
+        "metalness": 0
+      },
+      "metal": {
+        "color": "#d9be80",
+        "roughness": 0.25,
+        "metalness": 0.82
+      },
+      "zip": {
+        "color": "#61584c",
+        "roughness": 0.44,
+        "metalness": 0.58
+      },
+      "plastic": {
+        "color": "#37352f",
+        "roughness": 0.38,
+        "metalness": 0
+      },
+      "art": {
+        "color": "#ffffff",
+        "roughness": 0.68,
+        "metalness": 0
+      },
+      "cord": {
+        "color": "#a48c78",
+        "roughness": 0.94,
+        "metalness": 0
+      },
+      "carrier": {
+        "color": "#543629",
+        "roughness": 0.65,
+        "metalness": 0
+      },
+      "badge": {
+        "color": "#88613f",
+        "roughness": 0.74,
+        "metalness": 0
+      },
+      "pouch": {
+        "color": "#b79a7b",
+        "roughness": 0.82,
+        "metalness": 0
+      }
+    }
+  },
+  "verification": {
+    "merchantReview": "unreviewed",
+    "photoGeometryVerified": false,
+    "dimensionsVerified": false,
+    "physicalSimulation": false,
+    "retailARReady": false
+  }
+}

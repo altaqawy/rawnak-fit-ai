@@ -1,87 +1,99 @@
 {
   "browser": "153.0.8010.0",
   "roundTrip": {
-    "meshCount": 70,
+    "meshCount": 80,
     "anchorCount": 5,
     "animations": [
       "Closure",
       "Carriers",
       "Pocket zippers"
     ],
-    "covered": 1554,
-    "bytes": 509220,
+    "covered": 1504,
+    "bytes": 778808,
     "logoEmbedded": true
   },
   "closures": [
     {
-      "meshCount": 68,
+      "meshCount": 69,
       "anchorCount": 5,
       "animations": [
         "Closure",
         "Carriers",
         "Pocket zippers"
       ],
-      "covered": 936,
-      "bytes": 614144,
+      "covered": 925,
+      "bytes": 711252,
       "logoEmbedded": false
     },
     {
-      "meshCount": 65,
+      "meshCount": 66,
       "anchorCount": 5,
       "animations": [
         "Closure",
         "Carriers",
         "Pocket zippers"
       ],
-      "covered": 1056,
-      "bytes": 584532,
+      "covered": 1055,
+      "bytes": 681644,
       "logoEmbedded": false
     },
     {
-      "meshCount": 62,
+      "meshCount": 63,
       "anchorCount": 5,
       "animations": [
         "Closure",
         "Carriers",
         "Pocket zippers"
       ],
-      "covered": 817,
-      "bytes": 424008,
+      "covered": 814,
+      "bytes": 521116,
       "logoEmbedded": false
     }
   ],
   "sample": {
-    "meshCount": 71,
+    "meshCount": 81,
     "anchorCount": 5,
     "animations": [
       "Closure",
       "Carriers",
       "Pocket zippers"
     ],
-    "covered": 1658,
-    "bytes": 521648,
+    "covered": 1602,
+    "bytes": 791256,
+    "logoEmbedded": false
+  },
+  "coiled": {
+    "meshCount": 79,
+    "anchorCount": 5,
+    "animations": [
+      "Closure",
+      "Carriers",
+      "Pocket zippers"
+    ],
+    "covered": 974,
+    "bytes": 1784184,
     "logoEmbedded": false
   },
   "memory": {
     "rebuilds": 12,
     "first": {
-      "geometries": 70,
-      "textures": 5
+      "geometries": 80,
+      "textures": 8
     },
     "last": {
-      "geometries": 70,
-      "textures": 5
+      "geometries": 80,
+      "textures": 8
     },
     "structured": {
-      "buildAndDrawMs": 172,
-      "triangles": 12280,
-      "draws": 69,
+      "buildAndDrawMs": 339,
+      "triangles": 16036,
+      "draws": 79,
       "textureLimit": 512,
       "memory": {
-        "geometries": 70,
-        "textures": 5
+        "geometries": 80,
+        "textures": 8
       }
     }
   },
-  "snapshots": 17
+  "snapshots": 22
 }

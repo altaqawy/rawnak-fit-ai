@@ -176,7 +176,7 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        -0.1198463961482048,
+        -0.11332239955663681,
         0.10300339106470346,
         0
       ],
@@ -187,7 +187,7 @@
         1
       ],
       "dimensions": {
-        "width": 0.039926961064338684,
+        "width": 0.048754796385765076,
         "height": 0.19399322383105755,
         "depth": 0.09492038935422897
       },
@@ -227,7 +227,7 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        0.1198463961482048,
+        0.11332239955663681,
         0.10300339106470346,
         0
       ],
@@ -238,7 +238,7 @@
         1
       ],
       "dimensions": {
-        "width": 0.039926961064338684,
+        "width": 0.048754796385765076,
         "height": 0.19399322383105755,
         "depth": 0.09492038935422897
       },
@@ -331,7 +331,7 @@
       "animationImplemented": false,
       "position": [
         0,
-        0.19455536454916,
+        0.1945592612028122,
         0
       ],
       "orientation": [
@@ -341,8 +341,8 @@
         1
       ],
       "dimensions": {
-        "width": 0.24266380071640015,
-        "height": 0.012700125575065613,
+        "width": 0.22489508986473083,
+        "height": 0.012707918882369995,
         "depth": 0.0772356241941452
       },
       "thicknessM": null,
@@ -490,7 +490,7 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        0.11278427764773369,
+        0.11275852471590042,
         0.10264948476105928,
         0.03969171456992626
       ],
@@ -501,7 +501,7 @@
         1
       ],
       "dimensions": {
-        "width": 0.023351721465587616,
+        "width": 0.02330021560192108,
         "height": 0.19472607038915157,
         "depth": 0.018580276519060135
       },
@@ -598,7 +598,7 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        -0.11279604583978653,
+        -0.11277029290795326,
         0.10266385553404689,
         -0.03949704300612211
       ],
@@ -609,7 +609,7 @@
         1
       ],
       "dimensions": {
-        "width": 0.023328185081481934,
+        "width": 0.0232766792178154,
         "height": 0.19467819575220346,
         "depth": 0.01858430542051792
       },
@@ -685,6 +685,116 @@
       "includedInGLB": true
     },
     {
+      "id": "corner_guard_left",
+      "role": "corner_guard",
+      "type": "corner_guard",
+      "parent": "front_panel",
+      "requires": [
+        "front",
+        "left",
+        "bottom"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        -0.09111549705266953,
+        0.029366082773776725,
+        0.03162229619920254
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.09718196094036102,
+        "height": 0.05839647486573085,
+        "depth": 0.0469498448073864
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "front_panel",
+        "left_gusset",
+        "bottom_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "corner_guard_left",
+      "includedInGLB": true
+    },
+    {
+      "id": "corner_guard_right",
+      "role": "corner_guard",
+      "type": "corner_guard",
+      "parent": "front_panel",
+      "requires": [
+        "front",
+        "right",
+        "bottom"
+      ],
+      "material": "faux_leather",
+      "behavior": "semi-rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "semi-rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0.09111549705266953,
+        0.029366082773776725,
+        0.03162229619920254
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.09718196094036102,
+        "height": 0.05839647486573085,
+        "depth": 0.0469498448073864
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "front_panel",
+        "right_gusset",
+        "bottom_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "corner_guard_right",
+      "includedInGLB": true
+    },
+    {
       "id": "lining",
       "role": "interior",
       "type": "interior",
@@ -713,7 +823,7 @@
         1
       ],
       "dimensions": {
-        "width": 0.27435141801834106,
+        "width": 0.2696997821331024,
         "height": 0.18402798008173704,
         "depth": 0.10432273894548416
       },
@@ -810,8 +920,8 @@
       "animationImplemented": false,
       "position": [
         0,
-        0.07911716750822961,
-        -0.014910831581801176
+        0.07910827896557748,
+        -0.014987466391175985
       ],
       "orientation": [
         0,
@@ -820,9 +930,9 @@
         1
       ],
       "dimensions": {
-        "width": 0.273867130279541,
-        "height": 0.143376134801656,
-        "depth": 0.004953351803123951
+        "width": 0.26993510127067566,
+        "height": 0.14335835771635175,
+        "depth": 0.004800082184374332
       },
       "thicknessM": 0.0022,
       "anchors": {},
@@ -917,8 +1027,8 @@
       "animationImplemented": false,
       "position": [
         0,
-        0.07911806902848184,
-        0.015034649055451155
+        0.07910974672995508,
+        0.015110649168491364
       ],
       "orientation": [
         0,
@@ -927,9 +1037,9 @@
         1
       ],
       "dimensions": {
-        "width": 0.273867130279541,
-        "height": 0.14337793784216046,
-        "depth": 0.004705716855823994
+        "width": 0.26993510127067566,
+        "height": 0.14336129324510694,
+        "depth": 0.004553716629743576
       },
       "thicknessM": 0.0022,
       "anchors": {},
@@ -1190,9 +1300,9 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        -0.0656279306858778,
-        0.20976001523765325,
-        0.012870932047657876
+        -0.05442286096513271,
+        0.20967723710583172,
+        0.01301883818624612
       ],
       "orientation": [
         0,
@@ -1202,20 +1312,20 @@
       ],
       "dimensions": {
         "width": 0.016444776207208633,
-        "height": 0.011188795112919814,
-        "depth": 0.012196799839720544
+        "height": 0.01118879947569923,
+        "depth": 0.012196799852812218
       },
       "thicknessM": null,
       "anchors": {
         "sewn": [
-          -0.06562792848765293,
-          0.20557681768287123,
-          0.0020349319658402795
+          -0.05442285877155204,
+          0.20549403736966,
+          0.002182838110974361
         ],
         "loop": [
-          -0.06562792848765293,
-          0.21918481768287124,
-          0.00657093196584028
+          -0.05442285877155204,
+          0.21910203736966,
+          0.006718838110974361
         ]
       },
       "connections": [
@@ -1252,9 +1362,9 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        -0.06562792848765293,
-        0.21918481768287124,
-        0.00657093196584028
+        -0.054422858771552035,
+        0.22023356077020512,
+        0.006718838110974361
       ],
       "orientation": [
         0,
@@ -1263,21 +1373,21 @@
         1
       ],
       "dimensions": {
-        "width": 0.02399040013551712,
-        "height": 0.02399040013551712,
-        "depth": 0.003734363941475749
+        "width": 0.023587200790643685,
+        "height": 0.021011846140027046,
+        "depth": 0.0034272000193595886
       },
       "thicknessM": null,
       "anchors": {
         "center": [
-          -0.06562792848765293,
-          0.21918481768287124,
-          0.00657093196584028
+          -0.05442285877155204,
+          0.21910203736966,
+          0.006718838110974361
         ],
         "attachment": [
-          -0.06562792848765293,
-          0.22845841768287123,
-          0.00657093196584028
+          -0.05442285877155204,
+          0.22837563736966,
+          0.006718838110974361
         ]
       },
       "connections": [
@@ -1314,9 +1424,9 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        0.0656279306858778,
-        0.20976001523765322,
-        0.012870932047657876
+        0.05442286096513271,
+        0.20967723710583172,
+        0.01301883818624612
       ],
       "orientation": [
         0,
@@ -1326,20 +1436,20 @@
       ],
       "dimensions": {
         "width": 0.016444776207208633,
-        "height": 0.01118879511291987,
-        "depth": 0.012196799839720544
+        "height": 0.01118879947569923,
+        "depth": 0.012196799852812218
       },
       "thicknessM": null,
       "anchors": {
         "sewn": [
-          0.0656279284876529,
-          0.20557681768287117,
-          0.0020349319658402795
+          0.05442285877155205,
+          0.20549403736966,
+          0.002182838110974361
         ],
         "loop": [
-          0.0656279284876529,
-          0.21918481768287118,
-          0.00657093196584028
+          0.05442285877155205,
+          0.21910203736966,
+          0.006718838110974361
         ]
       },
       "connections": [
@@ -1376,9 +1486,9 @@
       "mobility": "fixed",
       "animationImplemented": false,
       "position": [
-        0.0656279284876529,
-        0.21918481768287118,
-        0.00657093196584028
+        0.05442285877155205,
+        0.22023356077020512,
+        0.006718838110974361
       ],
       "orientation": [
         0,
@@ -1387,21 +1497,21 @@
         1
       ],
       "dimensions": {
-        "width": 0.02399040013551712,
-        "height": 0.02399040013551712,
-        "depth": 0.003734363941475749
+        "width": 0.023587200790643692,
+        "height": 0.021011846140027046,
+        "depth": 0.0034272000193595886
       },
       "thicknessM": null,
       "anchors": {
         "center": [
-          0.0656279284876529,
-          0.21918481768287118,
-          0.00657093196584028
+          0.05442285877155205,
+          0.21910203736966,
+          0.006718838110974361
         ],
         "attachment": [
-          0.0656279284876529,
-          0.22845841768287117,
-          0.00657093196584028
+          0.05442285877155205,
+          0.22837563736966,
+          0.006718838110974361
         ]
       },
       "connections": [
@@ -1439,9 +1549,9 @@
       "mobility": "movable",
       "animationImplemented": true,
       "position": [
-        1.0274907313867487e-10,
-        0.27466807489110856,
-        0.006638158088905034
+        -3.675564089200556e-10,
+        0.2759278356576909,
+        0.0067188381109743595
       ],
       "orientation": [
         0,
@@ -1450,26 +1560,26 @@
         1
       ],
       "dimensions": {
-        "width": 0.13652265863493085,
-        "height": 0.09287978407519404,
-        "depth": 0.01947354804724455
+        "width": 0.12152610113844275,
+        "height": 0.10054759657941759,
+        "depth": 0.01674400083720684
       },
       "thicknessM": null,
       "anchors": {
         "a": [
-          -0.06562792848765293,
-          0.22845841768287123,
-          0.00657093196584028
+          -0.05442285877155204,
+          0.22837563736966,
+          0.006718838110974361
         ],
         "b": [
-          0.0656279284876529,
-          0.22845841768287117,
-          0.00657093196584028
+          0.05442285877155205,
+          0.22837563736966,
+          0.006718838110974361
         ],
         "carry": [
-          -4.5102810375396984e-17,
-          0.31845841768287114,
-          0.00657093196584028
+          6.687703269101471e-17,
+          0.31837563736966,
+          0.006718838110974361
         ]
       },
       "connections": [
@@ -1479,9 +1589,10 @@
       "visible": true,
       "geometryConstraints": {
         "requestedLengthM": null,
-        "actualCenterlineM": 0.2594813672780854,
-        "minimumSpanM": 0.13125585697530584,
+        "actualCenterlineM": 0.24239317436954066,
+        "minimumSpanM": 0.1088457175431041,
         "widthM": 0.0182,
+        "construction": "padded-roll-with-return-loops",
         "handleDropM": 0.09
       },
       "range": {
@@ -1490,7 +1601,7 @@
         "max": 32,
         "axis": [
           1,
-          -4.2292323185015324e-16,
+          0,
           0
         ]
       },
@@ -1521,9 +1632,9 @@
       "mobility": "movable",
       "animationImplemented": true,
       "position": [
-        -0.00004841387271878328,
-        0.16011619556844237,
-        0.011719382516926953
+        -0.00004231184720991654,
+        0.14853499213382604,
+        0.011795367677230384
       ],
       "orientation": [
         0,
@@ -1532,9 +1643,9 @@
         1
       ],
       "dimensions": {
-        "width": 0.2741697430610657,
-        "height": 0.09433988854289055,
-        "depth": 0.09691876497655895
+        "width": 0.24645310640335083,
+        "height": 0.11754095461219549,
+        "depth": 0.09707073529716581
       },
       "thicknessM": null,
       "anchors": {
@@ -1555,7 +1666,9 @@
         ]
       },
       "connections": [
-        "opening"
+        "opening",
+        "lock_keeper",
+        "turn_button"
       ],
       "visible": true,
       "geometryConstraints": {
@@ -1578,31 +1691,151 @@
       "overrides": {},
       "node": "CLOSURE_HINGE",
       "includedInGLB": true
+    },
+    {
+      "id": "lock_keeper",
+      "role": "lock_keeper",
+      "type": "lock_keeper",
+      "parent": "front_panel",
+      "requires": [
+        "front",
+        "closure",
+        "open"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": false,
+      "joint": null,
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "fixed",
+      "animationImplemented": false,
+      "position": [
+        0,
+        0.10398400000000002,
+        0.056403738708527
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.01864800002425909,
+        "height": 0.01612800002098083,
+        "depth": 0.008811999918326735
+      },
+      "thicknessM": null,
+      "anchors": {},
+      "connections": [
+        "front_panel"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": null,
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "lock_keeper",
+      "includedInGLB": true
+    },
+    {
+      "id": "turn_button",
+      "role": "turn_button",
+      "type": "turn_button",
+      "parent": "lock_keeper",
+      "requires": [
+        "closure",
+        "open"
+      ],
+      "material": "hardware",
+      "behavior": "rigid",
+      "moving": true,
+      "joint": "turn_lock",
+      "verifiedFromPhotos": false,
+      "rigidity": "rigid",
+      "flexibility": null,
+      "mobility": "movable",
+      "animationImplemented": true,
+      "position": [
+        0,
+        0.10398400000000002,
+        0.06062173875182232
+      ],
+      "orientation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "dimensions": {
+        "width": 0.012096000015735625,
+        "height": 0.005166000006720434,
+        "depth": 0.004284000005573031
+      },
+      "thicknessM": null,
+      "anchors": {
+        "spindle": [
+          0,
+          0.10398400000000002,
+          0.06062173875182232
+        ]
+      },
+      "connections": [
+        "lock_keeper"
+      ],
+      "visible": true,
+      "geometryConstraints": {
+        "pattern": "structured",
+        "boundedToParent": true
+      },
+      "range": {
+        "unit": "degrees",
+        "min": 0,
+        "max": 90,
+        "axis": [
+          0,
+          0,
+          1
+        ]
+      },
+      "sourceEvidence": [],
+      "verification": "inferred",
+      "confidence": null,
+      "overrides": {},
+      "node": "turn_button",
+      "includedInGLB": true
     }
   ],
   "anchors": {
     "handle_1_a": {
       "node": "anchor_handle_1_a",
       "position": [
-        -0.06562792848765293,
-        0.22845841768287123,
-        0.00657093196584028
+        -0.05442285877155204,
+        0.22837563736966,
+        0.006718838110974361
       ]
     },
     "handle_1_b": {
       "node": "anchor_handle_1_b",
       "position": [
-        0.0656279284876529,
-        0.22845841768287117,
-        0.00657093196584028
+        0.05442285877155205,
+        0.22837563736966,
+        0.006718838110974361
       ]
     },
     "handle_1_carry": {
       "node": "anchor_handle_1_carry",
       "position": [
-        -4.5102810375396984e-17,
-        0.31845841768287114,
-        0.00657093196584028
+        6.687703269101471e-17,
+        0.31837563736966,
+        0.006718838110974361
       ]
     },
     "base": {
@@ -1664,8 +1897,8 @@
     }
   ],
   "performance": {
-    "triangles": 12760,
-    "draws": 71,
+    "triangles": 16516,
+    "draws": 81,
     "textureLimit": 512
   },
   "pose": "closed-neutral",
@@ -1679,12 +1912,12 @@
     "finishes": {
       "skin": {
         "color": "#6e4336",
-        "roughness": 0.49,
+        "roughness": 0.7,
         "metalness": 0
       },
       "trim": {
         "color": "#633c30",
-        "roughness": 0.49,
+        "roughness": 0.7,
         "metalness": 0
       },
       "lining": {
