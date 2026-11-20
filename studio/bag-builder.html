@@ -74,6 +74,23 @@
             </div>
             <img id="compare-img" alt="" />
             <p class="fine" id="compare-note"></p>
+            <button id="trace-body" class="outline" data-en="Trace the body outline" hidden>
+              تحديد محيط جسم الشنطة
+            </button>
+            <label class="swatch-field">
+              <span data-en="Sample a photo color">أخذ لون من الصورة</span>
+              <select id="sample-channel">
+                <option value="" data-en="Select a part">اختر الجزء</option>
+                <option value="bodyColor" data-en="Bag body">جسم الشنطة</option>
+                <option value="strapColor" data-en="Leather strap">السير الجلدي</option>
+              </select>
+            </label>
+            <small
+              id="sample-hint"
+              hidden
+              data-en="Tap the material in the photograph. Enter samples its centre."
+              >اضغط على الخامة في الصورة. زر الإدخال يأخذ عينة من المنتصف.</small
+            >
           </div>
         </section>
         <section class="panel" id="controls">
@@ -243,5 +260,28 @@
       <p id="notice" class="notice" role="status" aria-live="polite"></p>
     </main>
     <script type="module" src="./bag-builder.js"></script>
+    <dialog id="outline-dialog" aria-labelledby="outline-title">
+      <form method="dialog">
+        <h2 id="outline-title" data-en="Trace the bag body">حدد محيط جسم الشنطة</h2>
+        <p
+          data-en="Tap around the outside of the body in order, leaving out the strap. Use at least four points. Arrow keys move the cursor and Enter adds a point."
+        >
+          اضغط بالترتيب حول الجسم من غير السير. اختار أربع نقاط على الأقل. بالكيبورد حرّك المؤشر
+          بالأسهم وأضف نقطة بزر الإدخال.
+        </p>
+        <canvas tabindex="0"></canvas>
+        <div class="trace-actions">
+          <output aria-live="polite"></output
+          ><button type="button" data-undo data-en="Undo point">تراجع عن نقطة</button
+          ><button type="button" data-clear data-en="Start over">ابدأ من جديد</button>
+        </div>
+        <div class="trace-actions">
+          <button value="accept" class="primary" disabled data-en="Use outline">
+            استخدم المحيط</button
+          ><button value="cancel" data-en="Cancel">إلغاء</button
+          ><button value="remove" data-en="Remove saved outline">حذف المحيط المحفوظ</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>

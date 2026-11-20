@@ -18,7 +18,8 @@ export function editLimits(part) {
     )
   )
     Object.assign(fields, { widthScale: [0.65, 1.18], offsetX: [-0.24, 0.24] });
-  if (['flap', 'buckle', 'clasp'].includes(part.role)) fields.lengthScale = [0.7, 1.25];
+  if (['flap', 'buckle', 'clasp', 'scroll_snap'].includes(part.role))
+    fields.lengthScale = [0.7, 1.25];
   if (part.moving) fields.motionLimit = [0, 1];
   return fields;
 }
@@ -55,6 +56,13 @@ export function newProject(spec, options = {}) {
             .slice(0, 36)
             .map(String),
           method: 'bounded-frontal-envelope',
+          ...(Array.isArray(options.fit.guidedSources)
+            ? {
+                guidedSources: options.fit.guidedSources
+                  .filter((id) => options.fit.sources?.includes(id))
+                  .slice(0, 36),
+              }
+            : {}),
         }
       : null;
   return {

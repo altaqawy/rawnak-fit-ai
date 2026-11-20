@@ -12,7 +12,7 @@ import {
   interpretCommand,
 } from '../bag-editor.js';
 
-test('eight patterns close shared seams, respect dimensions and bound a real cavity', () => {
+test('nine patterns close shared seams, respect dimensions and bound a real cavity', () => {
   const fingerprints = new Set();
   for (const [style, preset] of Object.entries(FAMILY_PRESETS)) {
     const m = buildModularBag({ ...preset, style, mainCompartments: 4 }, { profile: 'mobile' });
@@ -28,9 +28,19 @@ test('eight patterns close shared seams, respect dimensions and bound a real cav
     assert.equal(graph.parts.filter((x) => x.role === 'interior_partition').length, 3);
     const front = m.groups.get('front_panel').children[0].geometry;
     const right = m.groups.get('right_gusset').children[0].geometry;
-    for (let j = 0; j < 10; j++) {
-      const pos = (g, i) => new THREE.Vector3().fromBufferAttribute(g.attributes.position, i);
-      assert.ok(pos(front, 11 * j + 10).distanceTo(pos(right, 11 * j)) < 1e-7, style);
+    // The width columns of a flat panel and the winding of a cord panel have
+    // different indices. Check their actual boundary vertices in metres.
+    const contains = (geo, expected) => {
+      const a = geo.attributes.position,
+        pt = new THREE.Vector3();
+      for (let i = 0; i < a.count; i++)
+        if (pt.fromBufferAttribute(a, i).distanceTo(expected) < 1e-6) return true;
+      return false;
+    };
+    const seamSegments = style === 'coiled' ? 6 : 9;
+    for (let j = 0; j <= seamSegments; j++) {
+      const edge = new THREE.Vector3(...p.surface(Math.PI / 4, j / seamSegments, 0, 0));
+      assert.ok(contains(front, edge) && contains(right, edge), style + ' seam ' + j);
     }
     fingerprints.add(
       [0.05, 0.3, 0.55, 0.83, 1].map((t) => p.surface(Math.PI / 2, t)[0] / p.w).join(','),
@@ -51,7 +61,7 @@ test('eight patterns close shared seams, respect dimensions and bound a real cav
     m.dispose();
     m.dispose();
   }
-  assert.equal(fingerprints.size, 8);
+  assert.equal(fingerprints.size, 9);
 });
 test('depth moves gussets, floor, dividers, pockets and carrying mounts', () => {
   const a = buildModularBag({ depthCm: 8 }),
@@ -209,4 +219,89 @@ test('acyclic parents, unlinked references, fixed zipper and compartment bounds 
   }
   thin.dispose();
   m.dispose();
+});
+
+test('corded construction changes pitch, holds the sewn rear hinge and separates the two scrolls', () => {
+  const fine = buildModularBag(
+    { ...FAMILY_PRESETS.coiled, cordDiameterMm: 4 },
+    { profile: 'mobile' },
+  );
+  const bag = buildModularBag(FAMILY_PRESETS.coiled, {
+    profile: 'mobile',
+    images: [{ id: 'inside-photo', view: 'inside', url: 'blob:local' }],
+  });
+  const part = (m, id) => m.parts.find((p) => p.id === id);
+  assert.ok(
+    part(fine, 'front_panel').geometryConstraints.courseCount >
+      part(bag, 'front_panel').geometryConstraints.courseCount,
+  );
+  assert.ok(fine.graph.performance.triangles < 50000);
+  const bridge = bag.root.getObjectByName('closure__WOVEN_HINGE_BRIDGE');
+  const facing = bag.root.getObjectByName('opening__SEWN_HINGE_FACING');
+  const local = (g, i) => new THREE.Vector3().fromBufferAttribute(g, i);
+  for (const progress of [0, 0.25, 0.8, 1]) {
+    bag.setOpening(progress);
+    bag.root.updateMatrixWorld(true);
+    for (const i of [0, 6, 12]) {
+      const seam = local(bridge.geometry.attributes.position, i).lerp(
+        local(bridge.geometry.morphAttributes.position[0], i),
+        progress,
+      );
+      const fixed = facing.localToWorld(local(facing.geometry.attributes.position, 65 + i));
+      assert.ok(bridge.localToWorld(seam).distanceTo(fixed) < 1e-6);
+    }
+    const flap = bag.groups.get('scroll_left').children[0];
+    assert.equal(flap.morphTargetInfluences[0], progress);
+    assert.equal(bag.groups.get('scroll_right').parent, bag.groups.get('closure'));
+  }
+  assert.deepEqual(part(bag, 'insert_pouch').sourceEvidence, ['inside-photo']);
+  assert.equal(part(bag, 'scroll_left').verification, 'inferred');
+  assert.equal(bag.graph.verification.photoGeometryVerified, false);
+  fine.dispose();
+  bag.dispose();
+});
+
+test('zip insert travel opens a real gap and stays inside its assigned compartment', () => {
+  const bag = buildModularBag({ ...FAMILY_PRESETS.coiled, mainCompartments: 3 });
+  const slider = bag.groups.get('insert_slider'),
+    start = slider.position.clone();
+  const tape = bag.root.getObjectByName('insert_pouch__ZIP_TAPE_1');
+  const other = bag.root.getObjectByName('insert_pouch__ZIP_TAPE_-1');
+  const gap = () => {
+    const index = tape.geometry.attributes.position.count - 1 - 30;
+    return Math.abs(
+      tape.geometry.attributes.position.getZ(index) -
+        other.geometry.attributes.position.getZ(index),
+    );
+  };
+  const closed = gap();
+  bag.setPockets(1);
+  assert.ok(slider.position.distanceTo(start) > 0.08);
+  assert.ok(gap() > closed + 0.001);
+  assert.equal(
+    bag.parts.find((p) => p.id === 'insert_pouch').geometryConstraints.compartment,
+    'compartment_1',
+  );
+  assert.equal(bag.parts.find((p) => p.id === 'insert_slider').range.points.length, 16);
+  bag.setPockets(0);
+  assert.ok(slider.position.distanceTo(start) < 1e-7);
+  bag.dispose();
+});
+
+test('quarter turn releases before lifting and the keeper stays on the body', () => {
+  const bag = buildModularBag(FAMILY_PRESETS.structured),
+    keeper = bag.groups.get('lock_keeper');
+  const fixed = keeper.children[0].getWorldPosition(new THREE.Vector3());
+  bag.setOpening(0.25);
+  assert.equal(bag.groups.get('closure').rotation.x + 0, 0);
+  assert.equal(bag.groups.get('turn_button').rotation.z, Math.PI / 2);
+  bag.setOpening(1);
+  bag.root.updateMatrixWorld(true);
+  assert.ok(keeper.children[0].getWorldPosition(new THREE.Vector3()).distanceTo(fixed) < 1e-7);
+  assert.ok(bag.groups.get('closure').rotation.x < -1.5);
+  assert.equal(
+    bag.parts.find((p) => p.id === 'handle_1').geometryConstraints.construction,
+    'padded-roll-with-return-loops',
+  );
+  bag.dispose();
 });

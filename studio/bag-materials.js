@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { BAG_MATERIALS } from './bag-spec.js';
+import { braidMap } from './bag-cord.js';
+import { leatherMap } from './bag-leather.js';
 
 const finishes = {
-  leather: [0.56, 0.095],
-  faux_leather: [0.49, 0.085],
+  leather: [0.76, 0.3],
+  faux_leather: [0.7, 0.25],
   suede: [0.96, 0.18],
   canvas: [0.9, 0.23],
   nylon: [0.48, 0.23],
@@ -14,6 +16,7 @@ const finishes = {
 };
 // Periodic, deterministic micro-normal swatches; never attributed to a photo.
 function grain(kind) {
+  if (kind === 'leather' || kind === 'faux_leather') return leatherMap(kind, 'normal');
   const size = 64,
     data = new Uint8Array(size * size * 4);
   const woven = ['woven', 'canvas', 'cotton', 'polyester', 'nylon'].includes(kind);
@@ -59,12 +62,20 @@ export function makeMaterials(spec, maps = {}) {
   ]) {
     if (maps[key]) skin[slot] = maps[key];
   }
-  if (skin.roughnessMap) skin.roughness = 1;
+  if (maps.roughness) skin.roughness = 1;
+  else if (spec.material === 'leather' || spec.material === 'faux_leather')
+    skin.roughnessMap = leatherMap(spec.material, 'roughness');
   if (skin.metalnessMap) skin.metalness = 1;
   const trim = skin.clone();
   trim.color.multiplyScalar(0.8);
   const lining = standard(
-    spec.lining === 'leather' ? '#955c40' : spec.lining === 'cotton' ? '#dcc5a7' : '#ac8773',
+    spec.liningShade === 'dark'
+      ? '#4e4239'
+      : spec.lining === 'leather'
+        ? '#955c40'
+        : spec.lining === 'cotton'
+          ? '#dcc5a7'
+          : '#ac8773',
     0.85,
   );
   lining.normalMap = grain(spec.lining);
@@ -84,7 +95,23 @@ export function makeMaterials(spec, maps = {}) {
   art.polygonOffset = true;
   art.polygonOffsetFactor = -2;
   if (maps.logo) art.map = maps.logo;
-  return { skin, trim, lining, edge, thread, metal, zip, plastic, art };
+  const materials = { skin, trim, lining, edge, thread, metal, zip, plastic, art };
+  if (spec.style === 'coiled' || spec.closure === 'scroll_snap') {
+    materials.cord = skin.clone();
+    materials.cord.normalMap = maps.normal || braidMap();
+    materials.cord.map = maps.material || braidMap('color');
+    materials.cord.normalScale.setScalar(maps.normal ? 1 : 0.64);
+    materials.cord.roughness = maps.roughness ? 1 : 0.94;
+    materials.cord.roughnessMap = maps.roughness || null;
+  }
+  if (spec.style === 'coiled') {
+    materials.carrier = standard(spec.strapColor, 0.65);
+    materials.carrier.normalMap = leatherMap('leather', 'normal');
+    materials.carrier.normalScale.setScalar(0.22);
+  }
+  if (spec.logoType === 'round_patch') materials.badge = standard('#88613f', 0.74);
+  if (spec.zipInsert) materials.pouch = standard('#b79a7b', 0.82);
+  return materials;
 }
 
 // A licensed alpha mask can provide a relief normal and silhouette without

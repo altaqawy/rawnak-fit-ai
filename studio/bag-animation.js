@@ -13,7 +13,8 @@ export function bakeBagClips(model) {
     const nodes = [];
     model.root.traverseVisible((o) => {
       const p = o.userData.partId || '';
-      const isPocket = p.startsWith('inner_zip_pocket_');
+      const isPocket =
+        p.startsWith('inner_zip_pocket_') || p === 'insert_slider' || p === 'insert_pouch';
       if (swing ? !/^(strap|handle)_/.test(p) : pockets ? !isPocket : isPocket) return;
       nodes.push({ o, positions: [], rotations: [], weights: [], surfaces: [] });
     });

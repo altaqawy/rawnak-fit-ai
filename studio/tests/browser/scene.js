@@ -18,13 +18,18 @@ const pose = async ({
   view = 'orbit',
   open = 0,
   cut = false,
+  swing = 0,
+  pockets = 0,
   profile = 'mobile',
   patch = {},
+  fit = null,
 } = {}) => {
   const start = performance.now(),
-    m = buildModularBag({ ...FAMILY_PRESETS[style], style, ...patch }, { profile });
+    m = buildModularBag({ ...FAMILY_PRESETS[style], style, ...patch }, { profile, fit });
   v.replace(m);
   m.setOpening(open);
+  m.setSwing(swing);
+  m.setPockets(pockets);
   v.inspect(cut);
   v.frame(view);
   v.draw();
@@ -85,6 +90,17 @@ async function roundTrip(bytes, expected, withLogo = false) {
     throw Error('Missing exported construction');
   if (!anchorNames.includes('anchor_base') || !anchorNames.some((n) => n.endsWith('_carry')))
     throw Error('Missing GLB anchors');
+  if (expected === 'coiled') {
+    for (const id of [
+      'scroll_left',
+      'scroll_right',
+      'snap_receiver',
+      'insert_pouch',
+      'insert_slider',
+      'brand_mark',
+    ])
+      if (!ids.has(id)) throw Error('Missing coiled construction: ' + id);
+  }
   if (withLogo) {
     if (!logo?.material.map) throw Error('Missing embedded logo');
     const ctx = document.createElement('canvas').getContext('2d');
@@ -142,6 +158,27 @@ async function roundTrip(bytes, expected, withLogo = false) {
   await ticks();
   const open = signature();
   mixer.stopAllAction();
+  if (expected === 'coiled') {
+    const slider = asset.scene.getObjectByName('insert_slider');
+    const fixed = asset.scene.getObjectByName('snap_receiver');
+    const tape = asset.scene.getObjectByName('insert_pouch__ZIP_TAPE_1');
+    const origin = slider.position.clone(),
+      socket = fixed.getWorldPosition(new THREE.Vector3());
+    mixer.setTime(0);
+    const pockets = mixer.clipAction(asset.animations.find((c) => c.name === 'Pocket zippers'));
+    pockets.setLoop(THREE.LoopOnce, 1);
+    pockets.clampWhenFinished = true;
+    pockets.play();
+    mixer.setTime(0.98);
+    if (
+      slider.position.distanceTo(origin) < 0.05 ||
+      !tape.morphTargetInfluences.some((x) => x > 0.5)
+    )
+      throw Error('Pouch zipper lost its travel or opening in GLB');
+    if (fixed.getWorldPosition(new THREE.Vector3()).distanceTo(socket) > 1e-6)
+      throw Error('Body snap moved with the insert');
+    mixer.stopAllAction();
+  }
   mixer.uncacheRoot(asset.scene);
   if (open.sample === closed.sample)
     throw Error('Exported closure animation did not change rendered pixels');
@@ -157,7 +194,7 @@ async function roundTrip(bytes, expected, withLogo = false) {
 async function exercise() {
   const measurements = [];
   for (let i = 0; i < 12; i++)
-    measurements.push(await pose({ style: i % 2 ? 'structured' : 'bucket' }));
+    measurements.push(await pose({ style: i % 2 ? 'structured' : i % 4 ? 'coiled' : 'bucket' }));
   const a = measurements[3].memory,
     b = measurements.at(-1).memory;
   if (b.geometries > a.geometries + 1 || b.textures > a.textures + 1)
@@ -173,16 +210,20 @@ async function otherClosures() {
   }
   return out;
 }
-async function sampleAsset() {
-  const project = newProject({
-    ...FAMILY_PRESETS.structured,
-    style: 'structured',
-    mainCompartments: 3,
-    logoPlacement: 'none',
-  });
+async function sampleAsset(style = 'structured') {
+  const project = newProject(
+    style === 'coiled'
+      ? FAMILY_PRESETS.coiled
+      : {
+          ...FAMILY_PRESETS.structured,
+          style: 'structured',
+          mainCompartments: 3,
+          logoPlacement: 'none',
+        },
+  );
   const { data, graph } = await exportAsset(project, [], 'mobile');
   const bytes = new Uint8Array(data);
-  const checked = await roundTrip(bytes, 'structured');
+  const checked = await roundTrip(bytes, style);
   let str = '';
   for (let i = 0; i < bytes.length; i += 8192)
     str += String.fromCharCode(...bytes.subarray(i, i + 8192));

@@ -157,6 +157,10 @@ try {
   await step(3);
   await page.selectOption('#compare-photo', { label: 'Front · front.png' });
   assert.equal(await page.locator('#camera').inputValue(), 'front');
+  await page.waitForFunction(() => document.querySelector('#compare-img').naturalWidth > 0);
+  await page.selectOption('#sample-channel', 'bodyColor');
+  await page.locator('#compare-img').press('Enter');
+  assert.equal(await page.locator('#bodyColor').inputValue(), '#84442e');
   await page.check('#show-inside');
   await page.selectOption('#part-select', 'inner_zip_pocket_1');
   await page.screenshot({ path: resolve(out, 'comparison.png') });
@@ -175,6 +179,12 @@ try {
   assert.ok(
     project.project.feedback.some(
       (f) => f.category === 'silhouette-fit' && f.approval === 'merchant-approved',
+    ),
+  );
+  assert.ok(
+    project.project.feedback.some(
+      (f) =>
+        f.category === 'photo-swatch' && f.sampleUV[0] === 0.5 && f.sourceEvidence.length === 1,
     ),
   );
   assert.ok(project.images.every((p) => !p.url && !p.data));
@@ -239,6 +249,67 @@ try {
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     'mobile horizontal overflow',
   );
+  // A busy source can be annotated locally. Exercise the real dialog, its
+  // undo controls, the fit, save/load and digest-only reattachment.
+  await page.goto(base + '/studio/bag-builder.html?family=coiled');
+  await page.waitForFunction(
+    () =>
+      document.querySelector('#stage canvas') && document.querySelector('#stage-message').hidden,
+  );
+  assert.equal(await page.inputValue('#style'), 'coiled');
+  assert.equal(await page.inputValue('#camera'), 'product');
+  await step(1);
+  await page.setInputFiles('#photos-input', {
+    name: 'front.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(fixture.front, 'base64'),
+  });
+  await page.getByRole('button', { name: 'Confirm view' }).click();
+  await page.click('#trace-body');
+  const trace = page.locator('#outline-dialog canvas'),
+    rectTrace = await trace.boundingBox();
+  const point = (u, v) =>
+    trace.click({ position: { x: u * rectTrace.width, y: v * rectTrace.height } });
+  for (const [u, v] of [
+    [0.12, 0.84],
+    [0.08, 0.5],
+    [0.25, 0.23],
+    [0.71, 0.23],
+    [0.91, 0.51],
+    [0.86, 0.84],
+  ])
+    await point(u, v);
+  await page.locator('#outline-dialog [data-undo]').click();
+  await point(0.85, 0.84);
+  await page.locator('#outline-dialog [value="accept"]').click();
+  await step(2);
+  await page.click('#generate');
+  await page.waitForFunction(() =>
+    document.querySelector('#fit-status').textContent.includes('Applied'),
+  );
+  await step(4);
+  const guidedBytes = await download('download-project'),
+    guided = JSON.parse(guidedBytes);
+  assert.deepEqual(guided.project.fit.guidedSources, [guided.images[0].id]);
+  assert.equal(guided.images[0].outline.points.length, 6);
+  await page.setInputFiles('#project-file', {
+    name: 'coiled.bag.json',
+    mimeType: 'application/json',
+    buffer: guidedBytes,
+  });
+  await step(1);
+  await page.setInputFiles('#photos-input', {
+    name: 'again.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(fixture.front, 'base64'),
+  });
+  await page.click('#trace-body');
+  assert.equal(await page.locator('#outline-dialog output').textContent(), '6 / 48');
+  await page.locator('#outline-dialog [value="cancel"]').click();
+  await step(3);
+  await page.selectOption('#camera', 'construction');
+  assert.equal(await page.inputValue('#opening'), '100');
+  assert.equal(await page.inputValue('#swing'), '-95');
   await page.goto(base + '/__bag_qa');
   await page.waitForFunction(() => window.bagQA);
   const shots = {};
@@ -269,8 +340,16 @@ try {
     'clutch',
     'saddle',
     'backpack',
+    'coiled',
   ])
     await capture('family-' + style, { style });
+  for (const [id, settings] of [
+    ['corded-front', { view: 'product' }],
+    ['corded-back', { view: 'back' }],
+    ['corded-open', { view: 'construction', open: 1, swing: -0.95 }],
+    ['corded-pouch', { view: 'inside', open: 1, swing: -0.95, pockets: 0.82 }],
+  ])
+    await capture(id, { style: 'coiled', ...settings });
   const roundTrip = await page.evaluate(
     (bytes) => window.bagQA.roundTrip(bytes, 'structured', true),
     Array.from(glb),
@@ -282,6 +361,12 @@ try {
   await writeFile(
     resolve(out, 'satchel-mobile.parts.json'),
     JSON.stringify(sample.graph, null, 2) + '\n',
+  );
+  const corded = await page.evaluate(() => window.bagQA.sampleAsset('coiled'));
+  await writeFile(resolve(out, 'coiled-mobile.glb'), Buffer.from(corded.glb, 'base64'));
+  await writeFile(
+    resolve(out, 'coiled-mobile.parts.json'),
+    JSON.stringify(corded.graph, null, 2) + '\n',
   );
   const memory = await page.evaluate(() => window.bagQA.exercise());
   if (process.argv.includes('--update-baseline'))
@@ -305,6 +390,7 @@ try {
     roundTrip,
     closures,
     sample: sample.checked,
+    coiled: corded.checked,
     memory,
     snapshots: Object.keys(shots).length,
   };

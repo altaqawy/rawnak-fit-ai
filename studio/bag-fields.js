@@ -7,7 +7,17 @@ export const steps = [
   ['المراجعة', 'Review'],
   ['التصدير', 'Export'],
 ];
-const names = ['ساتشل', 'توت', 'باغيت', 'هوبو', 'باكيت', 'كلاتش', 'حقيبة ظهر صغيرة', 'سرج'];
+const names = [
+  'ساتشل',
+  'توت',
+  'باغيت',
+  'هوبو',
+  'باكيت',
+  'كلاتش',
+  'حقيبة ظهر صغيرة',
+  'حقيبة الحبل الحلزوني',
+  'سرج',
+];
 export const families = Object.fromEntries(
   Object.entries(BAG_STYLES).map(([k, v], i) => [k, [names[i], v.name]]),
 );
@@ -37,6 +47,8 @@ export const views = Object.fromEntries(
 views.unknown = ['غير محدد', 'Unassigned'];
 export const cameras = {
   orbit: ['منظور حر', 'Perspective'],
+  product: ['تفاصيل الجسم', 'Body detail'],
+  construction: ['الغطاء والداخل', 'Open construction'],
   front: views.front,
   back: views.back,
   left: views.left,
@@ -63,6 +75,7 @@ export const fields = {
         canvas: ['كانفاس', 'Canvas'],
         nylon: ['نايلون', 'Nylon'],
         woven: ['منسوج', 'Woven fabric'],
+        braid: ['حبل مضفّر', 'Braided cord'],
         rigid_case: ['بلاستيك صلب', 'Rigid plastic'],
       },
     ],
@@ -72,6 +85,7 @@ export const fields = {
       'Closure',
       {
         flap: ['غطاء', 'Flap'],
+        scroll_snap: ['غطاء حلزوني بكبّاس', 'Scroll flap with snap'],
         zipper: ['سوستة', 'Zipper'],
         drawstring: ['رباط شد', 'Drawstring'],
         magnetic: ['مغناطيس', 'Magnet'],
@@ -84,6 +98,9 @@ export const fields = {
     ['bodyColor', 'لون الجسم', 'Body color', 'color'],
   ],
   'pattern-fields': [
+    ['scrollWidth', 'عرض الغطاء الحلزوني ٪', 'Scroll width %', 65, 115, 1],
+    ['scrollAngle', 'ميل اللفتين °', 'Scroll angle °', -75, 75, 1],
+    ['cordDiameterMm', 'قطر الحبل · مم', 'Cord diameter · mm', 3, 12, 0.5],
     ['roundness', 'استدارة الجوانب', 'Corner roundness', 0, 100, 1],
     ['gussetWidth', 'عرض الجنب ٪', 'Gusset width %', 45, 100, 1],
     ['sideTaper', 'ميل الجوانب', 'Side taper', -60, 60, 1],
@@ -107,6 +124,7 @@ export const fields = {
         none: ['بدون سير', 'No strap'],
       },
     ],
+    ['strapColor', 'لون السير الجلدي', 'Leather strap color', 'color'],
     ['strapCount', 'عدد الأحزمة', 'Strap count', 0, 2, 1],
     ['strapLengthCm', 'طول السير · سم', 'Strap length · cm', 0, 210, 1],
     ['strapWidthCm', 'عرض السير · سم', 'Strap width · cm', 0.4, 12, 0.1],
@@ -116,6 +134,13 @@ export const fields = {
     ['detachable', 'مشابك قابلة للفصل', 'Detachable clips', 'check'],
   ],
   'inside-fields': [
+    [
+      'liningShade',
+      'درجة البطانة',
+      'Lining shade',
+      { natural: ['طبيعية', 'Natural'], dark: ['داكنة', 'Dark'] },
+    ],
+    ['zipInsert', 'جراب داخلي بسوستة', 'Separate zip pouch', 'check'],
     ['mainCompartments', 'عدد الأقسام', 'Compartments', 1, 5, 1],
     ['innerOpenPockets', 'جيوب داخلية مفتوحة', 'Slip pockets', 0, 8, 1],
     ['innerZippedPockets', 'جيوب بسوستة', 'Zip pockets', 0, 8, 1],
@@ -151,6 +176,7 @@ export const fields = {
         embossed: ['بصمة بارزة', 'Embossed'],
         debossed: ['بصمة غائرة', 'Debossed'],
         metal: ['لوحة معدنية', 'Metal plate'],
+        round_patch: ['شارة جلد دائرية', 'Round leather badge'],
         patch: ['رقعة مخيطة', 'Sewn patch'],
         none: ['بدون', 'None'],
       },
@@ -181,6 +207,14 @@ export const roles = {
   accessory_pocket: ['جيب إكسسوارات', 'Accessory pouch'],
   seam: ['خياطة جانبية', 'Side seam'],
   pocket_slider: ['سحّاب الجيب', 'Pocket slider'],
+  scroll_left: ['لفة الغطاء اليسرى', 'Left flap scroll'],
+  scroll_right: ['لفة الغطاء اليمنى', 'Right flap scroll'],
+  insert_pouch: ['الجراب الداخلي', 'Interior zip pouch'],
+  insert_slider: ['سحّاب الجراب', 'Pouch slider'],
+  snap_receiver: ['قاعدة الكبّاس', 'Snap socket'],
+  corner_guard: ['تدعيم الركن', 'Corner reinforcement'],
+  lock_keeper: ['قاعدة القفل', 'Lock keeper'],
+  turn_button: ['لسان القفل الدوّار', 'Turn button'],
   closure_slider: ['سحّاب الفتحة', 'Closure slider'],
   attachment_loop: ['عروة تثبيت', 'Mounting tab'],
   ring: ['حلقة معدنية', 'Mounting ring'],

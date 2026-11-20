@@ -99,6 +99,72 @@ export function stitches(points, radius) {
   }
   return geometry(p, uv, ix);
 }
+// Sweep one piece of leather around a padded core. The end billets flatten
+// into broad straps where they double back around the hardware.
+export function rolledGrip(curve, width, thickness, steps) {
+  const start = curve.getPointAt(0);
+  const plane = new THREE.Vector3()
+    .crossVectors(curve.getPointAt(1).sub(start), curve.getPointAt(0.5).sub(start))
+    .normalize();
+  const frames = Array.from({ length: steps + 1 }, (_, i) => {
+    const t = i / steps;
+    const core = THREE.MathUtils.smoothstep(Math.min(t, 1 - t), 0.055, 0.21);
+    return {
+      center: curve.getPointAt(t),
+      outward: new THREE.Vector3().crossVectors(plane, curve.getTangentAt(t)).normalize(),
+      radius: width * (0.35 + 0.08 * core),
+      depth: THREE.MathUtils.lerp(thickness * 0.53, width * 0.46, core),
+    };
+  });
+  const point = (i, angle) => {
+    const f = frames[i];
+    return f.center
+      .clone()
+      .addScaledVector(f.outward, f.radius * Math.cos(angle))
+      .addScaledVector(plane, f.depth * Math.sin(angle))
+      .toArray();
+  };
+  const sides = 12;
+  const surface = grid(
+    steps,
+    sides,
+    (t, v) => point(Math.round(t * steps), (v * 2 - 1) * Math.PI),
+    true,
+  );
+  // The UV chart opens at the inner seam. Average its duplicate edge normals.
+  const normal = surface.attributes.normal;
+  for (let i = 0; i <= steps; i++) {
+    const j = i + sides * (steps + 1);
+    const n = new THREE.Vector3()
+      .fromBufferAttribute(normal, i)
+      .add(new THREE.Vector3().fromBufferAttribute(normal, j))
+      .normalize();
+    normal.setXYZ(i, n.x, n.y, n.z);
+    normal.setXYZ(j, n.x, n.y, n.z);
+  }
+  return {
+    surface,
+    seam: frames.map((_, i) => point(i, 2.48)),
+    stitch: frames.map((_, i) => point(i, 2.2)),
+  };
+}
+
+export function mountingRing(radius) {
+  // The straight lower bar sits in the sewn tab. The crown carries the handle.
+  const outline = new THREE.CurvePath();
+  const pt = (x, y) => new THREE.Vector3(x * radius, y * radius, 0);
+  const line = (a, b) => outline.add(new THREE.LineCurve3(pt(...a), pt(...b)));
+  const arc = (a, b, c, d) =>
+    outline.add(new THREE.CubicBezierCurve3(pt(...a), pt(...b), pt(...c), pt(...d)));
+  line([-0.68, -0.76], [0.68, -0.76]);
+  arc([0.68, -0.76], [0.91, -0.76], [1, -0.58], [1, -0.31]);
+  line([1, -0.31], [1, 0.05]);
+  arc([1, 0.05], [1, 1.3], [-1, 1.3], [-1, 0.05]);
+  line([-1, 0.05], [-1, -0.31]);
+  arc([-1, -0.31], [-1, -0.58], [-0.91, -0.76], [-0.68, -0.76]);
+  return new THREE.TubeGeometry(outline, 32, radius * 0.17, 8, true);
+}
+
 export function ribbon(curve, width, thickness, steps = 36) {
   // Parallel-transport frames keep the section rectangular through the crown.
   const frames = curve.computeFrenetFrames(steps, false);

@@ -1,6 +1,19 @@
 import * as THREE from 'three';
 import { blend, clamp, mix, TAU } from './bag-patterns.js';
-import { grid, cord, ribbon, sampled, updateGrid, zipperTeeth } from './bag-surfaces.js';
+import {
+  grid,
+  cord,
+  ribbon,
+  rolledGrip,
+  mountingRing,
+  sampled,
+  stitches,
+  updateGrid,
+  zipperTeeth,
+} from './bag-surfaces.js';
+
+import { buildScrollFlap } from './bag-scroll-flap.js';
+import { buildTurnLock } from './bag-turn-lock.js';
 
 const vec = (a) => new THREE.Vector3(...a);
 function brassPlate(width, height, thickness) {
@@ -35,6 +48,7 @@ export function buildCarriers(c) {
       index = Number(id.split('_')[1]) - 1;
     const pack = !handle && s.strapType === 'backpack',
       e = edits[id] || {};
+    const leather = !handle && m.carrier ? m.carrier : m.trim;
     const side = index % 2 ? -1 : 1;
     const shift = e.anchorShift || 0;
     const flapClosure = ['flap', 'clasp', 'buckle'].includes(s.closure);
@@ -84,12 +98,7 @@ export function buildCarriers(c) {
         at[2] + outward[2] * extension,
       ];
       const center = offset(ringR * 1.35, ringR * 0.45);
-      const ringMesh = mesh(
-        ring,
-        'D_RING',
-        new THREE.TorusGeometry(ringR, ringR * 0.19, 7, 20),
-        m.metal,
-      );
+      const ringMesh = mesh(ring, 'D_RING', mountingRing(ringR), m.metal);
       ringMesh.position.set(...center);
       ringMesh.rotation.y = bearing;
       const tangent = [Math.cos(bearing), 0, -Math.sin(bearing)];
@@ -100,7 +109,7 @@ export function buildCarriers(c) {
           : offset(mix(-ringR * 2.45, ringR * 0.97, v), ringR * (0.25 + 0.22 * v));
         return q.map((n, k) => n + (u - 0.5) * width * tangent[k]);
       };
-      mesh(tab, 'FOLDED_TAB', grid(4, 5, tabPoint), m.trim);
+      mesh(tab, 'FOLDED_TAB', grid(4, 5, tabPoint), leather);
       for (const edge of [0.1, 0.9])
         path(tab, 'TAB_STITCH', 8, (v) => tabPoint(edge, v), ringR * 0.042, m.thread, true);
       const stud = c.hardware(tab, 'RIVET', ringR * 0.27, m.metal);
@@ -165,23 +174,46 @@ export function buildCarriers(c) {
     piv.name = (handle ? 'HANDLE_ANCHOR_' : 'STRAP_ANCHOR_') + (index + 1);
     piv.position.copy(a);
     const local = new THREE.CatmullRomCurve3(curve.points.map((pt) => pt.clone().sub(a)));
-    mesh(
-      id,
-      'FOLDED_LEATHER',
-      ribbon(local, w, Math.min(w * 0.25, p.thickness * 1.8), detail * 3),
-      m.trim,
-    );
-    const centerLine = (u) => local.getPointAt(u);
-    // Bound edges follow the transported ribbon columns exactly.
-    const belt = groups.get(id).children[0].geometry.attributes.position,
-      steps = detail * 3;
-    for (const row of [0, 1]) {
-      const points = sampled(steps, (t) => {
-        const i = row * (steps + 1) + Math.round(t * steps);
-        return [belt.getX(i), belt.getY(i), belt.getZ(i)];
-      });
-      mesh(id, 'ROLLED_EDGE_' + row, cord(points, p.thickness * 0.32), m.edge);
+    const steps = detail * 3;
+    const gauge = Math.min(w * 0.25, p.thickness * 1.8);
+    if (handle) {
+      const grip = rolledGrip(local, w, gauge, steps);
+      mesh(id, 'PADDED_ROLL', grip.surface, m.trim);
+      mesh(id, 'FOLDED_SEAM', cord(grip.seam, gauge * 0.13), m.edge);
+      mesh(id, 'HANDLE_STITCH', stitches(grip.stitch, gauge * 0.12), m.thread);
+      for (const [i, end] of ends.entries()) {
+        const bearing = lidMount ? 0 : Math.atan2(bases[i][0] / p.w, bases[i][2] / p.d);
+        const billet = (u, v) => {
+          const angle = v * TAU;
+          const edge = (u - 0.5) * w * 0.67;
+          const depth = ringR * Math.sin(angle) * 0.37;
+          return [
+            end.x - a.x + edge * Math.cos(bearing) + depth * Math.sin(bearing),
+            end.y - a.y + ringR * (0.07 + 0.34 * Math.cos(angle)),
+            end.z - a.z - edge * Math.sin(bearing) + depth * Math.cos(bearing),
+          ];
+        };
+        mesh(id, 'RETURN_LOOP_' + i, grid(2, 14, billet), m.trim);
+      }
+    } else {
+      const strap = mesh(id, 'FOLDED_LEATHER', ribbon(local, w, gauge, steps), leather);
+      // Bind the two long edges of the flat adjustable strap.
+      const belt = strap.geometry.attributes.position;
+      for (const row of [0, 1]) {
+        const points = sampled(steps, (t) => {
+          const i = row * (steps + 1) + Math.round(t * steps);
+          return [belt.getX(i), belt.getY(i), belt.getZ(i)];
+        });
+        mesh(id, 'ROLLED_EDGE_' + row, cord(points, p.thickness * 0.32), m.edge);
+        if (m.carrier) {
+          const seam = points.map((pt, i) =>
+            pt.map((x, k) => mix(x, local.getPointAt(i / steps).getComponent(k), 0.085)),
+          );
+          mesh(id, 'STRAP_STITCH_' + row, stitches(seam, gauge * 0.095), m.thread);
+        }
+      }
     }
+    const centerLine = (u) => local.getPointAt(u);
     const carry = (id2, f) => {
       const g = groups.get(id2);
       piv.add(g);
@@ -191,14 +223,48 @@ export function buildCarriers(c) {
     if (!handle && s.adjustable) {
       const g = carry(id + '_buckle', 0.19);
       const diameter = w * 0.61;
-      const ring = mesh(
+      const frame = new THREE.CurvePath();
+      const shape = new THREE.Shape();
+      const hw = diameter,
+        hh = w * 0.72,
+        rr = w * 0.16;
+      shape.moveTo(-hw + rr, -hh);
+      shape.lineTo(hw - rr, -hh);
+      shape.quadraticCurveTo(hw, -hh, hw, -hh + rr);
+      shape.lineTo(hw, hh - rr);
+      shape.quadraticCurveTo(hw, hh, hw - rr, hh);
+      shape.lineTo(-hw + rr, hh);
+      shape.quadraticCurveTo(-hw, hh, -hw, hh - rr);
+      shape.lineTo(-hw, -hh + rr);
+      shape.quadraticCurveTo(-hw, -hh, -hw + rr, -hh);
+      const points = shape.getPoints(4);
+      for (let i = 1; i < points.length; i++)
+        frame.add(
+          new THREE.LineCurve3(
+            new THREE.Vector3(points[i - 1].x, points[i - 1].y, 0),
+            new THREE.Vector3(points[i].x, points[i].y, 0),
+          ),
+        );
+      mesh(
         id + '_buckle',
         'ADJUSTMENT_FRAME',
-        new THREE.TorusGeometry(diameter, w * 0.073, 6, 20),
+        new THREE.TubeGeometry(frame, 36, w * 0.065, 7, true),
         m.metal,
       );
-      ring.scale.y = 1.35;
-      g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), local.getTangentAt(0.19));
+      const bar = mesh(
+        id + '_buckle',
+        'BUCKLE_BAR',
+        new THREE.CylinderGeometry(w * 0.064, w * 0.064, w * 1.19, 8),
+        m.metal,
+      );
+      bar.rotation.z = Math.PI / 2;
+      const tangent = local.getTangentAt(0.19);
+      const across = new THREE.Vector3(0, 0, 1);
+      if (Math.abs(across.dot(tangent)) > 0.87) across.set(1, 0, 0);
+      across.addScaledVector(tangent, -across.dot(tangent)).normalize();
+      const normal = new THREE.Vector3().crossVectors(across, tangent);
+      g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(across, tangent, normal));
+      g.position.addScaledVector(normal, gauge * 0.62);
     }
     if (!handle && s.detachable) {
       const g = groups.get(id + '_clips');
@@ -221,12 +287,14 @@ export function buildCarriers(c) {
       actualCenterlineM: curve.getLength(),
       minimumSpanM: span,
       widthM: w,
+      construction: handle ? 'padded-roll-with-return-loops' : 'bound-flat-strap',
       handleDropM: drop,
     };
+    const swingLimit = !handle && s.style === 'coiled' ? 92 : 32;
     part.range = {
       unit: 'degrees',
-      min: -32 * c.limit(id),
-      max: 32 * c.limit(id),
+      min: -swingLimit * c.limit(id),
+      max: swingLimit * c.limit(id),
       axis: axis.toArray(),
     };
     anchor(id + '_carry', part.anchors.carry, piv, a);
@@ -242,6 +310,7 @@ export function buildCarriers(c) {
 export function buildClosure(c) {
   const { p, s, m, parts, groups, mesh, sheet, path, detail, motions, edits } = c;
   if (s.closure === 'open') return;
+  if (s.closure === 'scroll_snap') return buildScrollFlap(c);
   const part = parts.get('closure'),
     group = groups.get('closure');
   const factor =
@@ -256,7 +325,7 @@ export function buildClosure(c) {
     const local = (a) => a.map((n, k) => n - hinge[k]);
     const length = (s.flapLength / 100) * (edits.closure?.lengthScale || 1);
     const flap = (u, v) => {
-      const q = (u * 2 - 1) * 0.78,
+      const q = (u * 2 - 1) * (s.style === 'structured' ? 0.66 : 0.78),
         edge = Math.abs(2 * u - 1);
       const back = p.lip(q, true),
         front = p.lip(q, false);
@@ -268,7 +337,14 @@ export function buildClosure(c) {
         return local(point);
       }
       const f = (v - 0.47) / 0.53;
-      const shape = s.style === 'clutch' ? 0.95 : s.style === 'saddle' ? 0.74 : 0.24;
+      const shape =
+        s.style === 'clutch'
+          ? 0.95
+          : s.style === 'saddle'
+            ? 0.74
+            : s.style === 'structured'
+              ? 0.55
+              : 0.24;
       const t = 1 - f * length * (1 - shape * edge ** 2);
       const point = p.lip(q * (1 - 0.075 * f ** 3), false, t, -p.thickness * 1.15);
       point[1] += p.thickness * 1.5 * (1 - f);
@@ -309,40 +385,45 @@ export function buildClosure(c) {
       const cap = [seat[0], hinge[1], hinge[2]];
       path('opening', 'HINGE_KNUCKLE', 6, (t) => blend(seat, cap, t), p.thickness * 0.83, m.trim);
     }
-    const lock =
-      s.closure === 'buckle'
-        ? mesh(
-            'closure',
-            'BUCKLE_FRAME',
-            new THREE.TorusGeometry(size * 0.95, size * 0.14, 7, 18),
-            m.metal,
-          )
-        : mesh('closure', 'TURN_LOCK', brassPlate(size * 2.4, size * 1.35, size * 0.19), m.metal);
-    lock.scale.set(1, s.closure === 'buckle' ? 1.23 : 0.73, s.closure === 'buckle' ? 1 : 0.36);
-    lock.position.set(...flap(0.5, 0.91));
-    lock.position.z += p.thickness * 0.68;
-    const tongue = mesh(
-      'closure',
-      'LOCK_BAR',
-      brassPlate(size * 1.2, size * 0.4, size * 0.27),
-      m.metal,
-    );
-    tongue.position.copy(lock.position);
-    tongue.position.z += size * 0.22;
-    for (const sign of [-1, 1]) {
-      const screw = c.hardware('closure', 'LOCK_RIVET', size * 0.11, m.zip);
-      screw.position.copy(lock.position);
-      screw.position.x += sign * size * 0.9;
-      screw.position.z += size * 0.16;
-      screw.scale.z = 0.34;
+    let release = (n) => n;
+    if (parts.has('turn_button')) {
+      release = buildTurnLock(c, hinge, 1 - length, size);
+    } else {
+      const lock =
+        s.closure === 'buckle'
+          ? mesh(
+              'closure',
+              'BUCKLE_FRAME',
+              new THREE.TorusGeometry(size * 0.95, size * 0.14, 7, 18),
+              m.metal,
+            )
+          : mesh('closure', 'TURN_LOCK', brassPlate(size * 2.4, size * 1.35, size * 0.19), m.metal);
+      lock.scale.set(1, s.closure === 'buckle' ? 1.23 : 0.73, s.closure === 'buckle' ? 1 : 0.36);
+      lock.position.set(...flap(0.5, 0.91));
+      lock.position.z += p.thickness * 0.68;
+      const tongue = mesh(
+        'closure',
+        'LOCK_BAR',
+        brassPlate(size * 1.2, size * 0.4, size * 0.27),
+        m.metal,
+      );
+      tongue.position.copy(lock.position);
+      tongue.position.z += size * 0.22;
+      for (const sign of [-1, 1]) {
+        const screw = c.hardware('closure', 'LOCK_RIVET', size * 0.11, m.zip);
+        screw.position.copy(lock.position);
+        screw.position.x += sign * size * 0.9;
+        screw.position.z += size * 0.16;
+        screw.scale.z = 0.34;
+      }
     }
     part.anchors = {
       hinge,
       axisStart: [p.lip(-0.48, true)[0], hinge[1], hinge[2]],
       axisEnd: [p.lip(0.48, true)[0], hinge[1], hinge[2]],
     };
-    part.range = { unit: 'degrees', min: 0, max: 112 * factor, axis: [-1, 0, 0] };
-    motions.open.push((n) => (group.rotation.x = (-n * part.range.max * Math.PI) / 180));
+    part.range = { unit: 'degrees', min: 0, max: 112 * factor * release(1), axis: [-1, 0, 0] };
+    motions.open.push((n) => (group.rotation.x = (-release(n) * part.range.max * Math.PI) / 180));
   } else if (s.closure === 'zipper') {
     const point = (u, v, back, open) => {
       const q = (u * 2 - 1) * 0.995,

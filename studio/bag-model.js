@@ -4,6 +4,7 @@ import { createBagSpec, describeBagComponents } from './bag-spec.js';
 import { makePattern, clamp } from './bag-patterns.js';
 import { grid, cord, stitches, sampled } from './bag-surfaces.js';
 import { makeMaterials, reliefArtwork } from './bag-materials.js';
+import { buildPouchInsert } from './bag-insert.js';
 import { buildShell, buildPockets } from './bag-shell.js';
 import { buildCarriers, buildClosure } from './bag-mechanisms.js';
 import { cleanEdit } from './bag-editor.js';
@@ -145,10 +146,21 @@ export function buildModularBag(input = {}, options = {}) {
   };
   buildShell(c);
   buildPockets(c);
+  if (s.zipInsert) buildPouchInsert(c);
   buildClosure(c);
   buildCarriers(c);
   anchor('base', p.volume(0, 0, 0, 0));
   anchor('opening', p.volume(0, 0, 1, 0));
+  const roundBadge = s.logoType === 'round_patch';
+  const badgeRadius = Math.min(p.w * 0.047, p.h * 0.071, p.d * 0.17);
+  function badgePosition(lift) {
+    const inside = s.logoPlacement === 'inside';
+    const angle = s.logoPlacement === 'front' ? 0 : Math.PI;
+    const offset = inside
+      ? p.thickness * 1.8 + lift
+      : -(p.thickness * 0.55 + (p.family.corded ? s.cordDiameterMm * 0.00035 : 0) + lift);
+    return p.surface(angle, inside ? 0.64 : 0.3, offset);
+  }
   let logo = null;
   function setLogoTexture(texture) {
     if (!parts.has('brand_mark')) return;
@@ -174,19 +186,47 @@ export function buildModularBag(input = {}, options = {}) {
     }
     if (!used) return;
     const aspect = (used.image?.width || 2) / (used.image?.height || 1);
-    const width = Math.min(p.w * 0.25, p.h * 0.14 * aspect),
+    const width = roundBadge
+        ? badgeRadius * 1.46 * Math.min(aspect, 1)
+        : Math.min(p.w * 0.25, p.h * 0.14 * aspect),
       height = width / aspect;
     const back = s.logoPlacement !== 'front',
       inside = s.logoPlacement === 'inside';
     const angle = back ? Math.PI : 0,
       t = inside ? 0.64 : 0.3,
-      center = p.surface(angle, t, inside ? p.thickness * 2 : -p.thickness);
+      center = roundBadge
+        ? badgePosition(p.thickness * 0.7)
+        : p.surface(angle, t, inside ? p.thickness * 2 : -p.thickness);
     logo = mesh('brand_mark', 'BRAND_MARK_IMAGE', new THREE.PlaneGeometry(width, height), material);
     logo.position.set(...center);
     if (back && !inside) logo.rotation.y = Math.PI;
     logo.renderOrder = 1;
   }
   if (parts.has('brand_mark')) {
+    if (roundBadge) {
+      const badge = mesh(
+        'brand_mark',
+        'ROUND_LEATHER_BADGE',
+        new THREE.CylinderGeometry(badgeRadius, badgeRadius, p.thickness * 0.75, 28),
+        m.badge,
+      );
+      badge.rotation.x = Math.PI / 2;
+      badge.position.set(...badgePosition(p.thickness * 0.26));
+      const at = badgePosition(p.thickness * 0.69);
+      path(
+        'brand_mark',
+        'BADGE_STITCH',
+        24,
+        (t) => [
+          at[0] + Math.cos(t * 2 * Math.PI) * badgeRadius * 0.82,
+          at[1] + Math.sin(t * 2 * Math.PI) * badgeRadius * 0.82,
+          at[2],
+        ],
+        p.thickness * 0.14,
+        m.thread,
+        true,
+      );
+    }
     if (['metal', 'patch'].includes(s.logoType)) {
       const inside = s.logoPlacement === 'inside',
         angle = s.logoPlacement === 'front' ? 0 : Math.PI;
@@ -236,7 +276,12 @@ export function buildModularBag(input = {}, options = {}) {
         }
         up = parts.get(up.parent);
       }
-      if (cut && part.id.startsWith('seam_')) v = false;
+      if (
+        cut &&
+        (part.id.startsWith('seam_') ||
+          ['corner_guard', 'lock_keeper', 'turn_button', 'snap_receiver'].includes(part.role))
+      )
+        v = false;
       if (cut && ['front_panel', 'piping', 'opening', 'closure', 'brand_mark'].includes(part.id))
         v = false;
       if (
@@ -289,7 +334,7 @@ export function buildModularBag(input = {}, options = {}) {
     part.node = group.name;
     part.includedInGLB = group.visible;
     part.orientation = group.getWorldQuaternion(new THREE.Quaternion()).toArray();
-    if (part.role === 'pocket_slider')
+    if (part.role === 'pocket_slider' && !part.range)
       part.range = { unit: 'path-fraction', min: 0, max: limit(part.id) };
     group.userData = {
       partId: part.id,
@@ -335,7 +380,7 @@ export function buildModularBag(input = {}, options = {}) {
     carryingModes: carries,
     profile,
     animations: [
-      ['Closure', 'opening', ['closure']],
+      ['Closure', 'opening', ['closure', 'turn_button']],
       ['Carriers', 'swing', carries.map((c) => c.part)],
       [
         'Pocket zippers',

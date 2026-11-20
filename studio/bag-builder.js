@@ -5,6 +5,7 @@ import {
   evaluateBagCapture,
   detectViewFromName,
 } from './bag-spec.js';
+import { editOutline, tracedEnvelope } from './bag-outline.js';
 import { FAMILY_PRESETS } from './bag-patterns.js';
 import {
   newProject,
@@ -19,6 +20,8 @@ import {
   fitFromEvidence,
   reconstructDraft,
   readLocalPhoto,
+  photoPoint,
+  samplePhotoColor,
   sourceMetadata,
   STAGES,
 } from './bag-evidence.js';
@@ -59,7 +62,13 @@ let lang = stored('bag-language') === 'en' ? 'en' : 'ar',
   theme = stored('bag-theme') === 'dark' ? 'dark' : 'light';
 const tr = (ar, en) => (lang === 'ar' ? ar : en);
 const label = (pair) => (pair ? tr(...pair) : '');
-let history = new EditHistory(newProject(FAMILY_PRESETS.structured));
+const requestedFamily = new URLSearchParams(location.search).get('family');
+const startingFamily = Object.hasOwn(FAMILY_PRESETS, requestedFamily)
+  ? requestedFamily
+  : 'structured';
+let history = new EditHistory(
+  newProject({ ...FAMILY_PRESETS[startingFamily], style: startingFamily }),
+);
 const current = () => history.present;
 let photos = [],
   selection = 'front_panel',
@@ -155,6 +164,10 @@ function syncInputs() {
       if (input.type === 'checkbox') input.checked = s[key];
       else input.value = s[key];
     }
+  for (const key of ['scrollWidth', 'scrollAngle'])
+    $(key).closest('label').hidden = s.closure !== 'scroll_snap';
+  $('cordDiameterMm').closest('label').hidden = s.style !== 'coiled' && s.closure !== 'scroll_snap';
+  $('strapColor').closest('label').hidden = s.style !== 'coiled';
   $('family-name').textContent = label(families[s.style]);
   $('measure-summary').textContent = [s.widthCm, s.heightCm, s.depthCm].join(' × ') + ' cm';
 }
@@ -231,8 +244,8 @@ function fitMessage(result) {
         ' ' +
         tr('صورة', 'view(s)')
       : tr(
-          'تحتاج الملاءمة صورة أمامية أو خلفية مؤكدة بخلفية بسيطة أو شفافة.',
-          'Fitting needs a confirmed front or back view on a plain or transparent background.',
+          'أكّد صورة أمامية أو خلفية. استخدم خلفية بسيطة أو حدّد محيط الجسم على الصورة.',
+          'Confirm a front or back view. Use a plain background or trace the body in the photograph.',
         );
 }
 function renderReports() {
@@ -281,7 +294,7 @@ function renderReports() {
   $('redo').disabled = !history.future.length;
   status();
 }
-function changedReferences() {
+function changedReferences(revisedId) {
   reconstruction = null;
   const consistent = results().status !== 'inconsistent-views';
   const assigned = new Set(
@@ -293,7 +306,10 @@ function changedReferences() {
   // observation invalidates the affected fit in every restorable history frame.
   const clean = (item) => ({
     ...item,
-    fit: consistent && item.fit?.sources.every((id) => assigned.has(id)) ? item.fit : null,
+    fit:
+      consistent && item.fit?.sources.every((id) => assigned.has(id) && id !== revisedId)
+        ? item.fit
+        : null,
     approval: 'unreviewed',
   });
   history.present = clean(current());
@@ -319,9 +335,10 @@ function renderPhotos() {
       setOptions(select, views, p.view);
       select.setAttribute('aria-label', tr('زاوية ', 'View for ') + p.name);
       select.onchange = () => {
+        if (p.view !== select.value) delete p.outline;
         p.view = select.value;
         p.source = 'merchant';
-        changedReferences();
+        changedReferences(p.id);
       };
       const assigned = p.source === 'merchant';
       const confirm = el('button', tr('تأكيد الزاوية', 'Confirm view'));
@@ -405,7 +422,86 @@ async function addPhotos(files, epoch) {
     ' ' +
     skipped;
 }
+$('trace-body').onclick = async () => {
+  const ref = photos.find((p) => p.id === $('compare-photo').value && p.url);
+  if (!ref || !['front', 'back'].includes(ref.view) || ref.source !== 'merchant') return;
+  const img = $('compare-img'),
+    view = ref.view;
+  try {
+    await img.decode();
+  } catch {
+    return;
+  }
+  if (img.currentSrc !== ref.url) return;
+  const points = await editOutline(img, ref.outline?.points || [], tr);
+  if (points === null || !photos.includes(ref) || ref.view !== view) return;
+  if (points.length) ref.outline = { view, points };
+  else delete ref.outline;
+  changedReferences(ref.id);
+  note('حدّث البناء لتطبيق المحيط الجديد', 'Run construction to apply the updated outline');
+};
+function setSampling(key) {
+  const image = $('compare-img');
+  $('sample-channel').value = key;
+  image.toggleAttribute('data-sampling', Boolean(key));
+  image.tabIndex = key ? 0 : -1;
+  $('sample-hint').hidden = !key;
+}
+function applyPhotoSample(point) {
+  const key = $('sample-channel').value,
+    ref = photos.find((p) => p.id === $('compare-photo').value && p.url);
+  if (
+    !key ||
+    !ref ||
+    !point ||
+    !$('compare-img').complete ||
+    $('compare-img').currentSrc !== ref.url
+  )
+    return;
+  const color = samplePhotoColor($('compare-img'), point);
+  if (!color) {
+    note('اختر جزءًا معتمًا من الخامة', 'Choose an opaque area of material');
+    return;
+  }
+  const prev = current(),
+    next = changeStructure(prev, { [key]: color }, [ref.id]);
+  if (next !== prev) {
+    Object.assign(next.feedback.at(-1), {
+      category: 'photo-swatch',
+      componentId: key === 'strapColor' ? 'strap_1' : 'body',
+      sampleUV: point,
+    });
+    apply(next);
+  }
+  setSampling('');
+  note('تم أخذ اللون من الصورة ' + color, 'Applied photo color ' + color);
+}
+$('sample-channel').onchange = (e) => {
+  setSampling(e.target.value);
+  if (e.target.value) $('compare-img').focus();
+};
+$('compare-img').onclick = (e) => {
+  const img = e.currentTarget,
+    r = img.getBoundingClientRect();
+  applyPhotoSample(
+    photoPoint(
+      r.width,
+      r.height,
+      img.naturalWidth,
+      img.naturalHeight,
+      e.clientX - r.left,
+      e.clientY - r.top,
+    ),
+  );
+};
+$('compare-img').onkeydown = (e) => {
+  if (e.key === 'Escape') setSampling('');
+  if (e.key === 'Enter' && $('sample-channel').value) applyPhotoSample([0.5, 0.5]);
+};
 function updateComparison(align) {
+  setSampling('');
+  $('sample-channel').querySelector('[value="strapColor"]').hidden =
+    current().spec.style !== 'coiled' || !current().spec.strapCount;
   const visible = photos.filter((p) => p.url),
     select = $('compare-photo'),
     old = select.value;
@@ -416,9 +512,10 @@ function updateComparison(align) {
   );
   if (visible.some((p) => p.id === old)) select.value = old;
   const p = visible.find((p) => p.id === select.value) || visible[0];
+  $('trace-body').hidden = !['front', 'back'].includes(p.view) || p.source !== 'merchant';
   $('compare-img').src = p.url;
   $('compare-img').alt = p.name;
-  const cam = cameras[p.view] ? p.view : p.view === 'open' ? 'inside' : null;
+  const cam = cameras[p.view] ? p.view : p.view === 'open' ? 'construction' : null;
   if (align && cam) setCamera(cam);
   $('compare-note').textContent =
     label(views[p.view]) +
@@ -573,10 +670,15 @@ function apply(next, reframe = false) {
 function setCamera(id) {
   if (!cameras[id]) return;
   $('camera').value = id;
-  if (id === 'inside') {
+  if (id === 'construction' || id === 'inside') {
     $('opening').value = 100;
     $('opening-out').value = '100%';
     model?.setOpening(1);
+    if (current().spec.style === 'coiled') {
+      $('swing').value = -95;
+      $('swing-out').value = '−95%';
+      model?.setSwing(-0.95);
+    }
     // Interior camera cuts a closed shell only when explicitly requested.
   }
   viewer?.frame(id);
@@ -616,8 +718,13 @@ async function build(id, frame) {
       next.dispose();
       return;
     }
+    const firstCord = next.spec.style === 'coiled' && model?.spec.style !== 'coiled';
     model = next;
     viewer.replace(next, frame);
+    if (firstCord) {
+      viewer.frame('product');
+      $('camera').value = 'product';
+    }
     model.setOpening(+$('opening').value / 100);
     model.setSwing(+$('swing').value / 100);
     model.setPockets(+$('pocket-motion').value / 100);
@@ -682,6 +789,9 @@ function readProject(record) {
       view: Object.hasOwn(views, p.view) ? p.view : 'unknown',
       source: p.source === 'merchant' ? 'merchant' : 'filename',
       analysis: null,
+      ...(p.outline?.view === p.view && tracedEnvelope(p.outline.points)
+        ? { outline: { view: p.view, points: p.outline.points } }
+        : {}),
       url: null,
     }));
   photoEpoch++;

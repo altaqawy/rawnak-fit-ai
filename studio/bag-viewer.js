@@ -58,6 +58,8 @@ export async function assemble(project, photos, profile) {
 }
 const directions = {
   orbit: [0.69, 0.39, 1.32],
+  construction: [0.18, 2.6, 1.1],
+  product: [0.32, 0.19, 1.35],
   front: [0, 0, 1],
   back: [0, 0, -1],
   left: [-1, 0, 0],
@@ -80,6 +82,8 @@ export class BagViewer {
     r.setClearColor(0, 0);
     r.setPixelRatio(Math.min(devicePixelRatio || 1, 1.6));
     r.localClippingEnabled = true;
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = THREE.PCFShadowMap;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = 0.98;
@@ -96,7 +100,11 @@ export class BagViewer {
     this.scene.add(sky);
     const key = new THREE.DirectionalLight(0xfff3df, 1.75);
     key.position.set(-1.2, 2, 2.2);
-    this.scene.add(key);
+    key.castShadow = true;
+    key.shadow.mapSize.set(512, 512);
+    key.shadow.bias = -0.00045;
+    this.keyLight = key;
+    this.scene.add(key, key.target);
     const rim = new THREE.DirectionalLight(0xcbd9fc, 0.8);
     rim.position.set(1.7, 1, -2.4);
     this.scene.add(rim);
@@ -198,6 +206,34 @@ export class BagViewer {
     }
     this.model = model;
     this.scene.add(model.root);
+    const { w, h, d } = model.pattern,
+      reach = Math.max(w, h, d);
+    const light = this.keyLight,
+      sc = light.shadow.camera;
+    light.target.position.set(0, h * 0.62, 0);
+    light.position
+      .set(-1.2, 2, 2.2)
+      .normalize()
+      .multiplyScalar(reach * 3.5)
+      .add(light.target.position);
+    Object.assign(sc, {
+      left: -reach,
+      right: reach,
+      top: reach,
+      bottom: -reach,
+      near: reach * 0.2,
+      far: reach * 6,
+    });
+    sc.updateProjectionMatrix();
+    light.shadow.normalBias = reach * 0.0011;
+    model.root.traverse((o) => {
+      if (!o.isMesh) return;
+      o.receiveShadow = true;
+      const id = o.userData.partId || '';
+      o.castShadow =
+        ['closure', 'scroll_left', 'scroll_right', 'insert_pouch', 'turn_button'].includes(id) ||
+        /^(handle|strap)_/.test(id);
+    });
     this.shadow.scale.set(model.pattern.w * 1.56, model.pattern.d * 2.1, 1);
     this.shadow.position.y = -0.0015;
     if (first || reframe) this.frame(this.view || 'orbit');
@@ -219,6 +255,14 @@ export class BagViewer {
       center = box.getCenter(new THREE.Vector3());
     const interior = view === 'inside',
       p = this.model.pattern;
+    if (view === 'product') {
+      size.set(p.w * 1.12, p.h * 1.15, p.d);
+      center.set(0, p.h * 0.52, 0);
+    }
+    if (view === 'construction') {
+      size.set(p.w * 1.1, p.h * 1.64, p.d * 1.5);
+      center.set(0, p.h * 0.72, -p.d * 0.79);
+    }
     if (interior) center.set(0, p.h * 0.38, 0);
     const dir = new THREE.Vector3(...directions[this.view]).normalize();
     const extent = interior
@@ -281,6 +325,7 @@ export class BagViewer {
     this.shadow.material.dispose();
     this.controls.dispose();
     this.model?.dispose();
+    this.keyLight.shadow.dispose();
     this.env.dispose();
     this.scene.clear();
     this.renderer.dispose();

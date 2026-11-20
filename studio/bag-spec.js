@@ -12,6 +12,7 @@ export const BAG_STYLES = Object.freeze({
   bucket: { name: 'Bucket / Drawstring', shape: 'bucket', family: 'soft' },
   clutch: { name: 'Clutch / Pouch', shape: 'compact', family: 'structured' },
   backpack: { name: 'Mini Backpack', shape: 'domed', family: 'structured' },
+  coiled: { name: 'Coiled-cord shoulder bag', shape: 'arched-coils', family: 'corded' },
   saddle: { name: 'Saddle / Rounded', shape: 'curve', family: 'structured' },
 });
 export const BAG_MATERIALS = Object.freeze({
@@ -21,11 +22,13 @@ export const BAG_MATERIALS = Object.freeze({
   suede: { name: 'شمواه', behavior: 'flexible', roughness: 0.95 },
   nylon: { name: 'نايلون', behavior: 'flexible', roughness: 0.61 },
   woven: { name: 'خوص/منسوج', behavior: 'semi-rigid', roughness: 0.9 },
+  braid: { name: 'حبل مضفّر', behavior: 'semi-rigid', roughness: 0.94 },
   rigid_case: { name: 'جسم صلب', behavior: 'rigid', roughness: 0.67 },
 });
 export const BAG_CLOSURES = Object.freeze({
   zipper: { name: 'سوستة', mechanism: 'slider' },
   flap: { name: 'غطاء مفصلي', mechanism: 'hinge' },
+  scroll_snap: { name: 'غطاء حلزوني بكبّاس', mechanism: 'hinge_and_snap' },
   magnetic: { name: 'مغناطيس/كبّاس', mechanism: 'snap' },
   drawstring: { name: 'رباط شد', mechanism: 'pull' },
   open: { name: 'مفتوحة', mechanism: 'none' },
@@ -74,10 +77,16 @@ const defaults = Object.freeze({
   innerZippedPockets: 1,
   outerPockets: 0,
   lining: 'polyester',
+  liningShade: 'natural',
   logoPlacement: 'front',
   logoType: 'print',
   logoText: '',
   bodyColor: '#996247',
+  strapColor: '#634334',
+  cordDiameterMm: 6,
+  scrollWidth: 100,
+  scrollAngle: 30,
+  zipInsert: false,
   metalColor: '#d9be80',
   panelThicknessMm: 2.2,
   roundness: 50,
@@ -103,6 +112,9 @@ const BOUNDS = Object.freeze({
   widthCm: [8, 85],
   heightCm: [6, 70],
   depthCm: [2, 45],
+  cordDiameterMm: [3, 12],
+  scrollWidth: [65, 115],
+  scrollAngle: [-75, 75],
   panelThicknessMm: [0.5, 6],
   roundness: [0, 100],
   gussetWidth: [45, 100],
@@ -148,16 +160,20 @@ export function createBagSpec(patch = {}) {
   x.lining = ['polyester', 'cotton', 'leather', 'none'].includes(patch.lining)
     ? patch.lining
     : defaults.lining;
+  x.liningShade = patch.liningShade === 'dark' ? 'dark' : 'natural';
   x.logoPlacement = ['front', 'back', 'inside', 'none'].includes(patch.logoPlacement)
     ? patch.logoPlacement
     : defaults.logoPlacement;
-  x.logoType = ['print', 'embossed', 'debossed', 'metal', 'patch', 'none'].includes(patch.logoType)
+  x.logoType = ['print', 'embossed', 'debossed', 'metal', 'patch', 'round_patch', 'none'].includes(
+    patch.logoType,
+  )
     ? patch.logoType
     : defaults.logoType;
   x.logoText = String(patch.logoText || '').slice(0, 100);
   x.bodyColor = color(patch.bodyColor, defaults.bodyColor);
+  x.strapColor = color(patch.strapColor, defaults.strapColor);
   x.metalColor = color(patch.metalColor, defaults.metalColor);
-  for (const key of ['reinforced', 'detachable', 'adjustable'])
+  for (const key of ['reinforced', 'detachable', 'adjustable', 'zipInsert'])
     x[key] = typeof patch[key] === 'boolean' ? patch[key] : defaults[key];
   x.brandLicenseConfirmed = yes(patch.brandLicenseConfirmed);
   // Crossbody is a carrying mode, not a unique geometric body.
@@ -167,7 +183,8 @@ export function createBagSpec(patch = {}) {
 export function requiredBagViews(specInput = {}) {
   const s = createBagSpec(specInput);
   const required = ['front', 'back', 'left', 'right', 'bottom', 'top', 'open', 'inside'];
-  if (s.innerOpenPockets + s.innerZippedPockets + s.outerPockets > 0) required.push('pockets');
+  if (s.zipInsert || s.innerOpenPockets + s.innerZippedPockets + s.outerPockets > 0)
+    required.push('pockets');
   if (s.strapCount > 0 || s.handlesCount > 0) required.push('strap');
   if (s.closure !== 'open') required.push('closure');
   if (s.logoPlacement !== 'none' && s.logoType !== 'none') required.push('logo');
@@ -267,8 +284,31 @@ export function describeBagComponents(specInput = {}) {
   ])
     add('seam_' + id, 'seam', 'piping', [...views, 'detail']);
   if (s.reinforced) add('base_insert', 'reinforcement', 'bottom_panel', ['bottom', 'inside']);
+  if (s.style === 'structured' && s.reinforced) {
+    for (const side of ['left', 'right'])
+      add('corner_guard_' + side, 'corner_guard', 'front_panel', ['front', side, 'bottom']);
+  }
   if (s.lining !== 'none') add('lining', 'interior', 'body', ['inside'], s.lining, 'flexible');
   const interior = s.lining === 'none' ? 'body' : 'lining';
+  if (s.zipInsert) {
+    add(
+      'insert_pouch',
+      'insert_pouch',
+      interior,
+      ['inside', 'open', 'pockets'],
+      'lining',
+      'flexible',
+    );
+    add(
+      'insert_slider',
+      'pocket_slider',
+      'insert_pouch',
+      ['inside', 'pockets'],
+      'hardware',
+      'rigid',
+      'slider',
+    );
+  }
   for (let i = 1; i <= s.mainCompartments; i++) {
     add('compartment_' + i, 'compartment', interior, ['inside', 'compartments'], 'air', 'fixed');
     if (i < s.mainCompartments)
@@ -322,7 +362,7 @@ export function describeBagComponents(specInput = {}) {
         prefix,
         mount,
         prefix === 'handle' ? ['strap', 'handles'] : ['strap'],
-        s.material,
+        s.style === 'coiled' && prefix === 'strap' ? 'leather' : s.material,
         prefix === 'strap' ? 'flexible' : 'semi-rigid',
         prefix + '_anchor',
       );
@@ -342,6 +382,37 @@ export function describeBagComponents(specInput = {}) {
       'rigid',
       BAG_CLOSURES[s.closure].mechanism,
     );
+  if (s.closure === 'scroll_snap') {
+    add('scroll_left', 'scroll_lobe', 'closure', ['front', 'open', 'detail']);
+    add('scroll_right', 'scroll_lobe', 'closure', ['front', 'open', 'detail']);
+    add(
+      'snap_receiver',
+      'snap_receiver',
+      'front_panel',
+      ['front', 'open', 'closure'],
+      'hardware',
+      'rigid',
+    );
+  }
+  if (s.style === 'structured' && ['flap', 'clasp'].includes(s.closure)) {
+    add(
+      'lock_keeper',
+      'lock_keeper',
+      'front_panel',
+      ['front', 'closure', 'open'],
+      'hardware',
+      'rigid',
+    );
+    add(
+      'turn_button',
+      'turn_button',
+      'lock_keeper',
+      ['closure', 'open'],
+      'hardware',
+      'rigid',
+      'turn_lock',
+    );
+  }
   if (s.closure === 'zipper')
     add('zip_slider', 'closure_slider', 'closure', ['closure'], 'hardware', 'rigid', 'slider');
   if (s.logoPlacement !== 'none' && s.logoType !== 'none')

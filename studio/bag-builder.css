@@ -591,6 +591,26 @@ details[open] > summary {
   object-fit: contain;
   margin-top: 8px;
 }
+.swatch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.swatch-field select {
+  max-width: 58%;
+}
+#compare-img[data-sampling] {
+  cursor: crosshair;
+}
+#sample-hint {
+  display: block;
+  margin-block-start: 8px;
+}
+#sample-hint[hidden] {
+  display: none;
+}
 .notice {
   font-size: 13px;
   margin: 10px 0;
@@ -753,4 +773,41 @@ details[open] > summary {
     flex: 1;
     min-height: 0;
   }
+}
+
+#outline-dialog {
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  max-height: 92dvh;
+  width: min(580px, 94vw);
+  padding: 18px;
+}
+#outline-dialog::backdrop {
+  background: rgba(18, 25, 21, 0.65);
+}
+#outline-dialog h2 {
+  margin: 0;
+}
+#outline-dialog p {
+  font-size: 13px;
+}
+#outline-dialog canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 54dvh;
+  margin: auto;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.trace-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-block-start: 10px;
+}
+#trace-body {
+  margin-block-end: 8px;
 }

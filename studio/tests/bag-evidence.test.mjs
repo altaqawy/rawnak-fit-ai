@@ -80,3 +80,76 @@ test('optional reconstruction stages abstain on unknown sources and record provi
   assert.equal(stage('multiview-texture-baking'), 'unavailable');
   assert.equal(result.photoGeometryVerified, false);
 });
+
+test('reference swatches ignore object-fit letterboxes in landscape and portrait views', async () => {
+  const { photoPoint } = await import('../bag-evidence.js');
+  assert.deepEqual(photoPoint(500, 300, 200, 400, 250, 150), [0.5, 0.5]);
+  assert.equal(photoPoint(500, 300, 200, 400, 5, 150), null);
+  assert.equal(photoPoint(100, 300, 400, 200, 50, 15), null);
+  assert.deepEqual(photoPoint(100, 300, 400, 200, 50, 175), [0.5, 1]);
+});
+
+test('guided body contours can fit a busy backdrop and keep manual evidence distinct', async () => {
+  const { tracedEnvelope } = await import('../bag-outline.js');
+  const { fitFromEvidence } = await import('../bag-evidence.js');
+  const points = [
+    [0.11, 0.86],
+    [0.08, 0.59],
+    [0.15, 0.35],
+    [0.35, 0.25],
+    [0.7, 0.25],
+    [0.84, 0.36],
+    [0.92, 0.6],
+    [0.88, 0.86],
+  ];
+  assert.equal(
+    tracedEnvelope([
+      [0, 0],
+      [1, 1],
+      [0, 1],
+      [1, 0],
+    ]),
+    null,
+  );
+  assert.equal(
+    tracedEnvelope([
+      [0.2, 0.2],
+      [0.21, 0.22],
+      [0.23, 0.23],
+      [0.22, 0.21],
+    ]),
+    null,
+  );
+  assert.equal(tracedEnvelope(points).widthProfile.length, 5);
+  const p = {
+    id: 'photo',
+    view: 'front',
+    source: 'merchant',
+    linked: true,
+    analysis: { status: 'abstained', reason: 'complex-background' },
+    outline: { view: 'front', points },
+  };
+  const fit = fitFromEvidence([p]);
+  assert.deepEqual(fit.fit.guidedSources, ['photo']);
+  assert.ok(fit.fit.widths.every((v) => v >= 0.35 && v <= 1));
+  assert.equal(fitFromEvidence([{ ...p, linked: false }]).fit, null);
+  assert.equal(fitFromEvidence([{ ...p, view: 'back' }]).fit, null);
+});
+
+test('a slightly tilted straight hem preserves traced width at the foot', async () => {
+  const { tracedEnvelope } = await import('../bag-outline.js');
+  const shape = [
+    [0.12, 0.8],
+    [0.08, 0.62],
+    [0.18, 0.39],
+    [0.39, 0.25],
+    [0.66, 0.25],
+    [0.83, 0.39],
+    [0.91, 0.63],
+    [0.86, 0.8],
+  ];
+  const skew = shape.map(([x, y]) => [x, y + (x - 0.5) * 0.075]);
+  const clean = tracedEnvelope(shape).widthProfile,
+    corrected = tracedEnvelope(skew).widthProfile;
+  assert.ok(clean.every((v, i) => Math.abs(v - corrected[i]) < 1e-6));
+});

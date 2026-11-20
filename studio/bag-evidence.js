@@ -1,6 +1,44 @@
+import { tracedEnvelope } from './bag-outline.js';
 import { PATTERNS, clamp } from './bag-patterns.js';
 
 const median = (a) => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
+// CSS object-fit:contain leaves letterboxing. Outside coordinates are never
+// clamped into the textile and accidentally recorded as merchant evidence.
+export function photoPoint(width, height, naturalWidth, naturalHeight, x, y) {
+  if (Math.min(width, height, naturalWidth, naturalHeight) <= 0) return null;
+  const scale = Math.min(width / naturalWidth, height / naturalHeight);
+  const w = naturalWidth * scale,
+    h = naturalHeight * scale;
+  const u = (x - (width - w) / 2) / w,
+    v = (y - (height - h) / 2) / h;
+  return u >= 0 && u <= 1 && v >= 0 && v <= 1 ? [u, v] : null;
+}
+export function samplePhotoColor(img, [u, v]) {
+  const w = img.naturalWidth,
+    h = img.naturalHeight;
+  if (!w || !h) return null;
+  const side = Math.max(1, Math.round(Math.min(w, h) * 0.018));
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 9;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(
+    img,
+    clamp(u * w - side / 2, 0, w - side),
+    clamp(v * h - side / 2, 0, h - side),
+    side,
+    side,
+    0,
+    0,
+    9,
+    9,
+  );
+  const pixels = ctx.getImageData(0, 0, 9, 9).data,
+    rgb = [[], [], []];
+  for (let i = 0; i < pixels.length; i += 4)
+    if (pixels[i + 3] >= 200) for (let c = 0; c < 3; c++) rgb[c].push(pixels[i + c]);
+  if (rgb[0].length < 41) return null;
+  return '#' + rgb.map((values) => median(values).toString(16).padStart(2, '0')).join('');
+}
 const failed = (reason) => ({ method: 'local-silhouette', status: 'abstained', reason });
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 export function analysePixels(data, w, h) {
@@ -119,13 +157,19 @@ export const STAGES = Object.freeze({
   modelTraining: 'off',
 });
 export function fitFromEvidence(images) {
-  const views = images.filter(
-    (p) =>
-      p.linked !== false &&
-      ['front', 'back'].includes(p.view) &&
-      p.source === 'merchant' &&
-      p.analysis?.status === 'candidate',
-  );
+  const views = images
+    .map((p) => {
+      const guided =
+        p.outline?.view === p.view ? tracedEnvelope(p.outline.points, p.width / p.height) : null;
+      return guided ? { ...p, analysis: { ...p.analysis, ...guided }, guided: true } : p;
+    })
+    .filter(
+      (p) =>
+        p.linked !== false &&
+        ['front', 'back'].includes(p.view) &&
+        p.source === 'merchant' &&
+        p.analysis?.status === 'candidate',
+    );
   if (!views.length) return { status: 'needs-confirmed-frontal-view', fit: null };
   const spread = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
   const first = views[0].analysis.widthProfile;
@@ -140,6 +184,9 @@ export function fitFromEvidence(images) {
       method: 'bounded-frontal-envelope',
       widths: widths.map((v) => clamp(v, 0.35, 1)),
       sources: views.map((v) => v.id),
+      ...(views.some((v) => v.guided)
+        ? { guidedSources: views.filter((v) => v.guided).map((v) => v.id) }
+        : {}),
     },
     color: views[0].analysis.color,
     ranking: views[0].analysis.ranking,
@@ -155,6 +202,7 @@ export function sourceMetadata(p) {
     width: p.width,
     height: p.height,
     analysis: p.analysis || null,
+    ...(p.outline ? { outline: p.outline } : {}),
     linked: Boolean(p.url),
   };
 }
@@ -224,7 +272,12 @@ export async function reconstructDraft(spec, images, { provider = null, signal }
       status: fit.ranking ? 'candidate' : 'insufficient-evidence',
       suggestions: fit.ranking || [],
     },
-    { id: 'silhouette-fit', status: fit.status, sources: fit.fit?.sources || [] },
+    {
+      id: 'silhouette-fit',
+      status: fit.status,
+      sources: fit.fit?.sources || [],
+      guidedSources: fit.fit?.guidedSources || [],
+    },
     {
       id: 'multiview-consistency',
       status:

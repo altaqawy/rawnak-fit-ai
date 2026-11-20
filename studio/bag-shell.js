@@ -1,4 +1,5 @@
 import { blend, clamp, mix, TAU } from './bag-patterns.js';
+import { panelCourses } from './bag-cord.js';
 import { disk, grid, sampled, updateGrid } from './bag-surfaces.js';
 
 const quarter = Math.PI / 4;
@@ -8,7 +9,25 @@ export function buildShell(c) {
   const faces = ['front_panel', 'right_gusset', 'back_panel', 'left_gusset'];
   for (const [i, id] of faces.entries()) {
     const theta = (u) => (i * 2 - 1) * quarter + u * 2 * quarter;
-    sheet(id, id.toUpperCase(), detail, 9, (u, v, o) => surface(theta(u), v, 0, o), m.skin);
+    if (p.family.corded) {
+      const courses = panelCourses(c, i);
+      const shell = mesh(id, 'LAID_CORD_COURSES', courses.geometry, m.cord);
+      if (s.closure === 'drawstring') {
+        const target = panelCourses(c, i, 1).geometry;
+        shell.geometry.morphAttributes.position = [target.attributes.position];
+        shell.geometry.morphAttributes.normal = [target.attributes.normal];
+        shell.updateMorphTargets();
+        c.motions.open.push((n) => {
+          shell.morphTargetInfluences[0] = n * c.limit('closure');
+        });
+        target.dispose();
+      }
+      parts.get(id).geometryConstraints = {
+        pattern: s.style,
+        courseCount: courses.count,
+        cordDiameterMm: s.cordDiameterMm,
+      };
+    } else sheet(id, id.toUpperCase(), detail, 9, (u, v, o) => surface(theta(u), v, 0, o), m.skin);
     // Cut edge and interior shell exist even with the lining removed.
     sheet(
       id,
@@ -34,8 +53,8 @@ export function buildShell(c) {
       'SEAM_' + i,
       12,
       (t, o) => surface(theta(0), t, -thickness * 0.17, o),
-      thickness * 0.49,
-      m.edge,
+      p.family.corded ? (s.cordDiameterMm / 1000) * 0.32 : thickness * 0.49,
+      p.family.corded ? m.skin : m.edge,
     );
     path(
       seamId,
@@ -46,6 +65,37 @@ export function buildShell(c) {
       m.thread,
       true,
     );
+  }
+  if (p.family.bellows && s.reinforced) {
+    for (const [side, sign] of [
+      ['left', -1],
+      ['right', 1],
+    ]) {
+      const id = 'corner_guard_' + side;
+      // A skived leather facing wraps continuously across the panel/gusset seam.
+      const facing = (u, v, o) => {
+        const theta = sign * mix(0.32, 1.4, u);
+        const top = 0.022 + 0.25 * Math.sin(Math.PI * u) ** 1.55;
+        return surface(theta, mix(0.009, top, v), -thickness * 0.93, o);
+      };
+      sheet(id, 'CUT_LEATHER', detail * 2, 4, facing, m.trim, sign < 0);
+      path(id, 'BURNISHED_EDGE', detail * 2, (u, o) => facing(u, 1, o), thickness * 0.4, m.edge);
+      path(
+        id,
+        'INSET_STITCH',
+        detail * 4,
+        (u, o) => {
+          const q = facing(mix(0.035, 0.965, u), 0.9, o);
+          q[0] += sign * thickness * 0.14;
+          q[2] += thickness * 0.14;
+          return q;
+        },
+        thickness * 0.17,
+        m.thread,
+        true,
+      );
+      parts.get(id).connections = ['front_panel', side + '_gusset', 'bottom_panel'];
+    }
   }
   const floor = (id, name, offset, height, mat, down = false) => {
     mesh(
@@ -61,9 +111,15 @@ export function buildShell(c) {
     'piping',
     'BASE_WELT',
     detail * 4,
-    (t, o) => surface(t * TAU, 0.012, -thickness * 0.18, o),
-    thickness * 0.48,
-    m.edge,
+    (t, o) =>
+      surface(
+        t * TAU,
+        p.family.corded ? 0.003 : 0.012,
+        -thickness * (p.family.corded ? 0.5 : 0.18),
+        o,
+      ),
+    p.family.corded ? s.cordDiameterMm * 0.00038 : thickness * 0.48,
+    p.family.corded ? m.skin : m.edge,
   );
   if (s.reinforced) floor('base_insert', 'BASE_INSERT', thickness * 1.1, 0.012, m.trim);
   if (s.lining !== 'none') {
