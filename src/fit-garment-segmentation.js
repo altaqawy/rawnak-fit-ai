@@ -46,7 +46,7 @@ class GarmentSegmenter{
   const model=await mod.ImageSegmenter.createFromOptions(wasm,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',outputCategoryMask:true,outputConfidenceMasks:false});
   return new GarmentSegmenter(model,createCanvas);
  }
- apply(ctx,source,pose,{width,height,color,strength=.9,timestamp}={}){
+ apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null}={}){
   if(!source?.width||!source?.height||!width||!height||!Number.isFinite(timestamp)||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!upperRegion(pose,source.width,source.height))return {ok:false,reason:'اظهر الكتفين والخصر أمام الكاميرا'};
   // Keep model output/readback small while retaining the original frame for compositing.
@@ -64,19 +64,28 @@ class GarmentSegmenter{
   this.mask.width=mw;this.mask.height=mh;
   const mc=this.mask.getContext('2d'),im=mc.createImageData(mw,mh);im.data.set(rgba);mc.putImageData(im,0,0);
   // Blend the requested hue into an original-frame copy, then restrict to the semantic mask.
-  const lw=source.width,lh=source.height;
+  const ratioOut=Math.min(1,640/Math.max(source.width,source.height));
+  const lw=Math.max(1,Math.round(source.width*ratioOut)),lh=Math.max(1,Math.round(source.height*ratioOut));
   if(this.layer.width!==lw)this.layer.width=lw;if(this.layer.height!==lh)this.layer.height=lh;
   const lc=this.layer.getContext('2d');
   lc.globalCompositeOperation='source-over';lc.globalAlpha=1;lc.clearRect(0,0,lw,lh);
-  lc.drawImage(source,0,0,lw,lh);
-  lc.globalCompositeOperation='color';lc.globalAlpha=clamp(Number(strength)||.9,.15,1);
-  lc.fillStyle=color;lc.fillRect(0,0,lw,lh);
+  let panel=null;
+  if(texture){
+   panel=root.RawnakFitProductTransfer?.drawPanel(lc,texture,pose,lw,lh,{strength});
+   if(!panel)return {ok:false,reason:'اظهر الجذع كاملًا وواجه الكاميرا لتجربة النقشة'};
+  }else{
+   lc.drawImage(source,0,0,lw,lh);
+   lc.globalCompositeOperation='color';lc.globalAlpha=clamp(Number(strength)||.9,.15,1);
+   lc.fillStyle=color;lc.fillRect(0,0,lw,lh);
+  }
   lc.globalAlpha=1;lc.globalCompositeOperation='destination-in';lc.imageSmoothingEnabled=false;
   lc.drawImage(this.mask,0,0,lw,lh);
   lc.globalCompositeOperation='source-over';
   const cover=Math.max(width/lw,height/lh),dw=lw*cover,dh=lh*cover;
-  ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
-  return {ok:true,count,mode:'semantic-clothes-mask'};
+  if(panel){
+   ctx.save();try{ctx.globalAlpha=panel.alpha;ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);}finally{ctx.restore();}
+  }else ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
+  return {ok:true,count,mode:panel?'semantic-product-panel':'semantic-clothes-mask'};
  }
  close(){this.model.close();this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
 }
