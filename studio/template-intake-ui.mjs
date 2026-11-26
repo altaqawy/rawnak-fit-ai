@@ -1,5 +1,6 @@
 import {inspectGLB,buildEntry,checksum} from './template-intake.mjs';
 import {ROLES,collectParts,applyPart,makePartPlan,applyPlan} from './template-parts.mjs';
+import {makeDemoBag} from './template-demo.mjs';
 const $=id=>document.getElementById(id);
 let revision=0,checked=null,live=null,parts=[],edits={},activePart=null;
 function say(id,s){$(id).textContent=s;}
@@ -55,8 +56,8 @@ async function preview(data,id,stats){
  initParts(model,stats);
  const frame=()=>{if(live!==session)return;controls.update();renderer.render(scene,camera);session.raf=requestAnimationFrame(frame);};frame();$('empty').hidden=true;
 }
-$('glb').addEventListener('change',async()=>{
- const id=++revision;checked=null;parts=[];edits={};activePart=null;$('parts-editor').hidden=true;cleanup();$('export').disabled=true;$('empty').hidden=false;say('metrics','');say('preview-status','');const f=$('glb').files[0];if(!f)return;
+async function loadTemplate(f){
+ const id=++revision;checked=null;parts=[];edits={};activePart=null;$('parts-editor').hidden=true;cleanup();$('export').disabled=true;$('empty').hidden=false;say('metrics','');say('preview-status','');if(!f)return;
  say('status','جاري تدقيق الملف محليًا…');
  try{
   if(!/\.glb$/i.test(f.name)||f.size>20*1048576)throw Error('اختر GLB أقل من 20 MB');
@@ -67,6 +68,13 @@ $('glb').addEventListener('change',async()=>{
   if(id!==revision)return;
   checked={hash,stats};$('export').disabled=false;say('status','نجح التدقيق الأولي والمعاينة. راجع الحقوق قبل تصدير البيانات.');
  }catch(e){if(id===revision)say('status','رفض الملف: '+e.message);}
+}
+$('glb').addEventListener('change',()=>void loadTemplate($('glb').files[0]));
+$('demo-template').addEventListener('click',async()=>{
+ const request=++revision;$('demo-template').disabled=true;say('status','جاري توليد شنطة اختبار متعددة الأجزاء…');
+ try{const f=await makeDemoBag();if(request!==revision)return;$('glb').value='';$('asset-id').value='rawnak-demo-bag';$('category').value='bag';$('license').value='';$('source').value='';$('confirmed').checked=false;await loadTemplate(f);}
+ catch(e){if(request===revision)say('status','تعذر تجهيز النموذج: '+e.message);}
+ finally{$('demo-template').disabled=false;}
 });
 $('intake').addEventListener('submit',e=>{
  e.preventDefault();if(!checked)return;
