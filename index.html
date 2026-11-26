@@ -9,13 +9,13 @@
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
   </script>
-  <link rel="stylesheet" href="./src/styles.css?v=20261127-clothing-swap-b5">
+  <link rel="stylesheet" href="./src/styles.css?v=20261127-clothing-swap-b6">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.6 · BACKGROUND AI</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.7 · CLOTH MOTION</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -77,6 +77,11 @@
             </div>
             <small id="swap-panel-info" role="status" aria-live="polite">ارفع صورة الجزء الأمامي للقماش أو استخدم العينة.</small>
           </fieldset>
+          <div id="swap-cloth-controls" class="swap-cutout-editor hidden">
+            <label for="swap-cloth-material">حركة القماش التقريبية</label>
+            <select id="swap-cloth-material"><option value="cotton">قطن · حركة متوسطة</option><option value="silk">حرير · أكثر مرونة</option><option value="denim">جينز · حركة محدودة</option><option value="off">بدون تأثير الحركة</option></select>
+            <small>تأثير مرئي تجريبي داخل حدود الملابس الموجودة، وليس محاكاة فيزيائية معتمدة للخامة.</small>
+          </div>
           <label for="swap-backend">معالجة الذكاء الاصطناعي</label>
           <select id="swap-backend"><option value="cpu">خيط منفصل · CPU (افتراضي)</option><option value="gpu">تجربة GPU · يرجع إلى CPU إذا تعذر التشغيل</option></select>
           <small id="swap-runtime" role="status">محرك الفصل غير متصل</small>
@@ -120,10 +125,11 @@
 <script defer src="./src/fit-3d-pose.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-garment-motion.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-arm-occlusion.js?v=20261118-alpha110"></script>
-<script defer src="./src/fit-clothing-swap.js?v=20261127-clothing-swap-b5"></script>
-<script defer src="./src/fit-product-transfer.js?v=20261127-clothing-swap-b5"></script>
-<script defer src="./src/fit-garment-cutout.js?v=20261127-clothing-swap-b5"></script>
-<script defer src="./src/fit-garment-segmentation.js?v=20261127-clothing-swap-b5"></script>
-<script defer src="./src/fit-segment-worker-client.js?v=20261127-clothing-swap-b5"></script>
-<script type="module" src="./src/app.js?v=20261127-clothing-swap-b5"></script>
+<script defer src="./src/fit-clothing-swap.js?v=20261127-clothing-swap-b6"></script>
+<script defer src="./src/fit-product-transfer.js?v=20261127-clothing-swap-b6"></script>
+<script defer src="./src/fit-cloth-motion-2d.js?v=20261127-clothing-swap-b6"></script>
+<script defer src="./src/fit-garment-cutout.js?v=20261127-clothing-swap-b6"></script>
+<script defer src="./src/fit-garment-segmentation.js?v=20261127-clothing-swap-b6"></script>
+<script defer src="./src/fit-segment-worker-client.js?v=20261127-clothing-swap-b6"></script>
+<script type="module" src="./src/app.js?v=20261127-clothing-swap-b6"></script>
 </body></html>
