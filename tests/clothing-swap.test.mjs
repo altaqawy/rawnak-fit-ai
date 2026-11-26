@@ -64,7 +64,7 @@ test('UI exposes same-type opt-in without modifying bag category',()=>{
   assert.ok(html.includes('fit-clothing-swap.js'));
   assert.ok(html.indexOf('fit-clothing-swap.js')<html.indexOf('src/app.js'));
   assert.ok(app.includes("['tee','jacket'].includes(state.selected.id)"));
-  assert.ok(app.includes("window.RawnakFitClothingSwap?.tintGarment"));
+  assert.ok(app.includes("state.segmenter.apply(ctx,sampleCanvas"));
   assert.ok(app.includes("if (nextMode === 'fast' && state.assetMode === 'swap')"));
   assert.ok(app.includes("state.assetMode = '3d'"));
 });
