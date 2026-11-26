@@ -15,14 +15,19 @@ HERE = Path(__file__).resolve().parent
 MAX_IMAGE = 8 * 1024 * 1024
 MAX_REQUEST = 23 * 1024 * 1024
 CATEGORIES = frozenset(("tops", "bottoms", "one-pieces"))
+PHOTO_TYPES = frozenset(("flat-lay", "model"))
+REQUIRED_WEIGHTS = ("model.safetensors", "dwpose/yolox_l.onnx", "dwpose/dw-ll_ucoco_384.onnx")
 TOKEN = secrets.token_urlsafe(32)
 
 def parse_request(payload):
-    if not isinstance(payload, dict) or set(payload) != {"person", "garment", "category", "consent"}:
+    if not isinstance(payload, dict) or set(payload) != {"person", "garment", "category", "consent", "photo_type"}:
         raise ValueError("Invalid request fields")
     if payload["consent"] is not True or not isinstance(payload["category"], str) or payload["category"] not in CATEGORIES:
         raise ValueError("Consent and valid category required")
-    return payload["category"], decode_image(payload["person"]), decode_image(payload["garment"])
+    photo_type = payload["photo_type"]
+    if not isinstance(photo_type, str) or photo_type not in PHOTO_TYPES:
+        raise ValueError("Invalid garment photo type")
+    return payload["category"], decode_image(payload["person"]), decode_image(payload["garment"]), photo_type
 
 def decode_image(encoded):
     if not isinstance(encoded, str) or len(encoded) > (MAX_IMAGE + 2) // 3 * 4:
@@ -52,12 +57,14 @@ class ResearchEngine:
         self.factory = factory
         self.pipeline = None
         self.lock = threading.Lock()
+    def missing_weights(self):
+        return [name for name in REQUIRED_WEIGHTS if not (self.weights_dir / name).is_file() or (self.weights_dir / name).stat().st_size == 0]
     def available(self):
-        return os.environ.get("RAWNAK_RESEARCH_ONLY") == "1" and (self.weights_dir / "model.safetensors").is_file()
-    def generate(self, person, garment, category):
+        return os.environ.get("RAWNAK_RESEARCH_ONLY") == "1" and not self.missing_weights()
+    def generate(self, person, garment, category, photo_type="flat-lay"):
         if not self.available():
             raise RuntimeError("Research engine disabled or model weights missing")
-        if category not in CATEGORIES:
+        if category not in CATEGORIES or photo_type not in PHOTO_TYPES:
             raise ValueError("Unsupported garment category")
         if not self.lock.acquire(blocking=False):
             raise BlockingIOError("One generation is already running")
@@ -67,7 +74,7 @@ class ResearchEngine:
                     from fashn_vton import TryOnPipeline
                     self.factory = TryOnPipeline
                 self.pipeline = self.factory(weights_dir=str(self.weights_dir))
-            result = self.pipeline(person_image=person, garment_image=garment, category=category)
+            result = self.pipeline(person_image=person, garment_image=garment, category=category, garment_photo_type=photo_type)
             out = io.BytesIO()
             result.images[0].convert("RGB").save(out, format="PNG")
             return out.getvalue()
@@ -98,7 +105,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(403, {"error": "Local access only"})
         route = urlsplit(self.path).path
         if route == "/status":
-            return self.send_json(200, {"ready": ENGINE.available(), "token": TOKEN, "mode": "research-only", "engine": "FASHN VTON 1.5"})
+            return self.send_json(200, {"ready": ENGINE.available(), "token": TOKEN, "mode": "research-only", "engine": "FASHN VTON 1.5", "missing_weights": ENGINE.missing_weights()})
         files = {"/": ("index.html", "text/html; charset=utf-8"), "/app.js": ("app.js", "text/javascript; charset=utf-8"), "/style.css": ("style.css", "text/css; charset=utf-8")}
         if route not in files:
             return self.send_json(404, {"error": "Not found"})
@@ -123,8 +130,8 @@ class Handler(BaseHTTPRequestHandler):
             if len(body) != size:
                 raise ValueError("Incomplete request")
             payload = json.loads(body)
-            category, person, garment = parse_request(payload)
-            result = ENGINE.generate(person, garment, category)
+            category, person, garment, photo_type = parse_request(payload)
+            result = ENGINE.generate(person, garment, category, photo_type)
             return self.send_bytes(200, result, "image/png")
         except (ValueError, TypeError, TimeoutError):
             return self.send_json(400, {"error": "Invalid images or request"})
