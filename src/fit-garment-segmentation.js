@@ -21,15 +21,31 @@ function upperRegion(pose,w,h){
  const y1=bottom+span*.03;
  return {left:clamp(left,0,w),right:clamp(right,0,w),top:clamp(y0,0,h),bottom:clamp(y1,0,h)};
 }
-function buildAlpha(categories,w,h,pose){
+function sleeveCorridors(pose,w,h){
+ const point=i=>({x:pose[i].x*w,y:pose[i].y*h});
+ if(![11,12].every(i=>visible(pose[i])))return [];
+ const a=point(11),b=point(12),radius=Math.hypot(a.x-b.x,a.y-b.y)*.18;
+ const segments=[];
+ for(const chain of [[11,13,15],[12,14,16]])for(let i=0;i<2;i++){
+  const u=chain[i],v=chain[i+1];if(!visible(pose[u])||!visible(pose[v]))continue;
+  const p=point(u),q=point(v),dx=q.x-p.x,dy=q.y-p.y,d2=dx*dx+dy*dy;
+  if(d2<1)continue;segments.push({p,dx,dy,d2,r2:radius*radius});
+ }
+ return segments;
+}
+function nearSleeve(x,y,segments){
+ return segments.some(({p,dx,dy,d2,r2})=>{const t=clamp(((x-p.x)*dx+(y-p.y)*dy)/d2,0,1);return (x-p.x-t*dx)**2+(y-p.y-t*dy)**2<=r2;});
+}
+function buildAlpha(categories,w,h,pose,{longSleeves=false}={}){
  if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||categories?.length!==w*h)return null;
  const roi=upperRegion(pose,w,h);if(!roi)return null;
- const rgba=new Uint8ClampedArray(w*h*4);
+ const rgba=new Uint8ClampedArray(w*h*4),corridors=longSleeves?sleeveCorridors(pose,w,h):[];
  let count=0;
- for(let y=Math.ceil(roi.top);y<Math.floor(roi.bottom);y++){
-  for(let x=Math.ceil(roi.left);x<Math.floor(roi.right);x++){
+ for(let y=longSleeves?1:Math.ceil(roi.top);y<(longSleeves?h-1:Math.floor(roi.bottom));y++){
+  for(let x=longSleeves?1:Math.ceil(roi.left);x<(longSleeves?w-1:Math.floor(roi.right));x++){
    const i=y*w+x;
    if(categories[i]!==CLOTHES)continue;
+   if(longSleeves&&!(x>=roi.left&&x<roi.right&&y>=roi.top&&y<roi.bottom)&&!nearSleeve(x,y,corridors))continue;
    // Conservative 1-pixel erosion removes ambiguous boundaries next to skin/hair.
    if(x===0||y===0||x===w-1||y===h-1||categories[i-1]!==CLOTHES||categories[i+1]!==CLOTHES||categories[i-w]!==CLOTHES||categories[i+w]!==CLOTHES)continue;
    rgba[i*4+3]=255;count++;
@@ -46,23 +62,25 @@ class GarmentSegmenter{
   const model=await mod.ImageSegmenter.createFromOptions(wasm,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',outputCategoryMask:true,outputConfidenceMasks:false});
   return new GarmentSegmenter(model,createCanvas);
  }
- apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null}={}){
+ apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null,cutout=null}={}){
   if(!source?.width||!source?.height||!width||!height||!Number.isFinite(timestamp)||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!upperRegion(pose,source.width,source.height))return {ok:false,reason:'اظهر الكتفين والخصر أمام الكاميرا'};
   // Keep model output/readback small while retaining the original frame for compositing.
   const ratio=Math.min(1,320/Math.max(source.width,source.height));
   const iw=Math.max(1,Math.round(source.width*ratio)),ih=Math.max(1,Math.round(source.height*ratio));
-  this.input.width=iw;this.input.height=ih;
+  if(this.input.width!==iw)this.input.width=iw;if(this.input.height!==ih)this.input.height=ih;
   this.input.getContext('2d').drawImage(source,0,0,iw,ih);
   let result=null;
   this.model.segmentForVideo(this.input,timestamp,r=>{
    const m=r.categoryMask;
-   if(m)result=buildAlpha(m.getAsUint8Array(),m.width,m.height,pose);
+   if(m)result=buildAlpha(m.getAsUint8Array(),m.width,m.height,pose,{longSleeves:cutout?.sleeves==='long'});
   });
   if(!result)return {ok:false,reason:'مش قادر أحدد منطقة الملابس بوضوح — واجه الكاميرا في إضاءة جيدة'};
   const {rgba,width:mw,height:mh,count}=result;
-  this.mask.width=mw;this.mask.height=mh;
-  const mc=this.mask.getContext('2d'),im=mc.createImageData(mw,mh);im.data.set(rgba);mc.putImageData(im,0,0);
+  if(this.mask.width!==mw)this.mask.width=mw;if(this.mask.height!==mh)this.mask.height=mh;
+  const mc=this.mask.getContext('2d');
+  if(!this.maskImage||this.maskImage.data.length!==rgba.length||this.maskW!==mw){this.maskImage=mc.createImageData(mw,mh);this.maskW=mw;}
+  this.maskImage.data.set(rgba);mc.putImageData(this.maskImage,0,0);
   // Blend the requested hue into an original-frame copy, then restrict to the semantic mask.
   const ratioOut=Math.min(1,640/Math.max(source.width,source.height));
   const lw=Math.max(1,Math.round(source.width*ratioOut)),lh=Math.max(1,Math.round(source.height*ratioOut));
@@ -70,7 +88,10 @@ class GarmentSegmenter{
   const lc=this.layer.getContext('2d');
   lc.globalCompositeOperation='source-over';lc.globalAlpha=1;lc.clearRect(0,0,lw,lh);
   let panel=null;
-  if(texture){
+  if(cutout){
+   panel=root.RawnakFitGarmentCutout?.drawCutout(lc,cutout,pose,lw,lh,{strength});
+   if(!panel)return {ok:false,reason:'اظهر الكتفين والذراعين والجذع، وتأكد من ضبط نقاط صورة المنتج'};
+  }else if(texture){
    panel=root.RawnakFitProductTransfer?.drawPanel(lc,texture,pose,lw,lh,{strength});
    if(!panel)return {ok:false,reason:'اظهر الجذع كاملًا وواجه الكاميرا لتجربة النقشة'};
   }else{
@@ -85,9 +106,9 @@ class GarmentSegmenter{
   if(panel){
    ctx.save();try{ctx.globalAlpha=panel.alpha;ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);}finally{ctx.restore();}
   }else ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
-  return {ok:true,count,mode:panel?'semantic-product-panel':'semantic-clothes-mask'};
+  return {ok:true,count,mode:cutout?'semantic-garment-cutout':panel?'semantic-product-panel':'semantic-clothes-mask'};
  }
- close(){this.model.close();this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
+ close(){this.model.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
 }
 root.RawnakFitGarmentSegmentation={GarmentSegmenter,buildAlpha,upperRegion,MODEL_URL,CLOTHES};
 })(typeof window!=='undefined'?window:globalThis);
