@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.27.SWAP-B3';
+  const BUILD_ID = '2026.11.27.SWAP-B4';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: ''
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
   };
 
   if (isEmbedded) {
@@ -242,6 +242,25 @@
       productsNode.append(button);
     }
   };
+  function updateCutoutEditor(asset,force=false){
+    const wrap=$('#swap-cutout-editor'),editor=$('#swap-cutout-preview'),select=$('#swap-cutout-anchor');
+    if(wrap)wrap.classList.toggle('hidden',!asset);
+    if(!asset||!editor||!select){state.cutoutEditorAsset=null;state.cutoutEditorFit=null;return;}
+    if(!force&&state.cutoutEditorAsset===asset&&state.cutoutEditorAnchor===select.value)return;
+    const ctx=editor.getContext('2d');if(!ctx)return;
+    const w=editor.width,h=editor.height,tex=asset.canvas;
+    const scale=Math.min((w-24)/tex.width,(h-24)/tex.height);
+    const dw=tex.width*scale,dh=tex.height*scale,x=(w-dw)/2,y=(h-dh)/2;
+    state.cutoutEditorAsset=asset;state.cutoutEditorAnchor=select.value;state.cutoutEditorFit={x,y,w:dw,h:dh};
+    ctx.clearRect(0,0,w,h);ctx.fillStyle='#17222e';ctx.fillRect(0,0,w,h);
+    ctx.drawImage(tex,x,y,dw,dh);
+    for(const [key,p] of Object.entries(asset.anchors)){
+      const active=key===select.value;
+      ctx.beginPath();ctx.arc(x+p.x*dw,y+p.y*dh,active?5:3,0,2*Math.PI);
+      ctx.fillStyle=active?'#f2c46b':'#64e0c2';ctx.fill();
+      ctx.strokeStyle='#081017';ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
   const updateUI = () => {
     const live = Boolean(state.stream);
     $('#stage-placeholder').classList.toggle('hidden', live);
@@ -281,8 +300,9 @@
     }
     if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
     const panel=state.swapPanels[state.selected.id];
+    updateCutoutEditor(panel?.asset);
     const panelMode=$('#swap-panel-mode'),panelDemo=$('#swap-panel-demo'),panelInfo=$('#swap-panel-info');
-    if(panelMode){panelMode.disabled=!panel;panelMode.textContent=state.swapPanelMode&&panel?'✓ نقشة المنتج مفعّلة':'تطبيق نقشة المنتج';panelMode.setAttribute('aria-pressed',String(Boolean(state.swapPanelMode&&panel)));}
+    if(panelMode){panelMode.disabled=!panel;panelMode.textContent=state.swapPanelMode&&panel?(panel.asset?'✓ شكل القطعة مفعّل':'✓ نقشة المنتج مفعّلة'):'تطبيق صورة المنتج';panelMode.setAttribute('aria-pressed',String(Boolean(state.swapPanelMode&&panel)));}
     if(panelDemo)panelDemo.classList.toggle('hidden',state.selected.id!=='tee');
     if(panelInfo)panelInfo.textContent=state.swapPanelMessage||(panel?'الصورة جاهزة محليًا · '+panel.name:'ارفع صورة الجزء الأمامي للقماش أو استخدم عينة التيشيرت.');
 
@@ -290,7 +310,7 @@
     if(swapStatus) swapStatus.textContent=swapOn
       ? (state.segmentStatus==='loading'?'جاري تحميل نموذج فصل الملابس… الكاميرا مستمرة':
          state.segmentStatus==='error'?'تعذر فصل الملابس. اضغط إعادة التتبع أو ارجع إلى 3D':
-         state.segmentStatus==='ready'?(state.swapPanelMode&&panel?'AI MASK + PRODUCT PANEL · نقل نقشة الجزء الأمامي':'AI MASK · تغيير اللون فقط'):
+         state.segmentStatus==='ready'?(state.swapPanelMode&&panel?(panel.asset?'AI MASK + ARTICULATED CUTOUT · معاينة الشكل والأكمام':'AI MASK + PRODUCT PANEL · نقل نقشة الجزء الأمامي'):'AI MASK · تغيير اللون فقط'):
          'افتح الكاميرا لبدء فصل الملابس')
       : 'وضع AI تجريبي لنقل اللون أو النقشة. يفضل لبس قطعة من نفس النوع.';
     const garmentControls=$('#garment-controls');
@@ -801,7 +821,8 @@
         try{
           const output=state.segmenter.apply(ctx,sampleCanvas,state.landmarks,{
             width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,
-            texture:state.swapPanelMode?(state.swapPanels[state.selected.id]?.canvas||null):null
+            texture:state.swapPanelMode&&!state.swapPanels[state.selected.id]?.asset?(state.swapPanels[state.selected.id]?.canvas||null):null,
+            cutout:state.swapPanelMode?(state.swapPanels[state.selected.id]?.asset||null):null
           });
           state.fitHint=output.ok?'':output.reason;
         }catch(error){
@@ -879,7 +900,8 @@
         !video.videoWidth || !video.videoHeight || !sampleContext ||
         frameTime - state.lastInference < SYNC_INTERVAL_MS) return false;
     // Semantic inference is opt-in and slower; never reuse a mask from an older image.
-    if(state.assetMode==='swap'&&(!state.segmenter||frameTime-state.lastInference<100))return false;
+    const swapInterval=Math.max(100,Math.min(300,Math.ceil((state.processingMs||0)*1.8)));
+    if(state.assetMode==='swap'&&(!state.segmenter||frameTime-state.lastInference<swapInterval))return false;
     // Avoid recalculating identical camera frames. The camera timestamp is media time.
     if (video.currentTime === state.lastVideoTime) return false;
     state.lastVideoTime = video.currentTime;
@@ -1008,7 +1030,7 @@
     state.syncFrameReady=false;state.lastInference=0;state.lastVideoTime=-1;state.three?.clear();
     if(state.stream)void ensureSegmenter();updatePhotoControl();updateUI();
   }
-  async function loadProductPanel(source,{centralCrop=false,name='صورة المنتج'}={}){
+  async function loadProductPanel(source,{centralCrop=false,cutoutSleeves=null,name='صورة المنتج'}={}){
     const item=state.selected.id;if(!['tee','jacket'].includes(item))return;
     const request=++state.swapPanelRequest;
     state.swapPanelMessage='جاري تجهيز الصورة محليًا…';updateUI();
@@ -1022,10 +1044,12 @@
       image=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(Error('تعذر قراءة صورة المنتج'));i.src=url;});
       if(request!==state.swapPanelRequest||item!==state.selected.id)return;
       const engine=window.RawnakFitProductTransfer;if(!engine)throw Error('محرك نقل النقشة غير متاح');
-      const panel=engine.preparePanel(image,{centralCrop});
+      const asset=cutoutSleeves?window.RawnakFitGarmentCutout?.prepareCutout(image,{sleeves:cutoutSleeves}):null;
+      if(cutoutSleeves&&!asset)throw Error('محرك شكل القطعة غير متاح');
+      const panel=asset?.canvas||engine.preparePanel(image,{centralCrop});
       const previous=state.swapPanels[item]?.canvas;if(previous){previous.width=1;previous.height=1;}
-      state.swapPanels[item]={canvas:panel,name:String(name).slice(0,80)};
-      state.swapPanelMessage='الصورة جاهزة · معاينة تقريبية للجزء الأمامي فقط';
+      state.swapPanels[item]={canvas:panel,asset,name:String(name).slice(0,80)};
+      state.swapPanelMessage=asset?'الصورة جاهزة · اضبط نقاط الياقة والكتفين والأكمام عند الحاجة':'الصورة جاهزة · معاينة تقريبية للجزء الأمامي فقط';
       activatePanel();
     }catch(error){
       if(request===state.swapPanelRequest){state.swapPanelMessage=error?.message||'تعذر تجهيز النقشة';updateUI();}
@@ -1033,11 +1057,33 @@
   }
   $('#swap-panel-upload')?.addEventListener('change',event=>{
     const file=event.target.files?.[0];if(!file)return;
-    const centralCrop=$('#swap-panel-crop')?.value==='center';
-    void loadProductPanel(file,{centralCrop,name:file.name});event.target.value='';
+    const kind=$('#swap-panel-crop')?.value;
+    const cutoutSleeves=kind==='cutout-long'?'long':kind==='cutout-short'?'short':null;
+    void loadProductPanel(file,{centralCrop:kind==='center',cutoutSleeves,name:file.name});event.target.value='';
   });
   $('#swap-panel-demo')?.addEventListener('click',()=>{
-    if(state.selected.id==='tee')void loadProductPanel('./demo/assets/tshirt-cutout.webp',{centralCrop:true,name:'عينة تيشيرت تجريبية'});
+    if(state.selected.id==='tee'){
+      const kind=$('#swap-panel-crop')?.value,full=kind==='cutout-short'||kind==='cutout-long';
+      void loadProductPanel('./demo/assets/tshirt-cutout.webp',{centralCrop:!full,cutoutSleeves:full?'short':null,name:'عينة تيشيرت تجريبية'});
+    }
+  });
+  $('#swap-cutout-anchor')?.addEventListener('change',()=>updateCutoutEditor(state.swapPanels[state.selected.id]?.asset,true));
+  $('#swap-cutout-preview')?.addEventListener('click',event=>{
+    const asset=state.swapPanels[state.selected.id]?.asset,editor=$('#swap-cutout-preview'),key=$('#swap-cutout-anchor')?.value,fit=state.cutoutEditorFit;
+    if(!asset||!editor||!key||!fit||!Object.hasOwn(asset.anchors,key))return;
+    const rect=editor.getBoundingClientRect();if(!rect.width||!rect.height)return;
+    const x=((event.clientX-rect.left)*editor.width/rect.width-fit.x)/fit.w;
+    const y=((event.clientY-rect.top)*editor.height/rect.height-fit.y)/fit.h;
+    const proposed={...asset.anchors,[key]:{x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))}};
+    if(!window.RawnakFitGarmentCutout?.validAnchors(proposed)){state.swapPanelMessage='النقطة خارج ترتيب القطعة الصحيح؛ اختر موضعًا آخر';updateUI();return;}
+    asset.anchors=proposed;state.swapPanelMessage='تم تحديث نقطة شكل القطعة';state.syncFrameReady=false;state.lastVideoTime=-1;
+    updateCutoutEditor(asset,true);updateUI();
+  });
+  $('#swap-cutout-reset')?.addEventListener('click',()=>{
+    const asset=state.swapPanels[state.selected.id]?.asset;if(!asset)return;
+    asset.anchors=window.RawnakFitGarmentCutout.defaultAnchors(asset.sleeves);
+    state.swapPanelMessage='تمت إعادة النقاط الافتراضية';state.syncFrameReady=false;state.lastVideoTime=-1;
+    updateCutoutEditor(asset,true);updateUI();
   });
   $('#swap-panel-mode')?.addEventListener('click',()=>{
     if(!state.swapPanels[state.selected.id])return;
