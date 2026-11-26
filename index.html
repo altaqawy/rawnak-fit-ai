@@ -9,13 +9,13 @@
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
   </script>
-  <link rel="stylesheet" href="./src/styles.css?v=20261127-clothing-swap-b3">
+  <link rel="stylesheet" href="./src/styles.css?v=20261127-clothing-swap-b4">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.4 · PRODUCT TEXTURE TRANSFER</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.5 · ARTICULATED GARMENT PREVIEW</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -47,7 +47,7 @@
           <label><input id="arm-occlusion" type="checkbox" checked> إظهار الذراع أمام القماش <span>في الوضع المتزامن فقط · تقريبي</span></label>
         </div>
         <div id="clothing-swap-controls" class="clothing-swap-controls hidden" role="group" aria-label="تجربة تغيير لون الملابس الموجودة">
-          <div><strong>AI SEGMENTATION · PRODUCT TEXTURE TRANSFER / BETA</strong><small>ارتدي تيشيرت مع تيشيرت أو جاكيت مع جاكيت، وواجه الكاميرا. النموذج يعزل الملابس ويطبّق لونًا أو ينقل النقشة الأمامية مع حركة الجذع. لا يغيّر القصة أو المقاس.</small></div>
+          <div><strong>AI SEGMENTATION · ARTICULATED GARMENT / BETA</strong><small>ارتدي تيشيرت مع تيشيرت أو جاكيت مع جاكيت، وواجه الكاميرا. النموذج يعزل الملابس وينقل اللون أو النقشة أو صورة قطعة شفافة متتبعة للكتفين والأكمام. المعاينة أمامية تقريبية وليست قياسًا فعليًا.</small></div>
           <div class="clothing-swap-actions">
             <button id="swap-toggle" class="btn" type="button" aria-pressed="false">جرّب المنتج على لبسك</button>
             <button id="swap-back" class="btn ghost hidden" type="button">العودة لمجسم 3D</button>
@@ -56,13 +56,28 @@
           <input id="swap-strength" type="range" min="40" max="100" step="10" value="90">
           <fieldset class="swap-panel-inputs"><legend>صورة المنتج / PRODUCT PANEL</legend>
             <label for="swap-panel-crop">نوع الصورة</label>
-            <select id="swap-panel-crop"><option value="panel">قصاصة أمامية للقماش فقط (أفضل)</option><option value="center">صورة أمامية كاملة — قص المنتصف تلقائيًا</option></select>
+            <select id="swap-panel-crop"><option value="panel">قصاصة أمامية للقماش فقط (أفضل)</option><option value="center">صورة أمامية كاملة — قص المنتصف تلقائيًا</option><option value="cutout-short">شكل القطعة الكامل · أكمام قصيرة · خلفية شفافة</option><option value="cutout-long">شكل القطعة الكامل · أكمام طويلة · خلفية شفافة</option></select>
             <label for="swap-panel-upload">اختيار صورة من جهازك · لا تُرفع للخادم</label>
             <input id="swap-panel-upload" type="file" accept="image/png,image/jpeg,image/webp">
-            <div class="clothing-swap-actions"><button id="swap-panel-demo" class="btn ghost" type="button">عينة تيشيرت</button><button id="swap-panel-mode" class="btn" type="button" aria-pressed="false" disabled>تطبيق نقشة المنتج</button><button id="swap-panel-clear" class="btn ghost" type="button">حذف الصورة</button></div>
+            <div class="clothing-swap-actions"><button id="swap-panel-demo" class="btn ghost" type="button">عينة تيشيرت</button><button id="swap-panel-mode" class="btn" type="button" aria-pressed="false" disabled>تطبيق صورة المنتج</button><button id="swap-panel-clear" class="btn ghost" type="button">حذف الصورة</button></div>
+            <div id="swap-cutout-editor" class="swap-cutout-editor hidden">
+              <strong>معايرة شكل المنتج / GARMENT ANCHORS</strong>
+              <small>اختر نقطة ثم اضغط مكانها على صورة القطعة. النقاط الافتراضية تقريبية؛ اليسار واليمين هنا حسب الصورة نفسها.</small>
+              <label for="swap-cutout-anchor">نقطة المعايرة</label>
+              <select id="swap-cutout-anchor">
+                <option value="ls">الكتف الأيسر</option><option value="neck">منتصف الياقة أعلى فتحة الرقبة</option><option value="rs">الكتف الأيمن</option>
+                <option value="la">أسفل الإبط الأيسر</option><option value="ra">أسفل الإبط الأيمن</option>
+                <option value="lh">نهاية الجذع يسار</option><option value="rh">نهاية الجذع يمين</option>
+                <option value="lco">الطرف الخارجي للكم الأيسر</option><option value="lci">الطرف الداخلي للكم الأيسر</option>
+                <option value="rco">الطرف الخارجي للكم الأيمن</option><option value="rci">الطرف الداخلي للكم الأيمن</option>
+              </select>
+              <canvas id="swap-cutout-preview" width="360" height="300" aria-label="معايرة نقاط صورة الملابس"></canvas>
+              <button id="swap-cutout-reset" class="btn ghost" type="button">إعادة النقاط الافتراضية</button>
+              <small>ارتدِ قطعة مشابهة في طول الأكمام والشكل. لا يمكن إزالة القماش الموجود أو كشف مناطق الجلد المخفية.</small>
+            </div>
             <small id="swap-panel-info" role="status" aria-live="polite">ارفع صورة الجزء الأمامي للقماش أو استخدم العينة.</small>
           </fieldset>
-          <small id="swap-status" role="status" aria-live="polite">معاينة أمامية تجريبية؛ لا تعيد تشكيل الملابس.</small>
+          <small id="swap-status" role="status" aria-live="polite">معاينة أمامية تجريبية؛ الشكل محدود بحدود الملابس الموجودة.</small>
         </div>
         <div id="demo-asset-switch" class="demo-asset-switch hidden" role="group" aria-label="اختيار أسلوب عرض المنتج">
           <div><strong>LIVE 3D MESH · THREE.JS</strong><small id="asset-status">مجسم 3D هندسي مع إضاءة وعمق — مش نسخة دقيقة من المنتج</small></div>
@@ -102,8 +117,9 @@
 <script defer src="./src/fit-3d-pose.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-garment-motion.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-arm-occlusion.js?v=20261118-alpha110"></script>
-<script defer src="./src/fit-clothing-swap.js?v=20261127-clothing-swap-b3"></script>
-<script defer src="./src/fit-product-transfer.js?v=20261127-clothing-swap-b3"></script>
-<script defer src="./src/fit-garment-segmentation.js?v=20261127-clothing-swap-b3"></script>
-<script type="module" src="./src/app.js?v=20261127-clothing-swap-b3"></script>
+<script defer src="./src/fit-clothing-swap.js?v=20261127-clothing-swap-b4"></script>
+<script defer src="./src/fit-product-transfer.js?v=20261127-clothing-swap-b4"></script>
+<script defer src="./src/fit-garment-cutout.js?v=20261127-clothing-swap-b4"></script>
+<script defer src="./src/fit-garment-segmentation.js?v=20261127-clothing-swap-b4"></script>
+<script type="module" src="./src/app.js?v=20261127-clothing-swap-b4"></script>
 </body></html>
