@@ -56,13 +56,13 @@ function buildAlpha(categories,w,h,pose,{longSleeves=false}={}){
 }
 class GarmentSegmenter{
  constructor(model,createCanvas){
-  this.model=model;this.input=createCanvas();this.mask=createCanvas();this.layer=createCanvas();
+  this.model=model;this.input=createCanvas();this.mask=createCanvas();this.layer=createCanvas();this.cloth=null;this.clothAsset=null;
  }
  static async create(mod,wasm,createCanvas=()=>document.createElement('canvas')){
   const model=await mod.ImageSegmenter.createFromOptions(wasm,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',outputCategoryMask:true,outputConfidenceMasks:false});
   return new GarmentSegmenter(model,createCanvas);
  }
- apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null,cutout=null}={}){
+ apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null,cutout=null,clothMaterial='off'}={}){
   if(!source?.width||!source?.height||!width||!height||!Number.isFinite(timestamp)||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!upperRegion(pose,source.width,source.height))return {ok:false,reason:'اظهر الكتفين والخصر أمام الكاميرا'};
   // Keep model output/readback small while retaining the original frame for compositing.
@@ -76,15 +76,16 @@ class GarmentSegmenter{
    const m=r.categoryMask;
    if(m)result=buildAlpha(m.getAsUint8Array(),m.width,m.height,pose,{longSleeves:cutout?.sleeves==='long'});
   });
-  return this.compose(ctx,source,pose,{width,height,color,strength,texture,cutout},result);
+  return this.compose(ctx,source,pose,{width,height,color,strength,texture,cutout,timestamp,clothMaterial},result);
  }
  applyMask(ctx,source,pose,options,mask){
   const result=mask?.labels?buildAlpha(mask.labels,mask.width,mask.height,pose,{longSleeves:options?.cutout?.sleeves==='long'}):null;
   return this.compose(ctx,source,pose,options,result);
  }
- compose(ctx,source,pose,{width,height,color,strength=.9,texture=null,cutout=null}={},result){
+ resetMotion(){this.cloth?.reset();this.clothAsset=null;}
+ compose(ctx,source,pose,{width,height,color,strength=.9,texture=null,cutout=null,timestamp,clothMaterial='off'}={},result){
   if(!source?.width||!source?.height||!width||!height||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
-  if(!result)return {ok:false,reason:'مش قادر أحدد منطقة الملابس بوضوح — واجه الكاميرا في إضاءة جيدة'};
+  if(!result){this.resetMotion();return {ok:false,reason:'مش قادر أحدد منطقة الملابس بوضوح — واجه الكاميرا في إضاءة جيدة'};}
   const {rgba,width:mw,height:mh,count}=result;
   if(this.mask.width!==mw)this.mask.width=mw;if(this.mask.height!==mh)this.mask.height=mh;
   const mc=this.mask.getContext('2d');
@@ -98,13 +99,19 @@ class GarmentSegmenter{
   lc.globalCompositeOperation='source-over';lc.globalAlpha=1;lc.clearRect(0,0,lw,lh);
   let panel=null;
   if(cutout){
-   panel=root.RawnakFitGarmentCutout?.drawCutout(lc,cutout,pose,lw,lh,{strength});
-   if(!panel)return {ok:false,reason:'اظهر الكتفين والذراعين والجذع، وتأكد من ضبط نقاط صورة المنتج'};
+   let clothOffset=null;
+   if(clothMaterial!=='off'&&root.RawnakFitClothMotion){
+    if(!this.cloth)this.cloth=new root.RawnakFitClothMotion.ClothSpring();
+    if(this.clothAsset!==cutout){this.cloth.reset();this.clothAsset=cutout;}
+    clothOffset=this.cloth.update(pose,timestamp,clothMaterial);
+   }else this.resetMotion();
+   panel=root.RawnakFitGarmentCutout?.drawCutout(lc,cutout,pose,lw,lh,{strength,clothOffset});
+   if(!panel){this.resetMotion();return {ok:false,reason:'اظهر الكتفين والذراعين والجذع، وتأكد من ضبط نقاط صورة المنتج'};}
   }else if(texture){
-   panel=root.RawnakFitProductTransfer?.drawPanel(lc,texture,pose,lw,lh,{strength});
+   this.resetMotion();panel=root.RawnakFitProductTransfer?.drawPanel(lc,texture,pose,lw,lh,{strength});
    if(!panel)return {ok:false,reason:'اظهر الجذع كاملًا وواجه الكاميرا لتجربة النقشة'};
   }else{
-   lc.drawImage(source,0,0,lw,lh);
+   this.resetMotion();lc.drawImage(source,0,0,lw,lh);
    lc.globalCompositeOperation='color';lc.globalAlpha=clamp(Number(strength)||.9,.15,1);
    lc.fillStyle=color;lc.fillRect(0,0,lw,lh);
   }
@@ -117,7 +124,7 @@ class GarmentSegmenter{
   }else ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
   return {ok:true,count,mode:cutout?'semantic-garment-cutout':panel?'semantic-product-panel':'semantic-clothes-mask'};
  }
- close(){this.model?.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
+ close(){this.resetMotion();this.cloth=null;this.model?.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
 }
 root.RawnakFitGarmentSegmentation={GarmentSegmenter,buildAlpha,upperRegion,MODEL_URL,CLOTHES};
 })(typeof window!=='undefined'?window:globalThis);
