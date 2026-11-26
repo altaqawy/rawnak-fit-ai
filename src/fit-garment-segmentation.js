@@ -56,13 +56,13 @@ function buildAlpha(categories,w,h,pose,{longSleeves=false}={}){
 }
 class GarmentSegmenter{
  constructor(model,createCanvas){
-  this.model=model;this.input=createCanvas();this.mask=createCanvas();this.layer=createCanvas();this.cloth=null;this.clothAsset=null;
+  this.model=model;this.input=createCanvas();this.mask=createCanvas();this.layer=createCanvas();this.cloth=null;this.clothAsset=null;this.lighting=root.RawnakFitGarmentLighting?new root.RawnakFitGarmentLighting.GarmentLighting(createCanvas):null;
  }
  static async create(mod,wasm,createCanvas=()=>document.createElement('canvas')){
   const model=await mod.ImageSegmenter.createFromOptions(wasm,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',outputCategoryMask:true,outputConfidenceMasks:false});
   return new GarmentSegmenter(model,createCanvas);
  }
- apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null,cutout=null,clothMaterial='off'}={}){
+ apply(ctx,source,pose,{width,height,color,strength=.9,timestamp,texture=null,cutout=null,clothMaterial='off',lightStrength=0}={}){
   if(!source?.width||!source?.height||!width||!height||!Number.isFinite(timestamp)||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!upperRegion(pose,source.width,source.height))return {ok:false,reason:'اظهر الكتفين والخصر أمام الكاميرا'};
   // Keep model output/readback small while retaining the original frame for compositing.
@@ -76,14 +76,14 @@ class GarmentSegmenter{
    const m=r.categoryMask;
    if(m)result=buildAlpha(m.getAsUint8Array(),m.width,m.height,pose,{longSleeves:cutout?.sleeves==='long'});
   });
-  return this.compose(ctx,source,pose,{width,height,color,strength,texture,cutout,timestamp,clothMaterial},result);
+  return this.compose(ctx,source,pose,{width,height,color,strength,texture,cutout,timestamp,clothMaterial,lightStrength},result);
  }
  applyMask(ctx,source,pose,options,mask){
   const result=mask?.labels?buildAlpha(mask.labels,mask.width,mask.height,pose,{longSleeves:options?.cutout?.sleeves==='long'}):null;
   return this.compose(ctx,source,pose,options,result);
  }
  resetMotion(){this.cloth?.reset();this.clothAsset=null;}
- compose(ctx,source,pose,{width,height,color,strength=.9,texture=null,cutout=null,timestamp,clothMaterial='off'}={},result){
+ compose(ctx,source,pose,{width,height,color,strength=.9,texture=null,cutout=null,timestamp,clothMaterial='off',lightStrength=0}={},result){
   if(!source?.width||!source?.height||!width||!height||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!result){this.resetMotion();return {ok:false,reason:'مش قادر أحدد منطقة الملابس بوضوح — واجه الكاميرا في إضاءة جيدة'};}
   const {rgba,width:mw,height:mh,count}=result;
@@ -118,13 +118,17 @@ class GarmentSegmenter{
   lc.globalAlpha=1;lc.globalCompositeOperation='destination-in';lc.imageSmoothingEnabled=false;
   lc.drawImage(this.mask,0,0,lw,lh);
   lc.globalCompositeOperation='source-over';
+  let lightingApplied=false;
+  if(panel&&lightStrength>0&&this.lighting){
+   try{lightingApplied=this.lighting.apply(lc,source,lw,lh,result,lightStrength);}catch(error){console.warn('[RAWNAK FIT] optional illumination skipped',error);}
+  }
   const cover=Math.max(width/lw,height/lh),dw=lw*cover,dh=lh*cover;
   if(panel){
    ctx.save();try{ctx.globalAlpha=panel.alpha;ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);}finally{ctx.restore();}
   }else ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
-  return {ok:true,count,mode:cutout?'semantic-garment-cutout':panel?'semantic-product-panel':'semantic-clothes-mask'};
+  return {ok:true,count,lightingApplied,mode:cutout?'semantic-garment-cutout':panel?'semantic-product-panel':'semantic-clothes-mask'};
  }
- close(){this.resetMotion();this.cloth=null;this.model?.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
+ close(){this.lighting?.close();this.resetMotion();this.cloth=null;this.model?.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
 }
 root.RawnakFitGarmentSegmentation={GarmentSegmenter,buildAlpha,upperRegion,MODEL_URL,CLOTHES};
 })(typeof window!=='undefined'?window:globalThis);
