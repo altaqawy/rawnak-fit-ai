@@ -8,7 +8,7 @@ const validProfile=p=>Array.isArray(p)&&p.length===5&&p.every(v=>Number.isFinite
 const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 const hex=a=>'#'+a.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
 const median=a=>[...a].sort((x,y)=>x-y)[Math.floor(a.length/2)];
-const isConfirmed=p=>p&&p.linked!==false&&p.source==='merchant'&&typeof p.id==='string'&&p.id.length>0;
+const isConfirmed=p=>p&&p.linked===true&&p.source==='merchant'&&typeof p.id==='string'&&p.id.length>0;
 export const OBSERVATIONS=Object.freeze({
  material:{label:'الخامة',views:['material','detail'],values:Object.keys(BAG_MATERIALS)},
  closure:{label:'التقفيل',views:['closure','top','open'],values:Object.keys(BAG_CLOSURES)},
@@ -20,11 +20,11 @@ export const OBSERVATIONS=Object.freeze({
  outerPockets:{label:'الجيوب الخارجية',views:['front','back','outer'],min:0,max:8},
 });
 export function validObservation(key,value,photo){
- const rule=OBSERVATIONS[key];if(!rule||!isConfirmed(photo)||!rule.views.includes(photo.view))return false;
+ const rule=Object.hasOwn(OBSERVATIONS,key)?OBSERVATIONS[key]:null;if(!rule||!isConfirmed(photo)||!rule.views.includes(photo.view))return false;
  return rule.values?rule.values.includes(value):Number.isInteger(value)&&value>=rule.min&&value<=rule.max;
 }
 export function recommendBag(spec,images,observations=[]){
- const confirmed=images.filter(isConfirmed),byId=new Map(confirmed.map(p=>[p.id,p]));
+ const byId=new Map(images.filter(isConfirmed).map(p=>[p.id,p])),confirmed=[...byId.values()];
  const front=confirmed.filter(p=>['front','back'].includes(p.view)&&p.analysis?.status==='candidate'&&validProfile(p.analysis.widthProfile));
  const proposals=[],conflicts=[],ranking=[];
  const add=(key,value,sources,method)=>{if(spec[key]!==value)proposals.push({key,value,sources:[...new Set(sources)],method});};
