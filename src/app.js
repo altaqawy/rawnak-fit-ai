@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.27.SWAP-B1';
+  const BUILD_ID = '2026.11.27.SWAP-B2';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: ''
   };
 
   if (isEmbedded) {
@@ -279,6 +279,13 @@
       swapToggle.textContent=swapOn?'✓ تغيير لون الملابس مفعّل':'جرّب تغيير اللون على لبسك';
     }
     if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
+    const swapStatus=$('#swap-status');
+    if(swapStatus) swapStatus.textContent=swapOn
+      ? (state.segmentStatus==='loading'?'جاري تحميل نموذج فصل الملابس… الكاميرا مستمرة':
+         state.segmentStatus==='error'?'تعذر فصل الملابس. اضغط إعادة التتبع أو ارجع إلى 3D':
+         state.segmentStatus==='ready'?'AI MASK · فصل القماش عن الجلد والشعر — تغيير اللون فقط':
+         'افتح الكاميرا لبدء فصل الملابس')
+      : 'وضع AI تجريبي لتغيير لون القماش فقط. يفضل لبس قطعة من نفس النوع.';
     const garmentControls=$('#garment-controls');
     if (garmentControls) garmentControls.classList.toggle('hidden',
       state.assetMode!=='3d'||!['tee','jacket'].includes(state.selected.id));
@@ -361,6 +368,31 @@
     return state.visionLoading;
   }
 
+  async function ensureSegmenter() {
+    if(!state.stream||state.assetMode!=='swap')return null;
+    if(state.segmenter)return state.segmenter;
+    if(state.segmentLoading)return state.segmentLoading;
+    const epoch=state.epoch;
+    state.segmentStatus='loading';state.syncFrameReady=false;updateUI();
+    const pending=(async()=>{
+      const {mod,wasm}=await getVision();
+      if(!mod.ImageSegmenter||!window.RawnakFitGarmentSegmentation)throw Error('ImageSegmenter unavailable');
+      const segmenter=await window.RawnakFitGarmentSegmentation.GarmentSegmenter.create(mod,wasm);
+      if(epoch!==state.epoch||!state.stream){segmenter.close();return null;}
+      state.segmenter=segmenter;state.segmentStatus='ready';state.fitHint='';
+      state.lastInference=0;state.lastVideoTime=-1;updateUI();
+      return segmenter;
+    })().catch(error=>{
+      if(epoch===state.epoch&&state.stream){
+        console.warn('[RAWNAK FIT] Garment segmentation unavailable; camera remains live',error);
+        state.segmentStatus='error';state.syncFrameReady=false;updateUI();
+      }
+      return null;
+    }).finally(()=>{if(state.segmentLoading===pending)state.segmentLoading=null;});
+    state.segmentLoading=pending;
+    return pending;
+  }
+
   async function loadEngine(type) {
     if (!state.stream) return;
     const epoch = state.epoch;
@@ -438,6 +470,8 @@
     video.pause();
     video.srcObject = null;
     closeModels();
+    try{state.segmenter?.close();}catch(error){console.warn('Garment segmenter disposal warning',error);}
+    state.segmenter=null;state.segmentLoading=null;state.segmentStatus='idle';state.segmentHint='';
     const ctx = canvas.getContext('2d');
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     const syncContext = syncCanvas.getContext('2d');
@@ -524,6 +558,7 @@
       state.raf = requestAnimationFrame(renderLoop);
       if (state.assetMode === '3d') void ensureThree();
       void loadEngine(sourceType(state.selected.engine)); // model failures do not close stream
+      if(state.assetMode==='swap')void ensureSegmenter();
     } catch (error) {
       if (epoch !== state.epoch) return;
       console.error('[RAWNAK FIT] Camera error:', error);
@@ -743,7 +778,7 @@
       return true;
     } finally {ctx.restore();}
   }
-  function drawOverlayTo(ctx, w, h) {
+  function drawOverlayTo(ctx, w, h, frameTime) {
     if (!state.detected || !state.landmarks) {
       state.three?.clear();
       return;
@@ -755,10 +790,18 @@
           state.fitHint = 'تغيير اللون متاح فقط في الوضع المتزامن';
           return;
         }
-        const output = window.RawnakFitClothingSwap?.tintGarment(ctx,state.landmarks,{
-          width:w,height:h,project,color:state.selected.color,strength:state.swapStrength
-        });
-        state.fitHint = output?.ok ? '' : (output?.reason || 'وضع تغيير اللون غير متاح');
+        if(!state.segmenter||!Number.isFinite(frameTime))return;
+        try{
+          const output=state.segmenter.apply(ctx,sampleCanvas,state.landmarks,{
+            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime
+          });
+          state.fitHint=output.ok?'':output.reason;
+        }catch(error){
+          console.warn('[RAWNAK FIT] semantic mask failed, preserving raw camera',error);
+          try{state.segmenter?.close();}catch(_){}
+          state.segmenter=null;state.segmentStatus='error';state.syncFrameReady=false;
+          state.fitHint='تعذر تحليل الملابس — جرّب إعادة التتبع أو ارجع إلى 3D';
+        }
         return;
       }
       if (state.assetMode === '3d') {
@@ -827,6 +870,8 @@
     if (!model || state.engine !== 'ready' || video.readyState < 2 ||
         !video.videoWidth || !video.videoHeight || !sampleContext ||
         frameTime - state.lastInference < SYNC_INTERVAL_MS) return false;
+    // Semantic inference is opt-in and slower; never reuse a mask from an older image.
+    if(state.assetMode==='swap'&&(!state.segmenter||frameTime-state.lastInference<100))return false;
     // Avoid recalculating identical camera frames. The camera timestamp is media time.
     if (video.currentTime === state.lastVideoTime) return false;
     state.lastVideoTime = video.currentTime;
@@ -854,7 +899,11 @@
       const displayHeight = sourceHeight * scale;
       // Object-fit cover, exactly matching the coordinates used in project().
       ctx.drawImage(sampleCanvas, (w - displayWidth) / 2, (h - displayHeight) / 2, displayWidth, displayHeight);
-      drawOverlayTo(ctx, w, h);
+      drawOverlayTo(ctx, w, h, frameTime);
+      if(state.assetMode==='swap'){
+        state.processingMs=Math.round(performance.now()-t0);
+        if(state.segmentStatus==='error'){state.syncFrameReady=false;updateUI();return false;}
+      }
       // Same-frame forearm pixels may be composited over shirt geometry. This
       // approximate overlap mask is explicitly opt-in and is NOT segmentation.
       state.occlusionCount=0;
@@ -949,7 +998,10 @@
   $('#swap-toggle')?.addEventListener('click',()=>{
     if (!['tee','jacket'].includes(state.selected.id)) return;
     state.assetMode = state.assetMode === 'swap' ? '3d' : 'swap';
-    if (state.assetMode === 'swap') changeViewMode('sync');
+    if (state.assetMode === 'swap') {
+      changeViewMode('sync');
+      if(state.stream)void ensureSegmenter();
+    }
     state.three?.clear();
     state.fitHint='';
     state.syncFrameReady=false;
@@ -989,6 +1041,7 @@
       if (state.assetMode === '3d' && !state.three) void ensureThree();
       state.engine = 'idle';
       void loadEngine(state.selected.engine);
+      if(state.assetMode==='swap')void ensureSegmenter();
     }
   });
   captureButton.addEventListener('click', saveSnapshot);
