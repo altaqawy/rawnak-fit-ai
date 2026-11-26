@@ -95,8 +95,9 @@ function buildMesh(asset,pose,w,h){
  const long=asset.sleeves==='long',src=triangles(asset.anchors,long),dst=triangles(dest,long);
  return {uv:src.v,vertices:dst.v,triangles:src.tri};
 }
-function drawCutout(ctx,asset,pose,w,h,{strength=.9}={}){
- const tex=asset?.canvas,mesh=buildMesh(asset,pose,w,h);
+function drawCutout(ctx,asset,pose,w,h,{strength=.9,clothOffset=null}={}){
+ const tex=asset?.canvas;let mesh=buildMesh(asset,pose,w,h);
+ if(mesh&&clothOffset&&root.RawnakFitClothMotion)mesh=root.RawnakFitClothMotion.deform(mesh,clothOffset,w,h);
  if(!ctx||!tex?.width||!tex?.height||!mesh)return false;
  const affine=root.RawnakFitProductTransfer.affine;
  const plans=mesh.triangles.map(tri=>{
