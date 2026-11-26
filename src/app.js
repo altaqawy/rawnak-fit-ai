@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.110';
+  const BUILD_ID = '2026.11.27.SWAP-B1';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9
   };
 
   if (isEmbedded) {
@@ -218,6 +218,7 @@
       button.append(icon, info, selectedMark);
       button.addEventListener('click', () => {
         state.selected = item;
+        if (state.assetMode === 'swap' && !['tee','jacket'].includes(item.id)) state.assetMode = '3d';
         state.landmarks = null;
         state.lastType = null;
         state.lastPoints = null;
@@ -252,6 +253,10 @@
       state.viewMode === 'fast' && state.engine === 'ready' && state.detected);
     const modeFast = $('#mode-fast');
     const modeSync = $('#mode-sync');
+    if (modeFast) {
+      modeFast.disabled = state.assetMode === 'swap';
+      modeFast.title = state.assetMode === 'swap' ? 'تغيير اللون يحتاج الوضع المتزامن مع الفريم الأصلي' : '';
+    }
     if (modeFast && modeSync) {
       modeFast.classList.toggle('active', state.viewMode === 'fast');
       modeSync.classList.toggle('active', state.viewMode === 'sync');
@@ -263,6 +268,17 @@
     cameraToggle.textContent = live ? 'إيقاف الكاميرا' : state.starting ? 'إلغاء التشغيل' : 'تشغيل الكاميرا';
     indicator.textContent = live ? '● CAMERA LIVE' : state.starting ? 'CONNECTING…' : 'CAMERA OFF';
     indicator.style.color = live ? '#c8ee9b' : '#a5bdac';
+    const swapControls=$('#clothing-swap-controls');
+    const garmentSelected=['tee','jacket'].includes(state.selected.id);
+    if (swapControls) swapControls.classList.toggle('hidden', !garmentSelected);
+    const swapOn=garmentSelected && state.assetMode==='swap';
+    const swapToggle=$('#swap-toggle'),swapBack=$('#swap-back');
+    if (swapToggle) {
+      swapToggle.classList.toggle('selected',swapOn);
+      swapToggle.setAttribute('aria-pressed',String(swapOn));
+      swapToggle.textContent=swapOn?'✓ تغيير لون الملابس مفعّل':'جرّب تغيير اللون على لبسك';
+    }
+    if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
     const garmentControls=$('#garment-controls');
     if (garmentControls) garmentControls.classList.toggle('hidden',
       state.assetMode!=='3d'||!['tee','jacket'].includes(state.selected.id));
@@ -733,6 +749,18 @@
       return;
     }
     try {
+      if (state.assetMode === 'swap' && ['tee','jacket'].includes(state.selected.id)) {
+        state.three?.clear();
+        if (state.viewMode !== 'sync') {
+          state.fitHint = 'تغيير اللون متاح فقط في الوضع المتزامن';
+          return;
+        }
+        const output = window.RawnakFitClothingSwap?.tintGarment(ctx,state.landmarks,{
+          width:w,height:h,project,color:state.selected.color,strength:state.swapStrength
+        });
+        state.fitHint = output?.ok ? '' : (output?.reason || 'وضع تغيير اللون غير متاح');
+        return;
+      }
       if (state.assetMode === '3d') {
         if (!state.three) {
           state.fitHint = state.threeError
@@ -901,6 +929,11 @@
 
   function changeViewMode(nextMode) {
     if (!['sync', 'fast'].includes(nextMode) || state.viewMode === nextMode) return;
+    if (nextMode === 'fast' && state.assetMode === 'swap') {
+      state.fitHint='تغيير اللون يحتاج الفريم المتزامن، ارجع لوضع 3D للايف السريع';
+      updateUI();
+      return;
+    }
     state.viewMode = nextMode;
     state.lastInference = 0;
     state.lastVideoTime = -1;
@@ -913,6 +946,27 @@
     state.lastFps = performance.now();
     updateUI();
   }
+  $('#swap-toggle')?.addEventListener('click',()=>{
+    if (!['tee','jacket'].includes(state.selected.id)) return;
+    state.assetMode = state.assetMode === 'swap' ? '3d' : 'swap';
+    if (state.assetMode === 'swap') changeViewMode('sync');
+    state.three?.clear();
+    state.fitHint='';
+    state.syncFrameReady=false;
+    state.lastInference=0;
+    if (state.assetMode === '3d' && state.stream) void ensureThree();
+    updatePhotoControl(); updateUI();
+  });
+  $('#swap-back')?.addEventListener('click',()=>{
+    state.assetMode='3d';state.fitHint='';state.syncFrameReady=false;state.lastInference=0;
+    if (state.stream) void ensureThree();
+    updatePhotoControl();updateUI();
+  });
+  $('#swap-strength')?.addEventListener('input',event=>{
+    state.swapStrength=Math.max(.4,Math.min(1,Number(event.target.value)/100||.9));
+    const output=$('#swap-strength-value');
+    if(output) output.textContent=Math.round(state.swapStrength*100)+'%';
+  });
   $('#mode-fast')?.addEventListener('click', () => changeViewMode('fast'));
   $('#mode-sync')?.addEventListener('click', () => changeViewMode('sync'));
   $('#garment-motion')?.addEventListener('change',event=>{
