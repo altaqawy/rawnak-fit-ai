@@ -91,7 +91,7 @@ $('suggest').onclick=()=>{
 };
 $('apply-suggestion').onclick=()=>{
  if(!report)return;const {patch}=selectedPatch(report,['style','bodyColor']);
- if(patch.style)changeFamily(patch.style);
+ if(patch.style)$('family').value=patch.style;
  if(patch.bodyColor)$('bodyColor').value=patch.bodyColor;
  stale();void build();
 };
@@ -109,7 +109,7 @@ async function build(){
   const s=spec(),r=fitFromEvidence(refs()),p=newProject(s,{fit:r.fit||null}),a=await api();
   if(disposed||id!==buildRevision)return;
   if(!viewer)viewer=new a.BagViewer($('stage'),part=>{say('part-status',part||'جزء من المجسم');viewer.highlight(part);viewer.draw();},code=>{say('model-status',code==='restored'?'تم استعادة الرسوميات.':'انقطع اتصال WebGL.');});
-  const next=await a.assemble(p,refs(),profile());
+  const next=await a.assemble(p,photos.map(p=>({...sourceMetadata(p),url:p.url})),profile());
   if(disposed||id!==buildRevision){next.dispose();return;}
   model=next;viewer.replace(next,true);project=p;
   model.setOpening(Number($('opening').value)/100);model.setSwing(Number($('swing').value)/100);viewer.draw();
@@ -124,7 +124,7 @@ $('swing').oninput=()=>{model?.setSwing(Number($('swing').value)/100);viewer?.dr
 $('report').onclick=()=>{try{const p=newProject(spec(),{fit:fitFromEvidence(refs()).fit||null});download(new Blob([JSON.stringify({kind:'rawnak-modular-bag',schemaVersion:2,units:'cm',project:p,images:refs().map(({url,...r})=>r),privacy:{imageBytesIncluded:false,trainingConsent:false},output:{photoTo3DFaithful:false,retailARReady:false}},null,2)],{type:'application/json'}),'fusion-bag.json');}catch(e){say('model-status',e.message);}};
 $('export').onclick=async()=>{
  if(!project||exportBusy)return;const p=project,id=buildRevision;exportBusy=true;$('export').disabled=true;
- try{const {data}=await (await api()).exportAsset(p,refs(),profile());if(id!==buildRevision||disposed)return;download(new Blob([data],{type:'model/gltf-binary'}),'fusion-bag.glb');say('model-status','تم تجهيز GLB محليًا؛ يحتاج مراجعة قبل الاستخدام التجاري.');}
+ try{const {data}=await (await api()).exportAsset(p,photos.map(p=>({...sourceMetadata(p),url:p.url})),profile());if(id!==buildRevision||disposed)return;download(new Blob([data],{type:'model/gltf-binary'}),'fusion-bag.glb');say('model-status','تم تجهيز GLB محليًا؛ يحتاج مراجعة قبل الاستخدام التجاري.');}
  catch(e){say('model-status','تعذر التصدير: '+e.message);}finally{exportBusy=false;$('export').disabled=!project;}
 };
 window.addEventListener('pagehide',e=>{if(e.persisted)return;disposed=true;buildRevision++;photoRevision++;viewer?.dispose();for(const p of photos){URL.revokeObjectURL(p.url);if(p.cut)URL.revokeObjectURL(p.cut.url);}});
