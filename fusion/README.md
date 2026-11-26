@@ -49,3 +49,13 @@ The CLI copies the verified file to local-assets and updates the registry withou
 FASHN adapter now distinguishes flat-lay product photos from model photos and checks all three required weight files before reporting available. Upstream documentation: https://github.com/fashn-AI/fashn-vton-1.5
 
 Validation: three Studio intake checks passed in a synthetic JS harness with mocked URL, encoding and digest; UI scripts parsed. Real browser rendering, actual SHA-256 runtime, Python CI and model inference remain unverified. Local Git clone failed due to DNS. No production deployment.
+
+## V2.2 — modular template editor
+In Auto Studio → Blender / GLB Import, load a GLB or select the original low-detail nine-part bag test fixture. The fixture is generated locally by Three.js and exported to GLB, then passes through the same intake as an uploaded asset. It is not an externally sourced bag or a photorealistic model. The editor enumerates existing mesh nodes, suggests roles from names, permits manual semantic role and mobility annotations, and edits static leaf mesh local scale (50–200%) and visibility. Animated/skinned/morph/parent geometry is locked conservatively. Mobility tags are metadata, not movement or physics. Separate mesh parts are required; a single mesh is not automatically segmented. Export the original GLB and separate checksum-bound parts JSON; import the plan only against the identical original asset. Edits do not alter the original or publish an edited GLB. Live try-on and Bag Builder retargeting remain future work.
+
+Candidate external CC0 models (source pages reviewed, files not downloaded or imported):
+- Quaternius Bag: https://poly.pizza/m/Wq1JPPqHZS
+- Quaternius Bag Open: https://poly.pizza/m/rJuZexcuhU
+- accidentallyc Duffel Bag: https://poly.pizza/m/rysPhwuIP4
+
+These are low-poly examples, not detailed handbags; verify the original files and current rights before registering. No external binaries have been committed. Four modular editor synthetic tests passed; UI modules parsed and literal UI IDs were found. Full CI remains failing; WebGL preview, sample GLB exporter and actual AI inference remain unverified. No production deployment.
