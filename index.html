@@ -9,13 +9,13 @@
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
   </script>
-  <link rel="stylesheet" href="./src/styles.css?v=20261118-alpha110">
+  <link rel="stylesheet" href="./src/styles.css?v=20261127-clothing-swap-b1">
 </head>
 <body>
 <div class="shell">
   <header class="nav">
     <a class="brand" href="./" aria-label="RAWNAK FIT AI"><span class="brand-mark">✳</span><span>RAWNAK <b>FIT AI</b><small>LIVE VIRTUAL MIRROR</small></span></a>
-    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.1 · RIGGED GLB REFERENCE</span></div>
+    <div class="nav-actions"><a class="studio-link" href="./studio/" title="تجهيز منتجات المتجر ثلاثية الأبعاد">AutoFit Studio <span>↗</span></a><a class="studio-link" href="./demo/" title="تجربة إضافة RAWNAK FIT لأي متجر">SDK Demo ↗</a><span class="version">ALPHA 1.2 · COLOR TRANSFER BETA</span></div>
   </header>
   <main>
     <div id="embed-product" class="embed-product hidden"></div>
@@ -45,6 +45,16 @@
           <div><strong>GARMENT MOTION · BETA</strong><small>حركة خفيفة للأكمام مع الكتفين والكوع — بدون محاكاة قماش فيزيائية كاملة</small></div>
           <label><input id="garment-motion" type="checkbox" checked> تحريك الأكمام مع الذراع</label>
           <label><input id="arm-occlusion" type="checkbox" checked> إظهار الذراع أمام القماش <span>في الوضع المتزامن فقط · تقريبي</span></label>
+        </div>
+        <div id="clothing-swap-controls" class="clothing-swap-controls hidden" role="group" aria-label="تجربة تغيير لون الملابس الموجودة">
+          <div><strong>AI POSE · CLOTHING COLOR TRANSFER / BETA</strong><small>ارتدي تيشيرت مع تيشيرت أو جاكيت مع جاكيت، وواجه الكاميرا. المعاينة تغيّر لون منطقة الجذع المتتبّعة فقط؛ ليست استبدالًا واقعيًا للملابس أو ضمانًا للمقاس.</small></div>
+          <div class="clothing-swap-actions">
+            <button id="swap-toggle" class="btn" type="button" aria-pressed="false">جرّب تغيير اللون على لبسك</button>
+            <button id="swap-back" class="btn ghost hidden" type="button">العودة لمجسم 3D</button>
+          </div>
+          <label for="swap-strength">شدة تغيير اللون <output id="swap-strength-value">90%</output></label>
+          <input id="swap-strength" type="range" min="40" max="100" step="10" value="90">
+          <small id="swap-status" role="status" aria-live="polite">وضع تجريبي بتتبع الجسم. تغيير تصميم وخامة القطعة بالكامل يحتاج نموذج فصل ملابس متخصص.</small>
         </div>
         <div id="demo-asset-switch" class="demo-asset-switch hidden" role="group" aria-label="اختيار أسلوب عرض المنتج">
           <div><strong>LIVE 3D MESH · THREE.JS</strong><small id="asset-status">مجسم 3D هندسي مع إضاءة وعمق — مش نسخة دقيقة من المنتج</small></div>
@@ -84,5 +94,6 @@
 <script defer src="./src/fit-3d-pose.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-garment-motion.js?v=20261118-alpha110"></script>
 <script defer src="./src/fit-arm-occlusion.js?v=20261118-alpha110"></script>
-<script type="module" src="./src/app.js?v=20261118-alpha110"></script>
+<script defer src="./src/fit-clothing-swap.js?v=20261127-clothing-swap-b1"></script>
+<script type="module" src="./src/app.js?v=20261127-clothing-swap-b1"></script>
 </body></html>
