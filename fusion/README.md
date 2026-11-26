@@ -59,3 +59,8 @@ Candidate external CC0 models (source pages reviewed, files not downloaded or im
 - accidentallyc Duffel Bag: https://poly.pizza/m/rysPhwuIP4
 
 These are low-poly examples, not detailed handbags; verify the original files and current rights before registering. No external binaries have been committed. Four modular editor synthetic tests passed; UI modules parsed and literal UI IDs were found. Full CI remains failing; WebGL preview, sample GLB exporter and actual AI inference remain unverified. No production deployment.
+
+## V2.3 — multi-view bag recommendations
+Bag Builder → Product photos: upload references, confirm each view, then open Construct the model. Fusion V2.3 compares front/back silhouette profiles and approximate foreground colors across distinct linked photos, ranks the existing nine bag families, and abstains on inconsistent or insufficient evidence. The merchant may explicitly record material, closure, handle/strap counts, compartment and pocket counts against eligible confirmed views. Conflicting observations are not applied. Select individual suggestions and apply to the existing parametric Bag Builder; absolute measurements are never inferred or changed. Accepted changes enter normal undo/redo and source-evidence history; observations are session-level and must be reconfirmed after opening a saved project. No AI segmentation or invisible internal geometry is claimed. No external model weights or BlenderKit assets have been downloaded.
+
+Five recommendation tests passed in a synthetic JavaScript harness; UI source parsed and new UI IDs checked. Real browser/camera, FASHN inference and full CI remain unverified; previous CI runs failed. No merge or production deployment.
