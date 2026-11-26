@@ -1,0 +1,21 @@
+{
+  "source": "https://github.com/kblood/CharacterCreator",
+  "revision": "852e48f316b90a0937234886630e4fb4cdfd1f78",
+  "license": "CC0-1.0",
+  "licenseEvidence": "https://github.com/kblood/CharacterCreator/blob/852e48f316b90a0937234886630e4fb4cdfd1f78/LICENSE-NOTES.md",
+  "note": "Generated GLB data only, no GPL program code copied. Preview only; retail camera rig unverified.",
+  "assets": [
+    {
+      "file": "clothing_tshirt.glb",
+      "gitBlob": "ce7966dfd52c4bc6158e1e3b21969e6a63b066da"
+    },
+    {
+      "file": "clothing_jacket.glb",
+      "gitBlob": "6f1d075b1c041a67e15af98395769e0c5fa915b9"
+    },
+    {
+      "file": "clothing_hoodie.glb",
+      "gitBlob": "85999d3584078c11e9e4637ea53d88b150a775c3"
+    }
+  ]
+}

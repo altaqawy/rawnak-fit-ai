@@ -52,7 +52,7 @@
         ? clamp((zRight-zLeft)*3,-1,1):0;
       return {ok:true,x:center.x,y:center.y+widthEyes*.06,
         widthPx:widthEyes*2.38*adjust,heightPx:widthEyes*.9*adjust,
-        angle:Math.atan2(right.y-left.y,right.x-left.x),yaw:clamp(yawProxy+depthYaw*.55,-1.15,1.15),
+        angle:Math.atan2((right.x>=left.x?1:-1)*(right.y-left.y),Math.abs(right.x-left.x)),yaw:clamp(yawProxy+depthYaw*.55,-1.15,1.15),
         pitch:0,metrics:{eyeSpanPx:Math.round(widthEyes)}};
     }
     const left=p(11),right=p(12),hipL=p(23),hipR=p(24);
@@ -72,7 +72,9 @@
     const shoulders=distance(left,right);
     if(shoulders<40)return invalid('قرّب شوية علشان نحدد عرض الكتفين');
     const top=mid(left,right);
-    const roll=Math.atan2(right.y-left.y,right.x-left.x);
+    // Anatomical labels are not guaranteed to be ordered in screen coordinates.
+    const screenLeft=left.x<=right.x?left:right,screenRight=left.x<=right.x?right:left;
+    const roll=Math.atan2(screenRight.y-screenLeft.y,screenRight.x-screenLeft.x);
     let yaw=0;
     if(worldLandmarks?.[11]&&worldLandmarks?.[12]){
       const a=worldLandmarks[11],b=worldLandmarks[12];

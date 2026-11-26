@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RAWNAK / Fusion Lab V2.4</title>
+<link rel="stylesheet" href="./fusion-lab.css?v=24"><script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js","three/addons/":"./vendor/three/examples/jsm/"}}</script></head>
+<body><header><a href="../" class="brand"><span class="mark">✳</span> RAWNAK <small>FIT AI</small></a><nav><a href="./real-assets.html">مكتبة المجسمات الحقيقية</a><a href="./bag-builder.html">Bag Builder</a><a href="./template-intake.html">GLB Studio</a><a href="../">Live Mirror</a></nav><span class="version">V2.4 · LAB</span></header>
+<main><section class="hero"><div><span class="eyebrow">FUSION / PRODUCT INTELLIGENCE</span><h1>من صورة إلى <em>مجسم.</em></h1><p>استوديو تجريبي للشنط. ارفع صور المنتج، راجع العزل والقالب المقترح، واضبط المجسم الثلاثي الأبعاد.</p></div><span class="local">● معالجة محلية للصور</span></section>
+<section class="workspace"><aside class="panel"><div class="heading"><span>01</span><h2>صور المنتج</h2></div>
+<label for="photos" class="upload"><strong>＋ اختر صور الشنطة</strong><small>حتى 8 صور · PNG / JPG / WEBP · 10MB للصورة</small></label><input type="file" id="photos" accept="image/png,image/jpeg,image/webp" multiple hidden>
+<div id="photo-list" class="photos"></div><p id="photo-status" class="status" role="status">ابدأ بصورتين أمامية وخلفية واضحتين.</p>
+<label class="field">الصورة المحددة<select id="active-photo" disabled></select></label>
+<div class="cutout"><img id="cutout" alt="الصورة بعد العزل" hidden><span id="cutout-placeholder">معاينة العزل</span></div>
+<label class="field">عتبة قناع العزل <input id="threshold" type="range" min="10" max="90" value="50"></label>
+<button id="mask" type="button" class="secondary" disabled>عزل الخلفية بالـ AI</button>
+<button id="use-mask" type="button" class="secondary" disabled>استخدم الصورة المعزولة للتحليل</button>
+<button id="mask-download" type="button" class="quiet" disabled>حفظ PNG</button>
+<small>العزل الاختياري ينزّل نموذج U²-Netp ومكتبة ONNX Runtime من الإنترنت؛ لا يرفع الصور.</small>
+</aside>
+<section class="panel preview"><div class="heading"><span>02</span><h2>المعاينة 3D</h2><span class="tag">PARAMETRIC</span></div>
+<div class="stage" id="stage"><div id="stage-message">جاري تجهيز مجسم الاختبار…</div></div>
+<div class="toolbar"><button type="button" data-view="orbit">منظور</button><button type="button" data-view="front">أمام</button><button type="button" data-view="back">خلف</button><button type="button" data-view="left">جانب</button><button type="button" data-view="inside">داخل</button></div>
+<div class="fields"><label class="field">فتح الغطاء<input id="opening" type="range" min="0" max="100" value="0"></label><label class="field">حركة الحزام<input id="swing" type="range" min="-100" max="100" value="0"></label></div>
+<p id="part-status" class="status" role="status">اضغط على جزء من الشنطة لمعرفة اسمه.</p><p id="model-status" class="status" role="status">معاينة هندسية غير معتمدة.</p>
+<div class="toolbar"><button id="export" type="button" class="primary" disabled>تنزيل GLB</button><button id="report" type="button">حفظ مواصفات JSON</button></div>
+</section>
+<aside class="panel"><div class="heading"><span>03</span><h2>التصميم والمواصفات</h2></div>
+<label class="field">القالب<select id="family"></select></label><div id="ranking" class="status">اختيار يدوي · ارفع الصور لاقتراح قالب.</div><button id="suggest" class="secondary" type="button">تحليل الصور</button><button id="apply-suggestion" type="button" class="quiet" disabled>تطبيق القالب واللون المقترحين</button>
+<div class="heading small"><h3>المقاسات بالسنتيمتر</h3></div><div class="fields three"><label class="field">عرض<input id="widthCm" type="number" min="8" max="85" step=".5" value="28"></label><label class="field">ارتفاع<input id="heightCm" type="number" min="6" max="70" step=".5" value="20"></label><label class="field">عمق<input id="depthCm" type="number" min="2" max="45" step=".5" value="11"></label></div>
+<label class="field">اللون<input id="bodyColor" type="color" value="#6e4336"></label><label class="field">الخامة<select id="material"></select></label><label class="field">التقفيل<select id="closure"></select></label>
+<div class="fields"><label class="field">عدد الأحزمة<input id="strapCount" type="number" min="0" max="2" value="0"></label><label class="field">عدد الأيدي<input id="handlesCount" type="number" min="0" max="2" value="1"></label><label class="field">الأقسام الداخلية<input id="mainCompartments" type="number" min="1" max="5" value="2"></label><label class="field">الجيوب الداخلية<input id="innerOpenPockets" type="number" min="0" max="8" value="1"></label></div>
+<button id="build" class="primary" type="button">تحديث المجسم</button><p class="status">المقاسات والتفاصيل الداخلية تُدخل يدويًا. لا يُستنتج العمق الحقيقي من صورة واحدة.</p></aside></section>
+<footer>RAWNAK FIT AI · Fusion V2.4 <span>نموذج تجريبي · ليس إعادة بناء فوتوغرافية كاملة أو قياسًا معتمدًا</span></footer></main>
+<script type="module" src="./fusion-lab.mjs?v=24"></script></body></html>

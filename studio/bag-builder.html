@@ -162,6 +162,23 @@
               اجمع المقاسات وتفاصيل التقفيل وأي حدود خارجية مؤكدة في مجسم تقدر تعدّل أجزاءه.
             </p>
             <div class="readout" id="construction-report"></div>
+            <details open>
+              <summary data-en="Fusion V2.3 — evidence-based recommendations">Fusion V2.3 — اقتراحات مبنية على الصور</summary>
+              <p class="fine" data-en="Confirm photo views first. Record visible details manually; hidden parts are not inferred.">
+                أكّد زوايا الصور أولًا. سجّل التفاصيل المرئية يدويًا؛ لا يتم تخمين الأجزاء المخفية.
+              </p>
+              <div class="fields">
+                <label class="field"><span data-en="Observed detail">التفصيل المرئي</span><select id="observation-field"></select></label>
+                <label class="field"><span data-en="Reference photo">الصورة المرجعية</span><select id="observation-source"></select></label>
+                <label class="field"><span data-en="Confirmed value">القيمة التي تؤكدها</span><select id="observation-value"></select></label>
+              </div>
+              <button type="button" id="observation-add" class="outline" data-en="Record observation">سجّل الملاحظة</button>
+              <div id="observation-list"></div>
+              <button type="button" id="suggestions-run" class="outline" data-en="Analyze confirmed evidence">حلّل المراجع المؤكدة</button>
+              <div class="readout" id="suggestions-status" role="status" aria-live="polite"></div>
+              <div id="suggestions-list" class="fields"></div>
+              <button type="button" id="suggestions-apply" class="primary" disabled data-en="Apply selected suggestions">طبّق الاقتراحات المختارة</button>
+            </details>
             <button id="generate" class="primary" data-en="Build from measurements and photos">
               ابنِ من المقاسات والصور
             </button>
