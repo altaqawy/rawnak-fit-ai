@@ -163,3 +163,5 @@
 
 /* Alpha 1.5: articulated cutout calibration */
 .swap-cutout-editor{display:grid;gap:8px;padding:10px;border:1px solid #405063;border-radius:10px}.swap-cutout-editor.hidden{display:none}.swap-cutout-editor canvas{display:block;width:100%;max-width:360px;height:auto;margin:0 auto;border:1px solid #405063;border-radius:8px;cursor:crosshair;touch-action:manipulation}.swap-cutout-editor strong{font-size:.77rem;letter-spacing:.04em}
+
+#swap-backend{width:100%;min-width:0;padding:8px;border-radius:8px;background:#16212c;color:inherit;border:1px solid #405063;font:inherit}#swap-runtime{font-family:ui-monospace,monospace;overflow-wrap:anywhere}
