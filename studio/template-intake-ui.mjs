@@ -57,7 +57,7 @@ async function preview(data,id,stats){
  const frame=()=>{if(live!==session)return;controls.update();renderer.render(scene,camera);session.raf=requestAnimationFrame(frame);};frame();$('empty').hidden=true;
 }
 async function loadTemplate(f){
- const id=++revision;checked=null;parts=[];edits={};activePart=null;$('parts-editor').hidden=true;cleanup();$('export').disabled=true;$('empty').hidden=false;say('metrics','');say('preview-status','');if(!f)return;
+ const id=++revision;checked=null;$('confirmed').checked=false;$('license').value='';$('source').value='';$('original-download').disabled=true;parts=[];edits={};activePart=null;$('parts-editor').hidden=true;cleanup();$('export').disabled=true;$('empty').hidden=false;say('metrics','');say('preview-status','');if(!f)return;
  say('status','جاري تدقيق الملف محليًا…');
  try{
   if(!/\.glb$/i.test(f.name)||f.size>20*1048576)throw Error('اختر GLB أقل من 20 MB');
@@ -66,16 +66,17 @@ async function loadTemplate(f){
   if(!$('asset-id').value)$('asset-id').value=f.name.replace(/\.glb$/i,'').toLowerCase().replace(/[^a-z0-9_-]/g,'-').replace(/^[^a-z0-9]+/,'').slice(0,64);
   try{await preview(data,id,stats);}catch(e){if(id===revision)say('preview-status','تعذرت المعاينة: '+e.message);return;}
   if(id!==revision)return;
-  checked={hash,stats};$('export').disabled=false;say('status','نجح التدقيق الأولي والمعاينة. راجع الحقوق قبل تصدير البيانات.');
+  checked={hash,stats,file:f};$('export').disabled=false;$('original-download').disabled=false;say('status','نجح التدقيق الأولي والمعاينة. راجع الحقوق قبل تصدير البيانات.');
  }catch(e){if(id===revision)say('status','رفض الملف: '+e.message);}
 }
 $('glb').addEventListener('change',()=>void loadTemplate($('glb').files[0]));
 $('demo-template').addEventListener('click',async()=>{
- const request=++revision;$('demo-template').disabled=true;say('status','جاري توليد شنطة اختبار متعددة الأجزاء…');
+ const request=++revision;checked=null;parts=[];edits={};activePart=null;cleanup();$('parts-editor').hidden=true;$('empty').hidden=false;$('export').disabled=true;$('original-download').disabled=true;$('demo-template').disabled=true;say('status','جاري توليد شنطة اختبار متعددة الأجزاء…');
  try{const f=await makeDemoBag();if(request!==revision)return;$('glb').value='';$('asset-id').value='rawnak-demo-bag';$('category').value='bag';$('license').value='';$('source').value='';$('confirmed').checked=false;await loadTemplate(f);}
  catch(e){if(request===revision)say('status','تعذر تجهيز النموذج: '+e.message);}
  finally{$('demo-template').disabled=false;}
 });
+$('original-download').addEventListener('click',()=>{if(!checked)return;const url=URL.createObjectURL(checked.file),a=document.createElement('a');a.href=url;a.download=checked.file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 $('intake').addEventListener('submit',e=>{
  e.preventDefault();if(!checked)return;
  try{const entry=buildEntry({id:$('asset-id').value,category:$('category').value,license:$('license').value,source:$('source').value,confirmed:$('confirmed').checked},checked.hash);
