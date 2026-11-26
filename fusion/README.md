@@ -35,3 +35,17 @@ Adapter code and UI integration created, model not installed or executed; no qua
 Upstream: https://github.com/fashn-AI/fashn-vton-1.5
 Parser terms: https://github.com/fashn-AI/fashn-human-parser
 Assets: https://www.blendkit.com/docs/licenses/
+
+## V2.1 — Blender template intake
+Open Auto Studio → Blender / GLB Import (studio/template-intake.html). Export the reviewed Blender object as a self-contained glTF Binary (.glb) with triangulated geometry, embedded textures, no unsupported compression extensions, max 20 MB / 250k estimated triangles / 60 meshes. The Studio checks the file, opens a local Three.js preview and exports a provenance JSON with SHA-256. Keep the original GLB. Run:
+
+```powershell
+python fusion/register_template.py path/to/template.json path/to/original.glb
+python fusion/asset_registry.py
+```
+
+The CLI copies the verified file to local-assets and updates the registry without overwriting an existing ID; run sequentially. It does not publish the asset, verify actual legal rights, or retarget rigging. No actual Blendkit assets are bundled. Blender export docs: https://docs.blender.org/manual/en/latest/addons/scene_gltf2.html
+
+FASHN adapter now distinguishes flat-lay product photos from model photos and checks all three required weight files before reporting available. Upstream documentation: https://github.com/fashn-AI/fashn-vton-1.5
+
+Validation: three Studio intake checks passed in a synthetic JS harness with mocked URL, encoding and digest; UI scripts parsed. Real browser rendering, actual SHA-256 runtime, Python CI and model inference remain unverified. Local Git clone failed due to DNS. No production deployment.
