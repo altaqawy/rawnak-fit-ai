@@ -127,3 +127,33 @@
 .garment-source-status.hidden{display:none!important}
 .fit-embed .garment-source-status{margin:5px 10px;padding:8px 10px;font-size:11px}
 @media(max-width:550px){.garment-source-status{margin:6px 12px 2px;font-size:11px}}
+
+
+/* Alpha 1.2 — optional same-type clothing color transfer.
+   Constrained browser-local recolor, not semantic apparel replacement. */
+.clothing-swap-controls {
+  margin:8px 18px 3px;padding:12px 14px;display:grid;gap:9px;
+  background:linear-gradient(135deg,#203d2e,#18372f);
+  border:1px solid #bceea54d;border-radius:13px;
+}
+.clothing-swap-controls.hidden{display:none!important}
+.clothing-swap-controls strong {
+  color:#c5efa2;font:800 11px system-ui;letter-spacing:.8px;display:block;direction:ltr;text-align:right
+}
+.clothing-swap-controls small {font-size:11px;line-height:1.65;color:#c1d6c4;display:block}
+.clothing-swap-actions {display:flex;gap:9px;flex-wrap:wrap}
+.clothing-swap-actions .btn {flex:1;min-width:140px;font-size:11px}
+.clothing-swap-actions .btn.selected {background:#c7eea4;border-color:#c7eea4;color:#183522}
+.clothing-swap-controls label {
+  display:flex;gap:10px;align-items:center;justify-content:space-between;
+  font-size:11px;color:#e4f5dc
+}
+.clothing-swap-controls output{font:700 12px system-ui;color:#c5efa2;direction:ltr}
+.clothing-swap-controls input[type=range]{width:100%;accent-color:#c5efa2}
+.clothing-swap-controls #swap-status{color:#b0c8bd;font-size:10px}
+.mode-button:disabled{opacity:.45;cursor:not-allowed}
+.fit-embed .clothing-swap-controls{margin:5px 10px;padding:9px 11px}
+@media(max-width:560px){
+  .clothing-swap-controls{margin:7px 12px 3px;padding:10px 11px}
+  .clothing-swap-actions .btn{min-width:0;flex-basis:100%}
+}
