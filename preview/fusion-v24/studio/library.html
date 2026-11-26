@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e2018">
+<meta name="description" content="RAWNAK FIT AI — ارفع صور المنتج فقط، والقوالب يتم اختيارها تلقائيًا">
+<title>RAWNAK FIT — Photo to Template</title>
+<link rel="stylesheet" href="./auto.css?v=20261118-auto1">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
+</script>
+</head>
+<body>
+<header class="navigation">
+ <a class="brand" href="../">✳ <strong>RAWNAK FIT</strong><span> / AUTO STUDIO</span></a>
+ <nav><a href="./fusion-lab.html">Fusion Lab V2.4</a><a href="./template-intake.html">Blender / GLB Import</a><a href="./bag-builder.html">Bag Builder · شنط نسائية</a><a href="../demo/">المتجر التجريبي</a><a href="./capture.html">إرشادات تصوير اختيارية</a><a href="../">المراية اللايف</a></nav>
+</header>
+<main>
+ <section class="hero">
+  <p class="eyebrow">PHOTO-ONLY · AUTO TEMPLATE ENGINE</p>
+  <h1>صور المنتج وبس.<br><em>والباقي علينا.</em></h1>
+  <p>ارفع صور منتجك مرة واحدة. النظام يحاول يتعرف على نوعه، يختار أقرب قالب ثلاثي الأبعاد، ويستخرج لونًا تقريبيًا لعمل معاينة. مفيش مقاسات أو GLB أو تحديد زوايا مطلوب منك.</p>
+  <div class="tags"><span>بدون نمذجة يدوية</span><span>بدون توكنز لكل فريم</span><span>التجهيز محلي في النسخة التجريبية</span></div>
+ </section>
+ <section class="workspace">
+  <div class="source">
+   <div class="section-head"><p class="eyebrow">01 / UPLOAD</p><h2>ارفع صور المنتج</h2></div>
+   <label class="dropzone" id="dropzone" for="product-photos">
+     <span class="upload-glyph">↑</span>
+     <strong>اسحب صور المنتج هنا أو اضغط للاختيار</strong>
+     <small>من صورة واحدة لحد 24 صورة · JPG / PNG / WEBP · بدون أي بيانات إضافية</small>
+   </label>
+   <input type="file" id="product-photos" accept="image/jpeg,image/png,image/webp" multiple hidden>
+   <div class="strip" id="photos" aria-live="polite"></div>
+   <p id="image-status" class="status" role="status">اختار الصور علشان يبدأ التحليل تلقائيًا</p>
+   <button type="button" id="reset" class="quiet" hidden>مسح الصور والبدء من جديد</button>
+   <div class="process">
+    <div><b>01</b><span>تحليل الصور والتعرف على المنتج</span><small id="step1">لم يبدأ</small></div>
+    <div><b>02</b><span>اختيار قالب 3D وإعداد اللون</span><small id="step2">لم يبدأ</small></div>
+    <div><b>03</b><span>معاينة النتيجة التجريبية</span><small id="step3">لم يبدأ</small></div>
+   </div>
+  </div>
+  <div class="result">
+   <div class="section-head"><p class="eyebrow">02 / LIVE PREVIEW</p><h2>القالب المقترح</h2></div>
+   <div class="viewer" id="viewer"><div class="empty" id="viewer-empty"><span class="orbit">◌</span><strong>معاينة 3D</strong><small>هيظهر النموذج بعد ما ترفع الصور</small></div></div>
+   <div id="result-status" class="status" role="status">لسه مفيش منتج للتحليل</div>
+   <div class="analysis" id="analysis" hidden>
+     <div><small>الفئة المتوقعة</small><strong id="category-label">—</strong></div>
+     <div><small>القالب المختار</small><strong id="template-label">—</strong></div>
+     <div><small>اللون المقترح</small><strong><span class="swatch" id="color-swatch"></span><span id="color-label">—</span></strong></div>
+   </div>
+   <div id="notice" class="notice" hidden></div>
+   <div class="actions">
+     <button id="export" class="primary" type="button" disabled>تنزيل تقرير النتيجة</button>
+     <a href="../diagnostics/3d-preview.html?product=tee" id="reference-link">شوف مكتبة الـ3D المرجعية ↗</a>
+   </div>
+  </div>
+ </section>
+ <p class="disclaimer">نسخة تجريبية: اختيار القالب واستخراج اللون مش إعادة بناء دقيقة للمنتج من الصور. الموديلات الحالية توضيحية ولا يمكن منها تأكيد المقاس أو عرض جميع التفاصيل المخفية. التكامل التجاري وتوليد Texture/Geometry مطابقين للصور ما زالا مرحلة تطوير.</p>
+ <footer>RAWNAK FIT AI · PHOTO-ONLY ALPHA 0.2 <a href="https://github.com/altaqawy/rawnak-fit-ai">GitHub</a></footer>
+</main>
+<script type="module" src="./auto.js?v=20261118-auto1"></script>
+</body></html>

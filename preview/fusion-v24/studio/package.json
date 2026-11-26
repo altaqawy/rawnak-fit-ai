@@ -1,0 +1,16 @@
+{
+  "name": "rawnak-autofit-studio",
+  "private": true,
+  "type": "module",
+  "version": "0.5.0",
+  "description": "Local-first merchant AutoFit Studio MVP",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:bag:browser": "node scripts/test-bag-browser.mjs",
+    "vendor:check": "node scripts/sync-three.mjs --check"
+  },
+  "devDependencies": {
+    "playwright-core": "1.62.1",
+    "three": "0.183.2"
+  }
+}

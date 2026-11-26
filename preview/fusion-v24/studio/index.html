@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c1916">
+<meta name="description" content="RAWNAK AutoFit Studio — تجهيز منتجات المتاجر للتجربة الافتراضية">
+<title>RAWNAK AutoFit Studio — Product Asset Lab</title>
+<link rel="stylesheet" href="./style.css?v=20261118.2">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="logo">✳</span><div><strong>RAWNAK <em>AutoFit</em></strong><small>PRODUCT INTELLIGENCE STUDIO</small></div></div>
+    <nav><a href="./fusion-lab.html">Fusion V2.4 ✳</a><a href="./bag-builder.html">Modular Bag Builder ✳</a><a href="./library.html">التجربة التلقائية · صور فقط ✳</a><a href="../demo/">المنتجات التجريبية</a><a href="./capture.html" id="capture-nav">دليل التصوير</a><a href="../">المراية اللايف</a><a href="https://github.com/altaqawy/rawnak-fit-ai" rel="noopener" target="_blank">GitHub ↗</a><span class="version">ALPHA 0.5.2 · PRODUCT FIXTURES</span></nav>
+  </header>
+  <main>
+    <section class="intro">
+      <div class="eyebrow"><span class="pulse"></span> PRODUCT-TO-AR PIPELINE · LOCAL-FIRST</div>
+      <h1>من صورة منتج إلى <em>معاينة ثلاثية الأبعاد</em></h1>
+      <p>ارفع صور المنتج، وسيحاول المحرك تحديد نوعه واختيار أفضل طريقة لتجهيزه. الساعات والخواتم والغوايش لها قوالب 3D أولية قابلة للتعديل؛ باقي الفئات تتحول إلى خطة تجهيز ومراجعة واضحة.</p>
+    </section>
+    <div id="fixture-message" hidden style="padding:12px 16px;background:#244533;border:1px solid #a8d88866;border-radius:12px;margin:0 0 15px;color:#d9efc0;font-size:12px;line-height:1.8"></div>
+    <div style="margin:8px 0 22px;padding:18px 22px;border:1px solid #b3e49486;border-radius:15px;background:#203e2e;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap">
+      <div><strong style="font-size:17px;color:#d6ffb4">الجديد: ترفع الصور فقط والباقي تلقائي</strong><p style="margin:4px 0;color:#b0d0b6;font-size:12px">الواجهة التالية مخصصة للتجار بدون نمذجة أو ملفات GLB أو مقاسات إجبارية. الصفحة الحالية أدوات التطوير القديمة.</p></div>
+      <a class="button light" href="./library.html" style="text-decoration:none">افتح Photo-Only Studio ↗</a>
+    </div>
+    <section class="workspace">
+      <div class="left-column">
+        <section class="panel" aria-labelledby="upload-title">
+          <div class="panel-heading"><div><span class="step">01 · INPUT</span><h2 id="upload-title">صور المنتج</h2></div><span class="micro">على جهازك</span></div>
+          <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="ارفع صور المنتج">
+            <div class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V3m0 0L7 8m5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div>
+            <strong>اسحب الصور هنا أو اضغط للاختيار</strong>
+            <span>PNG / JPG / WEBP · حتى 48 صورة · 10MB للصورة · حمّل على دفعات</span>
+            <input id="file-input" type="file" multiple accept="image/png,image/jpeg,image/webp" hidden>
+          </div>
+          <div id="photo-strip" class="photo-strip" aria-label="الصور المرفوعة"></div>
+          <div class="capture-hint"><div><strong id="capture-photo-status">حدد الفئة لعرض متطلبات التصوير</strong><small id="capture-photo-details">الحد الأدنى يختلف بين الساعات والخواتم والملابس</small></div><a id="capture-photo-guide" href="./capture.html">دليل تصوير هذه الفئة ↗</a></div>
+          <p class="note">لا تُرفع صور المنتجات لأي خادم في النسخة دي. تحليل MobileNet بيحصل داخل المتصفح، وملفات النموذج فقط هي اللي بتُحمّل من CDN.</p>
+          <div class="grid-fields">
+            <label class="field field-span"><span>اسم المنتج</span><input id="product-name" type="text" maxlength="100" placeholder="مثال: ساعة Rawnak Classic" autocomplete="off"></label>
+            <label class="field"><span>SKU / رمز المنتج</span><input id="sku" type="text" maxlength="64" placeholder="RW-001" dir="ltr"></label>
+            <label class="field"><span>الفئة</span><select id="category" aria-label="فئة المنتج"></select></label>
+            <label class="field"><span id="size-label">القياس الحقيقي</span><div class="unit-field"><input id="measurement" type="number" min="0.1" max="999" step="0.1" inputmode="decimal"><span id="size-unit">mm</span></div></label>
+            <label class="field"><span>لون النموذج</span><div class="color-field"><input id="product-color" type="color" value="#c4d7bd"><span id="color-code" dir="ltr">#c4d7bd</span></div></label>
+          </div>
+          <button id="analyze" class="button light wide" type="button">تحليل الصورة وتحديد مسار المنتج <span>↗</span></button>
+          <p id="analysis-status" class="status-line" aria-live="polite">ارفع صورة واحدة على الأقل لبدء التحليل</p>
+        </section>
+        <section class="panel" aria-labelledby="route-title">
+          <div class="panel-heading"><div><span class="step">02 · ROUTE</span><h2 id="route-title">المحرك المختار</h2></div><span id="routing-source" class="micro">—</span></div>
+          <div class="engine-box"><div class="engine-icon" id="engine-icon">⌁</div><div><strong id="engine-name">في انتظار الصور</strong><p id="engine-description">اختيار محرك بناء المنتج تلقائيًا أو يدويًا</p></div></div>
+          <div class="route-meta"><span>التجهيز الحالي</span><b id="engine-type">—</b></div>
+          <div class="route-meta"><span>حالة المنتج</span><b id="engine-status">ينتظر الإدخال</b></div>
+          <ul id="requirements" class="requirements"></ul>
+          <button id="open-library" type="button" class="button outline wide" style="margin-top:12px">ابدأ التجربة التلقائية · ارفع الصور فقط ↗</button>
+          <div class="material-panel">
+            <div class="material-header"><strong>تأكيد الأجزاء وحركتها</strong><small>اقتراح حسب نوع المنتج · ليس كشفًا مؤكدًا من الصور</small></div>
+            <div id="material-parts" class="material-parts"></div>
+          </div>
+        </section>
+      </div>
+      <div class="right-column">
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-heading"><div><span class="step">03 · PREVIEW</span><h2 id="preview-title">معاينة ثلاثية الأبعاد</h2></div><span class="micro">DRAG TO ROTATE · 360°</span></div>
+          <div id="preview-stage" class="preview-stage">
+            <div id="viewer" class="viewer" aria-label="عارض مجسم ثلاثي الأبعاد"></div>
+            <div id="preview-placeholder" class="placeholder">
+              <span class="orbit">◌</span><h3>القطعة لسه بتتجهز</h3>
+              <p>ارفع صور ساعة أو خاتم أو غويشة، أو جرّب نموذجًا توضيحيًا</p>
+            </div>
+            <div id="preview-label" class="preview-label">GENERIC TEMPLATE · NOT PRODUCT EXACT</div>
+          </div>
+          <div class="preview-actions">
+            <button type="button" id="build-model" class="button accent" disabled>بناء النموذج المبدئي 3D</button>
+            <button type="button" id="download-glb" class="button outline" disabled>تنزيل GLB</button>
+            <button type="button" id="export-json" class="button outline" disabled>تصدير بيانات المنتج</button>
+          </div>
+          <div class="demo-tools"><span>جرّب بدون صور:</span><button type="button" data-demo="watch">ساعة</button><button type="button" data-demo="ring">خاتم</button><button type="button" data-demo="bangle">غويشة</button></div>
+          <div class="disclosure"><strong>الفرق بين النموذج التقريبي والمنتج الحقيقي</strong><p>النموذج الحالي بيعتمد على شكل هندسي عام ومقاس تدخلّه، وليس إعادة بناء فعلية من صور المنتج. ألوان الصور تقديرية، وملابس/شنط/أحذية لسه محتاجة محركات 3D مخصصة. ما نعرضش حاجة على إنها دقيقة 100% من غير مراجعة التاجر.</p></div>
+        </section>
+        <section class="panel" aria-labelledby="queue-title">
+          <div class="panel-heading"><div><span class="step">04 · CATALOG</span><h2 id="queue-title">قائمة التجهيز</h2></div><span id="items-count" class="micro">0 منتجات</span></div>
+          <div id="queue" class="queue"><p class="empty-queue">مافيش منتجات متضافة لسه</p></div>
+          <div class="queue-actions"><button id="queue-product" type="button" class="button light" disabled>إضافة المنتج للقائمة</button><button id="export-queue" type="button" class="button outline" disabled>تصدير القائمة JSON</button></div>
+          <p class="note">الصور الأصلية لا تدخل في ملف JSON. القائمة محفوظة في ذاكرة الصفحة فقط في النسخة التجريبية.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+  <footer><span>© RAWNAK FIT AI · AUTOFIT STUDIO</span><span>ALPHA 0.5 / TEMPLATE DEMO · NOT A VERIFIED PRODUCT DIGITAL TWIN</span></footer>
+</div>
+<script type="module" src="./app.js?v=20261118.2"></script>
+</body></html>

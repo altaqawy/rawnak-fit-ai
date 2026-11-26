@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-18",
+  "purpose": "source research only, no external assets or model weights copied",
+  "compliance": {
+    "defaultAllowImport": false,
+    "requirePerAssetLicense": true,
+    "requireSellerPhotoRights": true,
+    "requireMerchantApproval": true,
+    "warning": "An open-source code license does not automatically license trained model weights, datasets, or marketplace 3D files."
+  },
+  "categoryRoutes": {
+    "tshirt": {
+      "family": "garment",
+      "template": "sewn-pattern",
+      "providers": [
+        "garmentcode",
+        "swifttailor",
+        "patterngsl"
+      ],
+      "engine": "rigged-garment",
+      "extraInputs": [
+        "chest_cm",
+        "shoulder_cm",
+        "garment_length_cm",
+        "size_chart"
+      ]
+    },
+    "hoodie": {
+      "family": "garment",
+      "template": "sewn-pattern",
+      "providers": [
+        "garmentcode",
+        "swifttailor"
+      ],
+      "engine": "rigged-garment"
+    },
+    "jacket": {
+      "family": "garment",
+      "template": "sewn-pattern",
+      "providers": [
+        "garmentcode",
+        "swifttailor"
+      ],
+      "engine": "rigged-garment"
+    },
+    "dress": {
+      "family": "garment",
+      "template": "sewn-pattern",
+      "providers": [
+        "garmentcode",
+        "swifttailor",
+        "patterngsl"
+      ],
+      "engine": "rigged-garment"
+    },
+    "watch": {
+      "family": "rigid-hybrid",
+      "template": "case-dial-strap",
+      "providers": [
+        "meshy",
+        "trellis2"
+      ],
+      "engine": "hand-wrist",
+      "extraInputs": [
+        "case_diameter_mm",
+        "strap_width_mm",
+        "strap_type"
+      ]
+    },
+    "ring": {
+      "family": "rigid",
+      "template": "band-stone",
+      "providers": [
+        "meshy",
+        "trellis2"
+      ],
+      "engine": "finger",
+      "extraInputs": [
+        "internal_diameter_mm",
+        "stone_diameter_mm"
+      ]
+    },
+    "bangle": {
+      "family": "rigid-hybrid",
+      "template": "bangle-or-chain",
+      "providers": [
+        "meshy",
+        "trellis2"
+      ],
+      "engine": "hand-wrist"
+    },
+    "glasses": {
+      "family": "hinged-rigid",
+      "template": "frame-lenses-arms",
+      "providers": [
+        "meshy",
+        "trellis2"
+      ],
+      "engine": "face"
+    },
+    "earrings": {
+      "family": "rigid-hybrid",
+      "template": "stud-or-drop",
+      "providers": [
+        "meshy",
+        "trellis2"
+      ],
+      "engine": "ear"
+    },
+    "bag": {
+      "family": "hybrid",
+      "template": "body-straps-hinges",
+      "providers": [
+        "meshy",
+        "trellis2",
+        "colmap"
+      ],
+      "engine": "shoulder-hip"
+    },
+    "shoes": {
+      "family": "hybrid",
+      "template": "upper-sole-laces",
+      "providers": [
+        "meshy",
+        "trellis2",
+        "colmap"
+      ],
+      "engine": "ankle-foot"
+    }
+  },
+  "candidates": [
+    {
+      "id": "garmentcode",
+      "name": "GarmentCode",
+      "url": "https://github.com/maria-korosteleva/GarmentCode",
+      "use": "editable parametric garment patterns and preset bodies",
+      "categories": [
+        "tshirt",
+        "hoodie",
+        "jacket",
+        "dress"
+      ],
+      "license": "MIT repository code",
+      "assetIngest": "none",
+      "state": "research-prototype",
+      "priority": 1
+    },
+    {
+      "id": "swifttailor",
+      "name": "SwiftTailor (Qualcomm)",
+      "url": "https://github.com/Qualcomm-AI-research/garment-gen",
+      "use": "image/text to sewing pattern to garment mesh",
+      "categories": [
+        "tshirt",
+        "hoodie",
+        "jacket",
+        "dress"
+      ],
+      "license": "BSD-3-Clause-Clear repository; verify release weights/dependencies separately",
+      "assetIngest": "none",
+      "state": "research-prototype",
+      "priority": 1
+    },
+    {
+      "id": "patterngsl",
+      "name": "PatternGSL",
+      "url": "https://lagrangeli.github.io/PatternGSL/",
+      "use": "single-image structured pattern research",
+      "categories": [
+        "tshirt",
+        "hoodie",
+        "jacket",
+        "dress"
+      ],
+      "license": "verify exact code, weights, dataset and download availability",
+      "assetIngest": "none",
+      "state": "research-only",
+      "priority": 2
+    },
+    {
+      "id": "meshy",
+      "name": "Meshy API Multi-Image to 3D",
+      "url": "https://docs.meshy.ai/en/api/multi-image-to-3d",
+      "use": "paid image to textured 3D for rigid/hybrid accessories",
+      "categories": [
+        "watch",
+        "ring",
+        "bangle",
+        "glasses",
+        "earrings",
+        "bag",
+        "shoes"
+      ],
+      "license": "service/plan-specific; commercial rights and user images must be reviewed",
+      "assetIngest": "none",
+      "state": "paid-pilot",
+      "priority": 1
+    },
+    {
+      "id": "trellis2",
+      "name": "TRELLIS.2 (Microsoft)",
+      "url": "https://github.com/microsoft/TRELLIS.2",
+      "use": "local GPU/cloud generation for accessory draft meshes",
+      "categories": [
+        "watch",
+        "ring",
+        "bangle",
+        "glasses",
+        "earrings",
+        "bag",
+        "shoes"
+      ],
+      "license": "MIT model and code per repository; verify dependencies",
+      "assetIngest": "none",
+      "state": "gpu-required",
+      "priority": 2
+    },
+    {
+      "id": "colmap",
+      "name": "COLMAP",
+      "url": "https://colmap.github.io/",
+      "use": "multi-view structure-from-motion/photogrammetry for captured rigid objects",
+      "categories": [
+        "bag",
+        "shoes"
+      ],
+      "license": "check repository licenses of chosen build and dependencies",
+      "assetIngest": "none",
+      "state": "requires-capture",
+      "priority": 2
+    },
+    {
+      "id": "polyhaven",
+      "name": "Poly Haven",
+      "url": "https://polyhaven.com/license",
+      "use": "CC0 textures, HDRI, reference assets when appropriate",
+      "categories": [
+        "tshirt",
+        "watch",
+        "ring",
+        "bangle",
+        "glasses",
+        "earrings",
+        "bag",
+        "shoes"
+      ],
+      "license": "CC0 assets, check actual match and availability",
+      "assetIngest": "none",
+      "state": "assets-eligible-review",
+      "priority": 1
+    },
+    {
+      "id": "blendkit",
+      "name": "Blendkit (formerly BlenderKit)",
+      "url": "https://www.blendkit.com/docs/licenses/",
+      "use": "reference models/texture assets subject to individual license and redistribution restrictions",
+      "categories": [
+        "tshirt",
+        "watch",
+        "ring",
+        "bangle",
+        "glasses",
+        "earrings",
+        "bag",
+        "shoes"
+      ],
+      "license": "CC0 or royalty-free; cannot assume sublicensing or raw GLB redistribution",
+      "assetIngest": "none",
+      "state": "license-review",
+      "priority": 3
+    },
+    {
+      "id": "sketchfab",
+      "name": "Sketchfab",
+      "url": "https://sketchfab.com/licenses",
+      "use": "reference geometry only where a specific asset permits intended embedding",
+      "categories": [
+        "watch",
+        "ring",
+        "glasses",
+        "bag",
+        "shoes"
+      ],
+      "license": "license may restrict standalone 3D file distribution or extraction",
+      "assetIngest": "none",
+      "state": "license-review",
+      "priority": 3
+    }
+  ]
+}

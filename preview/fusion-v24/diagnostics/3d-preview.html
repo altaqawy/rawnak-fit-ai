@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10231c">
+<title>RAWNAK FIT — Rigged Garment GLB Lab</title>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"}}
+</script>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 10% 15%,#254b33,#0e1f17 52%);color:#edf7e9;font:14px system-ui,'Segoe UI',sans-serif}
+main{max-width:1050px;margin:auto;padding:22px 16px 46px}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:30px}
+a{color:#c7f29d;text-decoration:none}a:hover{text-decoration:underline}
+.kicker{font-size:11px;color:#c2e49b;letter-spacing:1.2px;font-weight:700}
+h1{font-size:clamp(24px,4vw,43px);line-height:1.4;margin:13px 0}
+p{line-height:1.9;color:#b7c9b6}
+.layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(250px,.7fr);gap:15px}
+#preview{position:relative;min-width:0;min-height:430px;height:min(64vh,600px);background:#162b20;border:1px solid #b7ed985c;border-radius:18px;overflow:hidden;touch-action:none;cursor:grab}
+#preview:active{cursor:grabbing}
+#preview canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.panel{padding:21px 18px;background:#1a3326;border:1px solid #d5f5a52b;border-radius:18px}
+.control{margin:18px 0;display:grid;gap:9px}
+label{font-size:12px;color:#d5ebca}
+select,input[type="range"]{width:100%;accent-color:#c2f092}
+select{height:43px;border-radius:9px;border:1px solid #a5c99655;background:#122b1c;color:#edf7e9;padding:6px 11px}
+button{border:1px solid #bfdb9b4a;border-radius:9px;background:#c6efa0;color:#1a3327;font:700 13px system-ui;padding:12px;cursor:pointer}
+button:disabled{opacity:.5}
+#status{border-top:1px solid #badea32c;padding-top:14px;color:#c6daaf;line-height:1.7;overflow-wrap:anywhere}
+.disclaimer{background:#4a3a224d;color:#eadbb6;border:1px solid #ebd19f48;padding:14px;border-radius:11px;font-size:12px;line-height:1.9;margin-top:22px}
+.hidden{display:none}
+@media(max-width:720px){.layout{grid-template-columns:1fr}#preview{height:380px;min-height:320px}}
+</style>
+</head>
+<body>
+<main>
+<nav><strong>✳ RAWNAK FIT / 3D ENGINE</strong><a href="../demo/">العودة للمتجر التجريبي</a></nav>
+<div class="kicker">ALPHA 1.1 · RIGGED GLB GARMENT LAB · NO CAMERA REQUIRED</div>
+<h1>لف المجسم من كل الاتجاهات <span style="color:#bdeb9f">بدون كاميرا</span></h1>
+<p>التجربة الجديدة فيها جسم قماش منحني ورقبة دائرية وأكمام منفصلة بتتحرك مع الذراعين. اسحب بإصبعك فوق المجسم عشان تلفه من أي زاوية، وبعدها جرّبه على الكاميرا.</p>
+<div class="layout">
+  <div id="preview" role="img" aria-label="معاينة مجسم المنتج ثلاثي الأبعاد، قابل للتدوير"></div>
+  <div class="panel">
+    <div class="control"><label for="category">نوع المجسم</label>
+      <select id="category">
+        <option value="watch">ساعة بجلد أبيض</option>
+        <option value="tee">تيشيرت أخضر</option>
+        <option value="glasses">نظارة سوداء/ذهبية</option>
+        <option value="bag">شنطة جلد بني</option>
+        <option value="bracelet">غويشة</option>
+        <option value="jacket">جاكيت</option>
+        <option value="shoes">حذاء</option>
+      </select>
+    </div>
+    <div class="control"><label for="yaw">لف يمين / شمال: <output id="yaw-value">0°</output></label>
+      <input id="yaw" type="range" min="-180" max="180" value="0" step="5">
+    </div>
+    <div class="control"><label for="tilt">زاوية النظر: <output id="tilt-value">0°</output></label>
+      <input id="tilt" type="range" min="-35" max="35" value="0" step="5">
+    </div>
+    <div class="control"><label for="zoom">حجم المجسم: <output id="zoom-value">110%</output></label>
+      <input id="zoom" type="range" min="70" max="145" value="110" step="5">
+    </div>
+    <div class="control" id="glb-row">
+      <label><input id="use-glb" type="checkbox" checked> استخدام GLB مرجعي بعظام للكتفين</label>
+      <small id="asset-load-status" role="status" aria-live="polite" style="color:#bfe5a4;line-height:1.7">جارٍ تجهيز تحميل ملف GLB…</small>
+      <small style="color:#bdc8b4">المجسم المرجعي أصلي للتجربة، لم يُستخرج من صور التيشيرت ولم تتم مراجعة قياساته.</small>
+      <label for="local-glb">اختبر ملف GLB من جهازك (حتى 20MB، بدون رفع للسيرفر)</label>
+      <input id="local-glb" type="file" accept=".glb,model/gltf-binary"
+        style="max-width:100%;font-size:12px;color:#d0e9c1">
+      <small id="local-import-status" role="status" aria-live="polite"
+        style="color:#c9d9a9">لازم SkinnedMesh بعظمتَي Shoulder_L و Shoulder_R</small>
+    </div>
+    <div class="control" id="sleeve-row">
+       <label for="sleeve">رفع الأكمام: <output id="sleeve-value">0°</output></label>
+       <input id="sleeve" type="range" min="-60" max="60" value="0" step="5">
+       <small style="color:#b7c9b6">اختبار ديناميكية الأكمام بدون كاميرا (T-shirt / Jacket)</small>
+     </div>
+    <div class="control"><label><input id="auto" type="checkbox" checked> دوران تلقائي 360°</label></div>
+    <button type="button" id="capture" disabled>حفظ صورة المجسم</button>
+    <p id="status" aria-live="polite">جاري تحميل Three.js وتهيئة WebGL…</p>
+    <div class="disclaimer"><strong>تنبيه مهم:</strong> دي نماذج هندسية تجريبية بعمق 3D، مش موديلات مستخرجة بدقة من صور المنتج ولا محاكاة قماش فيزيائية. المنتج الحقيقي يحتاج ملف GLB معتمد وصور ومقاسات صحيحة.</div>
+    <p><a href="../demo/">جرّب نفس المنتج بالكاميرا داخل المتجر</a></p>
+  </div>
+</div>
+</main>
+<script defer src="../src/fit-garment-motion.js?v=20261118-alpha110"></script>
+<script type="module">
+const $=id=>document.getElementById(id);
+let scene=null,active=true,last=0,angle=0,drag=null,lastCategory=null;
+const toRad=d=>d*Math.PI/180;
+const query=new URLSearchParams(location.search);
+if (query.has('product') && [...$('category').options].some(x=>x.value===query.get('product')))
+  $('category').value=query.get('product');
+try {
+  const { Fit3DRenderer } = await import('../src/fit-3d-renderer.js?v=20261118-alpha110');
+  scene=new Fit3DRenderer($('preview'));
+  $('status').textContent='WebGL جاهز ✓ — جارٍ تحميل Skinned GLB مرجعي…';
+  $('capture').disabled=false;
+  scene.ensureReferenceGarment().then((model)=>{
+    if(!active || !scene)return;
+    $('asset-load-status').textContent=model
+      ? '✓ GLB محمّل · 3 Shoulder Joints · عرض تجريبي غير معتمد'
+      : 'تعذر تحميل GLB — المعروض هو المجسم القديم للمقارنة · '+
+        (scene.referenceStatus.message||'تحقق من الاتصال وملف GLB');
+    lastCategory=null;
+  });
+} catch(error) {
+  $('status').textContent='محرك 3D فشل على الجهاز: '+(error?.message||error);
+  console.error('[RAWNAK FIT 3D INSPECTOR]',error);
+}
+function loop(now){
+  if(!active)return;
+  if(scene && now-last>=33){
+    last=now;
+    if($('auto').checked){
+      angle=(angle+1.5)%360;
+      $('yaw').value=String(angle>180?angle-360:angle);
+    }else angle=Number($('yaw').value);
+    $('yaw-value').textContent=Math.round(angle)+'°';
+    $('tilt-value').textContent=$('tilt').value+'°';
+    $('zoom-value').textContent=$('zoom').value+'%';
+    const category=$('category').value;
+    $('glb-row').classList.toggle('hidden',category!=='tee');
+    const wantReference=$('use-glb').checked;
+    if(scene.useReferenceGLB!==wantReference)scene.setUseReferenceGLB(wantReference);
+    if(category!==lastCategory){
+      lastCategory=category;
+      const mesh=scene.meshes?.[category]?.userData?.garmentMesh;
+      const geo=mesh?.geometry;
+      const n=geo?.attributes?.position?.count || 0;
+      const triangles=geo?.index?.count ? geo.index.count/3 : (geo?.index?.length||0)/3;
+      const imported=category==='tee' && scene.useReferenceGLB && scene.referenceTee;
+      $('status').textContent=imported
+        ? (scene.referenceStatus.status==='local_unverified'
+           ? 'LOCAL GLB ✓ · ملفك للمعاينة فقط، بدون اعتماد أو رفع'
+           : 'GLB / SkinnedMesh ✓ · 3 Joint Rig · دي تجربة عظام مش قياس ملابس معتمد')
+        : n
+          ? 'Procedural Legacy · '+n+' vertices · '+Math.round(triangles)+' triangles'
+          : '3D WebGL ✓ · مجسم هندسي توضيحي';
+    }
+    $('sleeve-row').classList.toggle('hidden',category!=='tee'&&category!=='jacket');
+    $('sleeve-value').textContent=$('sleeve').value+'°';
+    try{scene.preview(category,{yaw:toRad(angle),tilt:toRad(Number($('tilt').value)),
+      sleeveAngle:toRad(Number($('sleeve').value)),scale:Number($('zoom').value)/100});}
+    catch(error){$('status').textContent='فشل عرض المجسم: '+(error?.message||error);console.warn(error);}
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+$('capture').addEventListener('click',()=>{
+ if(!scene)return;
+ const anchor=document.createElement('a');
+ anchor.href=scene.canvas.toDataURL('image/png');
+ anchor.download='rawnak-3d-'+$('category').value+'.png';
+ anchor.click();
+});
+$('yaw').addEventListener('input',()=>{$('auto').checked=false;});
+$('use-glb').addEventListener('change',()=>{lastCategory=null;});
+$('local-glb').addEventListener('change',async event=>{
+ const file=event.target.files?.[0];
+ if(!file||!scene)return;
+ $('local-import-status').textContent='جاري فحص ملف GLB محليًا وتحميل الهيكل…';
+ try{
+  const holder=await scene.importLocalGarment(file);
+  if(!holder)return;
+  $('category').value='tee';
+  $('use-glb').checked=true;
+  scene.setUseReferenceGLB(true);
+  lastCategory=null;
+  $('asset-load-status').textContent='✓ ملف GLB محلي غير معتمد · '+file.name;
+  $('local-import-status').textContent='تم تحميل المجسم من جهازك فقط. لم يتم إرساله لأي خادم.';
+ }catch(error){
+  $('local-import-status').textContent='فشل استيراد الملف: '+(error?.message||error);
+ }
+});
+const surface=$('preview');
+surface.addEventListener('pointerdown',event=>{
+  if(event.button!==0 && event.pointerType==='mouse')return;
+  $('auto').checked=false;
+  drag={id:event.pointerId,x:event.clientX,y:event.clientY,
+    yaw:Number($('yaw').value),tilt:Number($('tilt').value)};
+  surface.setPointerCapture?.(event.pointerId);
+});
+surface.addEventListener('pointermove',event=>{
+  if(!drag||drag.id!==event.pointerId)return;
+  const yaw=((drag.yaw+(event.clientX-drag.x)*.65+180)%360+360)%360-180;
+  const tilt=Math.max(-35,Math.min(35,drag.tilt+(event.clientY-drag.y)*.22));
+  $('yaw').value=String(Math.round(yaw));
+  $('tilt').value=String(Math.round(tilt));
+});
+const release=event=>{if(drag?.id===event.pointerId)drag=null;};
+surface.addEventListener('pointerup',release);
+surface.addEventListener('pointercancel',release);
+addEventListener('pagehide',()=>{active=false;scene?.dispose();scene=null;});
+</script>
+</body>
+</html>

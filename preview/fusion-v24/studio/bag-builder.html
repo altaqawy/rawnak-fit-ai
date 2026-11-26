@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f4f3ed" />
+    <meta
+      name="description"
+      content="مشغل حقائب رونق لبناء شنطة قابلة للتعديل من المقاسات وصور المنتج"
+    />
+    <title>Bag Atelier · RAWNAK FIT</title>
+    <link rel="stylesheet" href="./bag-builder.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three/build/three.module.min.js",
+          "three/addons/": "./vendor/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="nav">
+      <a class="wordmark" href="./" dir="ltr"><i aria-hidden="true">✳</i> RAWNAK <b>FIT</b></a>
+      <nav>
+        <a href="./library.html" data-en="Photo studio">استوديو الصور</a
+        ><a href="../demo/" data-en="Try-on">تجربة الارتداء</a>
+      </nav>
+      <div class="nav-tools">
+        <button id="language" type="button" lang="en">English</button
+        ><button id="theme" type="button" data-en="Dark mode">الوضع الداكن</button>
+      </div>
+    </header>
+    <main>
+      <div class="heading">
+        <div>
+          <div class="overline" dir="ltr">RAWNAK FIT / ATELIER</div>
+          <h1 data-en="Bag atelier">مشغل الحقائب</h1>
+        </div>
+        <button id="import" class="outline" data-en="Open project">فتح مشروع</button
+        ><input id="project-file" type="file" accept=".json,application/json" hidden />
+      </div>
+      <nav class="steps" id="steps" aria-label="Workflow"></nav>
+      <div class="workspace">
+        <section class="viewer" aria-label="3D">
+          <div class="stage" id="stage">
+            <div class="stage-caption">
+              <span class="overline" data-en="Model view">عرض المجسم</span
+              ><strong id="family-name"></strong>
+            </div>
+            <div
+              class="stage-message"
+              id="stage-message"
+              role="status"
+              data-en="Preparing the workspace…"
+            >
+              جارٍ تجهيز مساحة العمل…
+            </div>
+            <div class="stage-tools">
+              <label
+                ><span class="sr" data-en="Camera">الكاميرا</span
+                ><select id="camera"></select></label
+              ><button id="reset-view" data-en="Reset view">ضبط المنظور</button>
+            </div>
+          </div>
+          <div class="caption">
+            <div><span class="dot"></span><span id="model-status" role="status"></span></div>
+            <output id="measure-summary" dir="ltr"></output>
+          </div>
+          <div id="comparison" hidden>
+            <div class="compare-head">
+              <strong data-en="Source photograph">الصورة المرجعية</strong
+              ><select id="compare-photo" aria-label="Source photo"></select>
+            </div>
+            <img id="compare-img" alt="" />
+            <p class="fine" id="compare-note"></p>
+            <button id="trace-body" class="outline" data-en="Trace the body outline" hidden>
+              تحديد محيط جسم الشنطة
+            </button>
+            <label class="swatch-field">
+              <span data-en="Sample a photo color">أخذ لون من الصورة</span>
+              <select id="sample-channel">
+                <option value="" data-en="Select a part">اختر الجزء</option>
+                <option value="bodyColor" data-en="Bag body">جسم الشنطة</option>
+                <option value="strapColor" data-en="Leather strap">السير الجلدي</option>
+              </select>
+            </label>
+            <small
+              id="sample-hint"
+              hidden
+              data-en="Tap the material in the photograph. Enter samples its centre."
+              >اضغط على الخامة في الصورة. زر الإدخال يأخذ عينة من المنتصف.</small
+            >
+          </div>
+        </section>
+        <section class="panel" id="controls">
+          <div class="page" data-page="0">
+            <h2 data-en="Structure">الهيكل</h2>
+            <div class="fields">
+              <label class="wide"
+                ><span data-en="Bag family">عائلة الشنطة</span
+                ><select id="style"></select
+              ></label>
+            </div>
+            <h3 data-en="Body measurements">مقاسات الجسم</h3>
+            <div class="fields three" id="dimensions"></div>
+            <div class="fields" id="finishes"></div>
+            <details>
+              <summary data-en="Pattern and construction">الباترون والتقفيل</summary>
+              <div class="fields" id="pattern-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Straps and handles">الأحزمة والأيدي</summary>
+              <div class="fields" id="carry-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Compartments and pockets">الداخل والجيوب</summary>
+              <div class="fields" id="inside-fields"></div>
+            </details>
+            <details>
+              <summary data-en="Branding and hardware">الشعار والإكسسوارات</summary>
+              <div class="fields" id="brand-fields"></div>
+            </details>
+          </div>
+          <div class="page" data-page="1" hidden>
+            <h2 data-en="Product photos">صور المنتج</h2>
+            <p
+              class="intro"
+              data-en="Assign each view. Confirm a straight front or back view to fit the body outline."
+            >
+              حدد زاوية كل صورة. أكّد صورة أمامية أو خلفية مستقيمة لاستخدام حدود الجسم في البناء.
+            </p>
+            <label class="upload"
+              ><span aria-hidden="true">＋</span
+              ><strong data-en="Choose photos">اختار صور المنتج</strong
+              ><small>JPG · PNG · WebP · 10 MB</small
+              ><input
+                id="photos-input"
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp"
+            /></label>
+            <div id="photos-list"></div>
+            <p class="fine" id="photo-quality" role="status"></p>
+            <details>
+              <summary>
+                <span data-en="Reference coverage">تغطية الصور المطلوبة</span>
+                <output id="photo-progress"></output>
+              </summary>
+              <div id="photo-requirements" class="tags"></div>
+            </details>
+            <button id="remove-photos" class="plain" data-en="Remove all references">
+              إزالة كل المراجع
+            </button>
+          </div>
+          <div class="page" data-page="2" hidden>
+            <h2 data-en="Construct the model">بناء المجسم</h2>
+            <p
+              class="intro"
+              data-en="Use your measurements, construction details and any confirmed silhouettes to assemble an editable bag."
+            >
+              اجمع المقاسات وتفاصيل التقفيل وأي حدود خارجية مؤكدة في مجسم تقدر تعدّل أجزاءه.
+            </p>
+            <div class="readout" id="construction-report"></div>
+            <details open>
+              <summary data-en="Fusion V2.3 — evidence-based recommendations">Fusion V2.3 — اقتراحات مبنية على الصور</summary>
+              <p class="fine" data-en="Confirm photo views first. Record visible details manually; hidden parts are not inferred.">
+                أكّد زوايا الصور أولًا. سجّل التفاصيل المرئية يدويًا؛ لا يتم تخمين الأجزاء المخفية.
+              </p>
+              <div class="fields">
+                <label class="field"><span data-en="Observed detail">التفصيل المرئي</span><select id="observation-field"></select></label>
+                <label class="field"><span data-en="Reference photo">الصورة المرجعية</span><select id="observation-source"></select></label>
+                <label class="field"><span data-en="Confirmed value">القيمة التي تؤكدها</span><select id="observation-value"></select></label>
+              </div>
+              <button type="button" id="observation-add" class="outline" data-en="Record observation">سجّل الملاحظة</button>
+              <div id="observation-list"></div>
+              <button type="button" id="suggestions-run" class="outline" data-en="Analyze confirmed evidence">حلّل المراجع المؤكدة</button>
+              <div class="readout" id="suggestions-status" role="status" aria-live="polite"></div>
+              <div id="suggestions-list" class="fields"></div>
+              <button type="button" id="suggestions-apply" class="primary" disabled data-en="Apply selected suggestions">طبّق الاقتراحات المختارة</button>
+            </details>
+            <button id="generate" class="primary" data-en="Build from measurements and photos">
+              ابنِ من المقاسات والصور
+            </button>
+            <button id="use-color" class="outline" hidden data-en="Apply sampled body color">
+              استخدم لون الجسم من الصورة
+            </button>
+            <p class="fine" id="fit-status" role="status"></p>
+          </div>
+          <div class="page" data-page="3" hidden>
+            <h2 data-en="Inspect and correct">مراجعة الأجزاء</h2>
+            <div class="toolbar">
+              <button id="undo" data-en="Undo">تراجع</button
+              ><button id="redo" data-en="Redo">إعادة</button>
+            </div>
+            <label class="field"
+              ><span data-en="Selected component">الجزء المحدد</span
+              ><select id="part-select"></select
+            ></label>
+            <div id="part-info" class="fine"></div>
+            <div class="fields" id="edit-fields"></div>
+            <div class="toolbar">
+              <button id="save-part-correction" class="primary" data-en="Apply edit">
+                تطبيق التعديل</button
+              ><button id="reset-part" data-en="Reset part">إرجاع الجزء لأصله</button>
+            </div>
+            <details open>
+              <summary data-en="Motion and interior">الحركة والداخل</summary>
+              <label class="range"
+                ><span data-en="Main closure">فتح الشنطة</span><output id="opening-out">0%</output
+                ><input id="opening" type="range" min="0" max="100" value="0"
+              /></label>
+              <label class="range"
+                ><span data-en="Carrier swing">حركة الأيدي والأحزمة</span
+                ><output id="swing-out">0%</output
+                ><input id="swing" type="range" min="-100" max="100" value="0"
+              /></label>
+              <label class="range"
+                ><span data-en="Pocket zippers">سوست الجيوب</span><output id="pocket-out">0%</output
+                ><input id="pocket-motion" type="range" min="0" max="100" value="0"
+              /></label>
+              <label class="check"
+                ><input id="show-inside" type="checkbox" /><span data-en="Cut through the front"
+                  >مقطع يكشف الداخل</span
+                ></label
+              >
+            </details>
+            <details>
+              <summary data-en="Command and component tree">الأوامر وشجرة الأجزاء</summary>
+              <label class="field"
+                ><span data-en="Edit command">أمر تعديل</span
+                ><input id="command" list="commands" /></label
+              ><datalist id="commands"></datalist>
+              <button id="run-command" data-en="Apply command">تنفيذ الأمر</button>
+              <div id="parts" class="tree"></div>
+            </details>
+            <p id="part-feedback" class="fine" role="status"></p>
+          </div>
+          <div class="page" data-page="4" hidden>
+            <h2 data-en="Review and export">الاعتماد والتصدير</h2>
+            <div id="capture-status" class="readout"></div>
+            <label class="field"
+              ><span data-en="Mesh detail">دقة المجسم</span
+              ><select id="profile">
+                <option value="mobile" data-en="Mobile">موبايل</option>
+                <option value="detail" data-en="Detailed">تفصيلي</option>
+              </select></label
+            >
+            <button class="outline" id="approve" data-en="Approve my design corrections">
+              اعتماد تعديلاتي على التصميم
+            </button>
+            <p
+              class="fine"
+              data-en="The project stores references and correction history locally. Reattach original photos when reopening. The GLB embeds assigned materials and permitted artwork."
+            >
+              ملف المشروع يحفظ مراجع الصور وسجل التعديلات. عند فتحه اختار الصور الأصلية مرة تانية.
+              ملف GLB يضم الخامات المحددة والشعار المصرّح به.
+            </p>
+            <div class="export-list">
+              <button id="download-glb">
+                <b>GLB</b><span data-en="3D asset">المجسم ثلاثي الأبعاد</span>
+              </button>
+              <button id="download-json">
+                <b>JSON</b
+                ><span data-en="Part graph and AR contract">الأجزاء وعقد الربط بـ AR</span>
+              </button>
+              <button id="download-project">
+                <b>FIT</b><span data-en="Editable project">المشروع القابل للتعديل</span>
+              </button>
+            </div>
+          </div>
+          <div class="step-footer">
+            <button id="next" class="primary"></button><span id="step-count" dir="ltr"></span>
+          </div>
+        </section>
+      </div>
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
+    </main>
+    <script type="module" src="./bag-builder.js"></script>
+    <dialog id="outline-dialog" aria-labelledby="outline-title">
+      <form method="dialog">
+        <h2 id="outline-title" data-en="Trace the bag body">حدد محيط جسم الشنطة</h2>
+        <p
+          data-en="Tap around the outside of the body in order, leaving out the strap. Use at least four points. Arrow keys move the cursor and Enter adds a point."
+        >
+          اضغط بالترتيب حول الجسم من غير السير. اختار أربع نقاط على الأقل. بالكيبورد حرّك المؤشر
+          بالأسهم وأضف نقطة بزر الإدخال.
+        </p>
+        <canvas tabindex="0"></canvas>
+        <div class="trace-actions">
+          <output aria-live="polite"></output
+          ><button type="button" data-undo data-en="Undo point">تراجع عن نقطة</button
+          ><button type="button" data-clear data-en="Start over">ابدأ من جديد</button>
+        </div>
+        <div class="trace-actions">
+          <button value="accept" class="primary" disabled data-en="Use outline">
+            استخدم المحيط</button
+          ><button value="cancel" data-en="Cancel">إلغاء</button
+          ><button value="remove" data-en="Remove saved outline">حذف المحيط المحفوظ</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "productId": "RAWNAK-REF-TEE-001",
+  "source": "original pattern-inspired reference geometry",
+  "assets": {
+    "frontBackModel": "reference-tee-v1.glb",
+    "format": "model/gltf-binary",
+    "path": "assets/garments/reference-tee-v1.glb",
+    "referenceOnly": true,
+    "approvedForCommercialUse": false,
+    "photoReconstruction": false,
+    "physicalFitVerified": false
+  },
+  "size": {
+    "unit": "m",
+    "nominalHeight": 1.32,
+    "nominalWidth": 1.65,
+    "measuredProductSize": false
+  },
+  "rig": {
+    "type": "gltf2_skin",
+    "root": "RigRoot",
+    "leftShoulder": "Shoulder_L",
+    "rightShoulder": "Shoulder_R",
+    "jointCount": 3
+  },
+  "requirements": {
+    "textureSource": "merchant supplied (not implemented)",
+    "clothPhysics": "not yet implemented",
+    "humanOcclusion": "approximate beta"
+  },
+  "qualityGate": {
+    "requiresMerchantApproval": true,
+    "allowedForLiveDemo": true,
+    "merchantApproved": false
+  }
+}

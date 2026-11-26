@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d231b">
+<title>RAWNAK FIT AI — رحلة المنتج من الصور للتجربة</title>
+<meta name="description" content="شاهد معالجة صور المنتج وتصنيفها وتجهيز خاماتها وحالة 3D وLive Try-On بوضوح">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+:root{--bg:#0a1b14;--card:#14291f;--paper:#eff3e8;--ink:#f4f9eb;--green:#c6ed9e;--muted:#a9bdab;--line:#e5efd222;font-family:'IBM Plex Sans Arabic',sans-serif;color:var(--ink)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 900px 600px at 80% 0%,#1c462b 0%,transparent 70%),var(--bg)}
+a{color:inherit;text-decoration:none}button,select{font:inherit}
+.wrap{max-width:1390px;margin:0 auto;padding:0 22px}
+header{display:flex;gap:14px;align-items:center;justify-content:space-between;padding:19px 0;border-bottom:1px solid var(--line)}
+.logo{font:800 19px 'DM Sans';letter-spacing:-.7px;direction:ltr}.logo em{font-style:normal;color:var(--green)}
+nav{display:flex;gap:17px;font-size:12px;color:#c1d1bf}nav a:hover{color:var(--green)}
+.eyebrow{font:700 10px 'DM Sans';letter-spacing:2px;color:var(--green);direction:ltr;text-align:right}
+.hero{padding:45px 0 22px}
+.hero h1{font-size:clamp(29px,4vw,51px);line-height:1.33;letter-spacing:-.7px;margin:12px 0}
+.hero h1 em{font-style:normal;color:var(--green)}.hero p{color:var(--muted);line-height:1.85;max-width:850px;margin:0}
+.selector{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0 24px}
+.selector label{font-size:12px;color:#cbdac9}select{background:#1d3829;border:1px solid #c4ef9e45;color:#eef9e6;border-radius:9px;padding:9px 11px;min-width:240px}
+.grid{display:grid;grid-template-columns:1.12fr .88fr;gap:20px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:20px;padding:19px;background:linear-gradient(145deg,#142d21,#0e2119);min-width:0}
+.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.heading h2{font-size:21px;margin:4px 0}.micro{font:700 10px 'DM Sans';color:var(--green);letter-spacing:1.4px}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photo{background:#ecedeb;border-radius:13px;overflow:hidden;min-height:230px;position:relative}
+.photo img{width:100%;height:100%;object-fit:contain;aspect-ratio:1/1;display:block}
+.photo label{position:absolute;bottom:10px;right:10px;background:#0b2018dd;color:#f3f8ee;border-radius:50px;padding:5px 10px;font-size:11px}
+.photo-note{font-size:12px;color:var(--muted);line-height:1.85;margin-top:13px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.metric{border-radius:11px;background:#213b2a;border:1px solid var(--line);padding:13px;min-width:0}
+.metric small{display:block;color:#b4c8ae;font-size:11px}.metric strong{display:block;font:800 19px 'DM Sans';color:#d6f4bc;margin-top:5px}
+.metrics .metric:last-child strong{font-size:13px}
+.stage{display:grid;grid-template-columns:35px 1fr auto;align-items:start;gap:11px;padding:15px 4px;border-bottom:1px solid var(--line)}
+.stage:last-child{border-bottom:0}.counter{background:#36533b;color:#d4f1b4;border-radius:100px;width:31px;height:31px;display:grid;place-items:center;font:700 11px 'DM Sans'}
+.stage h3{font-size:14px;margin:0}.stage p{font-size:11px;line-height:1.75;color:var(--muted);margin:5px 0 0}.status{white-space:nowrap;background:#314535;color:#ebf4dc;border-radius:30px;font-size:10px;padding:5px 8px}
+.status.done{background:#284b2d;color:#cafaad}.status.pending{background:#413e2b;color:#f4d9a1}.status.off{background:#34413c;color:#c7cfc8}
+.action-row{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0 5px}
+.btn{background:var(--green);color:#19351f;border:0;border-radius:11px;font-size:12px;font-weight:700;padding:12px 16px;cursor:pointer}
+.btn.secondary{background:#274b34;border:1px solid #bce7a044;color:#e2f3d1}
+.btn:disabled{cursor:not-allowed;opacity:.5}.btn:hover:not(:disabled){filter:brightness(1.08)}
+.info{min-height:23px;color:#d5e8c2;font-size:12px;line-height:1.8}
+.outcome{margin-top:20px}.outcome h2{font-size:23px;margin:0 0 13px}
+.result{background:#213c2c;border-radius:15px;padding:17px}
+.result-line{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff1c;font-size:12px;color:#d5e5d3}
+.result-line:last-child{border:0}.result-line b{color:#def6bb;direction:ltr;text-align:left}
+.parts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.part{font-size:11px;color:#c9e5c5;background:#264a31;padding:7px 10px;border-radius:9px;border:1px solid #d3e5ac22}
+.notice{border:1px solid #d9a95a55;color:#e8d4a7;background:#60492228;padding:14px;border-radius:13px;font-size:12px;line-height:1.8;margin:16px 0}
+#tryon-slot{margin:15px 0}
+rawnak-fit::part(button){width:100%;min-width:230px}
+footer{font:10px 'DM Sans';color:#93ad99;letter-spacing:1px;padding:28px 0;border-top:1px solid var(--line);margin-top:34px;direction:ltr}
+.cutout-result{display:flex;align-items:center;gap:17px;background:#0e241a;border-radius:12px;border:1px solid #ffffff1d;margin-top:15px;padding:12px}
+.cutout-result img{width:135px;height:155px;object-fit:contain;background:radial-gradient(circle,#395748,#162d22);border-radius:10px}
+.cutout-result strong{font-size:13px;color:#e4f5d7}.cutout-result p{font-size:11px;color:#a4c1a6;line-height:1.7}
+@media(max-width:550px){.cutout-result img{width:92px;height:110px}.cutout-result{gap:9px}}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+@media(max-width:550px){.wrap{padding:0 12px}header{align-items:flex-start;flex-direction:column}nav{font-size:11px}.panel{padding:13px}.photo{min-height:130px}.photo-grid{gap:8px}.metrics{gap:5px}.metric{padding:10px 6px}.metric strong{font-size:15px}.stage{grid-template-columns:30px 1fr auto;gap:8px}.stage p{font-size:10px}}
+</style>
+<script defer src="../sdk/rawnak-fit.js?v=20261118-03"></script>
+</head>
+<body><div class="wrap">
+<header><a href="./" class="logo">RAWNAK <em>FIT AI</em> / LAB</a><nav><a href="./">المتجر التجريبي</a><a href="../studio/">AutoFit Studio</a><a href="../">المراية اللايف</a></nav></header>
+<main>
+<section class="hero"><span class="eyebrow">REAL INPUTS · TRANSPARENT PIPELINE</span>
+<h1>إزاي الصور بتتحول إلى <em>تجربة Try-On؟</em></h1>
+<p>اعرف المنتج من الصور، حلل اللون والتصنيف على جهازك، راجع الأجزاء والخامات، وشوف إيه اللي اتنفذ وإيه اللي لسه محتاج محرك 3D. بنعرض مراحل حقيقية مش شريط تقدم وهمي.</p></section>
+<div class="selector"><label for="product-select">اختار منتج من الصور اللي جهزناها</label><select id="product-select"></select></div>
+<div class="grid">
+<div>
+<section class="panel">
+<div class="heading"><div><div class="micro">01 · ORIGINAL ASSETS</div><h2 id="product-title">صور المنتج</h2></div><span id="source-badge" class="status done">AI images</span></div>
+<div class="photo-grid" id="photo-grid"></div>
+<p class="photo-note">المنتج افتراضي مولّد بالذكاء الاصطناعي لا يمثل سلعة فعلية. كل زاوية منفصلة ممكن تحتوي اختلافات طفيفة، لذلك لا نعتبرها بيانات هندسية معتمدة.</p>
+<div class="metrics"><div class="metric"><small>الصور المتاحة</small><strong id="photos-count">2</strong></div><div class="metric"><small>الحد المبدئي للفئة</small><strong id="minimum-count">—</strong></div><div class="metric"><small>تغطية التصوير</small><strong id="coverage-count">—</strong></div></div>
+</section>
+<section class="panel outcome">
+<div class="heading"><div><div class="micro">RESULT · PRODUCT ANALYSIS</div><h2>نتيجة التحليل الحالية</h2></div></div>
+<div class="result"><div class="result-line"><span>الفئة</span><b id="result-category">—</b></div>
+<div class="result-line"><span>محرك التجهيز</span><b id="result-engine">—</b></div>
+<div class="result-line"><span>اللون من الصورة</span><b id="result-color">اضغط تحليل</b></div>
+<div class="result-line"><span>توقع نموذج التصنيف</span><b id="result-ai">لم يتم تشغيله</b></div>
+<div class="result-line"><span>مجسم هندسي 3D للاختبار</span><b>متاح — لا يمثل المنتج بدقة</b></div><div class="result-line"><span>مجسم 3D مطابق للصور والمقاسات</span><b>غير متاح بعد</b></div>
+<div class="result-line"><span>المعاينة اللايف</span><b id="result-tryon">مجسم 3D تجريبي بعمق وإضاءة</b></div></div>
+<div class="cutout-result"><img id="cutout-image" src="" alt="قصاصة المنتج مع خلفية شفافة" loading="lazy"><div><strong>النتيجة الوسيطة: عزل صورة المنتج</strong><p>تُستعمل قصاصة أمامية لإسقاط الصورة فوق نقاط الوجه أو اليد أو الجسم. لا تعطي دوران 3D حقيقيًا.</p></div></div>
+<p class="photo-note">الأجزاء المقترحة حسب فئة المنتج، وليست أجزاء تم استخراجها تلقائيًا من الصور:</p><div id="parts" class="parts"></div>
+<div class="notice" id="quality-warning"></div>
+<div class="action-row"><a id="inspect-3d-link" class="btn secondary" href="../diagnostics/3d-preview.html">لف مجسم المنتج 3D</a><a id="studio-link" class="btn secondary" href="../studio/">فتح المنتج في AutoFit Studio</a><a id="capture-link" class="btn secondary" href="../studio/capture.html">الصور المطلوبة لهذه الفئة</a></div>
+<div id="tryon-slot"></div>
+</section>
+</div>
+<div>
+<section class="panel">
+<div class="heading"><div><div class="micro">02 · PROCESS</div><h2>مراحل تجهيز المنتج</h2></div></div>
+<div class="stage"><div class="counter">01</div><div><h3>تحميل صور المنتج</h3><p>تحميل صورتي المنتج الحقيقيتين من مجلد أصول GitHub وعرضهما</p></div><span id="status-photos" class="status off">جارٍ التحقق</span></div>
+<div class="stage"><div class="counter">02</div><div><h3>تحليل الصورة</h3><p>استخراج لون تقريبي من Canvas ثم تجربة MobileNet محليًا عند الطلب</p></div><span id="status-analysis" class="status off">لم يبدأ</span></div>
+<div class="stage"><div class="counter">03</div><div><h3>اختيار الفئة والأجزاء</h3><p>تحديد المحرك من بيانات المنتج وإظهار أجزاء صلبة/قماش/مفصلات ليراجعها التاجر</p></div><span id="status-parts" class="status done">قالب فئة</span></div>
+<div class="stage"><div class="counter">04</div><div><h3>إنشاء GLB ثلاثي الأبعاد</h3><p>مطلوب محرك إعادة بناء أو قالب معتمد وتأكيد القياسات والجوانب — غير متصل في النسخة الحالية</p></div><span class="status pending">غير مُنفّذ</span></div>
+<div class="stage"><div class="counter">05</div><div><h3>Live AR Try-On</h3><p>المحرك يعرض Mesh 3D تجريبي على نقاط الجسم واليد أو الوجه. الشكل مش إعادة بناء دقيقة لنفس SKU.</p></div><span id="status-tryon" class="status done">3D DEMO MESH</span></div>
+<div class="action-row"><button class="btn" id="analyze-button" type="button">حلل الصورة فعليًا</button><button class="btn secondary" id="reset-button" type="button">إعادة التقييم</button></div>
+<p id="analysis-message" class="info" aria-live="polite">شغّل التحليل علشان تشوف لون الصورة واقتراح MobileNet.</p>
+</section>
+</div>
+</div>
+</main><footer>RAWNAK FIT AI · DEMO PRODUCT PIPELINE · IMAGES ARE SYNTHETIC AND NOT VERIFIED 3D ASSETS</footer>
+</div>
+<script type="module" src="./process.js?v=20261118-p2"></script>
+</body></html>
