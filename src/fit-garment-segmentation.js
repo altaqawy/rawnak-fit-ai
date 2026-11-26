@@ -71,10 +71,19 @@ class GarmentSegmenter{
   if(this.input.width!==iw)this.input.width=iw;if(this.input.height!==ih)this.input.height=ih;
   this.input.getContext('2d').drawImage(source,0,0,iw,ih);
   let result=null;
+  if(!this.model)return {ok:false,reason:'محرك التحليل غير متاح'};
   this.model.segmentForVideo(this.input,timestamp,r=>{
    const m=r.categoryMask;
    if(m)result=buildAlpha(m.getAsUint8Array(),m.width,m.height,pose,{longSleeves:cutout?.sleeves==='long'});
   });
+  return this.compose(ctx,source,pose,{width,height,color,strength,texture,cutout},result);
+ }
+ applyMask(ctx,source,pose,options,mask){
+  const result=mask?.labels?buildAlpha(mask.labels,mask.width,mask.height,pose,{longSleeves:options?.cutout?.sleeves==='long'}):null;
+  return this.compose(ctx,source,pose,options,result);
+ }
+ compose(ctx,source,pose,{width,height,color,strength=.9,texture=null,cutout=null}={},result){
+  if(!source?.width||!source?.height||!width||!height||!/^#[0-9a-f]{6}$/i.test(color))return {ok:false,reason:'بيانات المعاينة غير مكتملة'};
   if(!result)return {ok:false,reason:'مش قادر أحدد منطقة الملابس بوضوح — واجه الكاميرا في إضاءة جيدة'};
   const {rgba,width:mw,height:mh,count}=result;
   if(this.mask.width!==mw)this.mask.width=mw;if(this.mask.height!==mh)this.mask.height=mh;
@@ -108,7 +117,7 @@ class GarmentSegmenter{
   }else ctx.drawImage(this.layer,(width-dw)/2,(height-dh)/2,dw,dh);
   return {ok:true,count,mode:cutout?'semantic-garment-cutout':panel?'semantic-product-panel':'semantic-clothes-mask'};
  }
- close(){this.model.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
+ close(){this.model?.close();this.maskImage=null;this.input.width=this.mask.width=this.layer.width=1;this.input.height=this.mask.height=this.layer.height=1;}
 }
 root.RawnakFitGarmentSegmentation={GarmentSegmenter,buildAlpha,upperRegion,MODEL_URL,CLOTHES};
 })(typeof window!=='undefined'?window:globalThis);
