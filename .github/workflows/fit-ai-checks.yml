@@ -9,6 +9,16 @@ permissions:
   contents: read
 
 jobs:
+  garment-unit-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run independent garment engine regression tests
+        run: node --test tests/clothing-swap.test.mjs tests/garment-segmentation.test.mjs tests/product-transfer.test.mjs tests/garment-cutout.test.mjs tests/segment-worker.test.mjs tests/worker-frame-sync.test.mjs tests/cloth-motion-2d.test.mjs tests/garment-lighting.test.mjs
   static-and-mock-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -33,6 +43,7 @@ jobs:
           node --check src/fit-product-transfer.js
           node --check src/fit-garment-cutout.js
           node --check src/fit-cloth-motion-2d.js
+          node --check src/fit-garment-lighting.js
           node --check src/fit-segment-worker.js
           node --check src/fit-segment-worker-client.js
           node --check src/fit-3d-renderer.js
@@ -66,7 +77,7 @@ jobs:
       - name: Test garment motion and same-frame arm overlap
         run: node --test tests/garment-motion.test.mjs
       - name: Test pose-guided same-type clothing color transfer
-        run: node --test tests/clothing-swap.test.mjs tests/garment-segmentation.test.mjs tests/product-transfer.test.mjs tests/garment-cutout.test.mjs tests/segment-worker.test.mjs tests/worker-frame-sync.test.mjs tests/cloth-motion-2d.test.mjs
+        run: node --test tests/clothing-swap.test.mjs tests/garment-segmentation.test.mjs tests/product-transfer.test.mjs tests/garment-cutout.test.mjs tests/segment-worker.test.mjs tests/worker-frame-sync.test.mjs tests/cloth-motion-2d.test.mjs tests/garment-lighting.test.mjs
       - name: Test rounded garment geometry and interactive sleeve pivots
         run: node --test tests/garment-surface.test.mjs
       - name: Validate actual GLB structure, bones, weights and manifest
