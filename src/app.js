@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.27.SWAP-B5';
+  const BUILD_ID = '2026.11.27.SWAP-B6';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', segmentWorker: null, segmentRequest: 0, segmentBackend: '', segmentPreference: 'cpu', segmentForceMain: false, swapJob: null, swapRevision: 0, swapLastPresented: 0, swapDropped: 0, swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, clothMaterial: 'cotton', segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', segmentWorker: null, segmentRequest: 0, segmentBackend: '', segmentPreference: 'cpu', segmentForceMain: false, swapJob: null, swapRevision: 0, swapLastPresented: 0, swapDropped: 0, swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
   };
 
   if (isEmbedded) {
@@ -302,6 +302,7 @@
     if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
     const panel=state.swapPanels[state.selected.id];
     updateCutoutEditor(panel?.asset);
+    $('#swap-cloth-controls')?.classList.toggle('hidden',!panel?.asset);
     const panelMode=$('#swap-panel-mode'),panelDemo=$('#swap-panel-demo'),panelInfo=$('#swap-panel-info');
     if(panelMode){panelMode.disabled=!panel;panelMode.textContent=state.swapPanelMode&&panel?(panel.asset?'✓ شكل القطعة مفعّل':'✓ نقشة المنتج مفعّلة'):'تطبيق صورة المنتج';panelMode.setAttribute('aria-pressed',String(Boolean(state.swapPanelMode&&panel)));}
     if(panelDemo)panelDemo.classList.toggle('hidden',state.selected.id!=='tee');
@@ -399,7 +400,7 @@
   }
 
   function invalidateSwap(){
-    ++state.swapRevision;state.swapLastPresented=0;state.syncFrameReady=false;
+    ++state.swapRevision;state.swapLastPresented=0;state.syncFrameReady=false;state.segmenter?.resetMotion?.();
     if(state.assetMode==='swap'){state.lastPoints=null;state.lastType=null;}
   }
   function resetSegmenter(){
@@ -870,7 +871,7 @@
         if(!state.segmenter||!Number.isFinite(frameTime))return;
         try{
           const output=state.segmenter.apply(ctx,sampleCanvas,state.landmarks,{
-            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,
+            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,
             texture:state.swapPanelMode&&!state.swapPanels[state.selected.id]?.asset?(state.swapPanels[state.selected.id]?.canvas||null):null,
             cutout:state.swapPanelMode?(state.swapPanels[state.selected.id]?.asset||null):null
           });
@@ -945,7 +946,7 @@
   // This prevents an old landmark result being drawn on a newer camera image.
   function swapOptions(w,h,frameTime){
     const panel=state.swapPanels[state.selected.id];
-    return {width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,
+    return {width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,
       texture:state.swapPanelMode&&!panel?.asset?(panel?.canvas||null):null,
       cutout:state.swapPanelMode?(panel?.asset||null):null};
   }
@@ -1215,6 +1216,10 @@
     invalidateSwap();state.assetMode='3d';state.fitHint='';state.syncFrameReady=false;state.lastInference=0;
     if (state.stream) void ensureThree();
     updatePhotoControl();updateUI();
+  });
+  $('#swap-cloth-material')?.addEventListener('change',event=>{
+    state.clothMaterial=['off','cotton','silk','denim'].includes(event.target.value)?event.target.value:'cotton';
+    invalidateSwap();state.lastVideoTime=-1;updateUI();
   });
   $('#swap-backend')?.addEventListener('change',event=>{
     state.segmentPreference=event.target.value==='gpu'?'gpu':'cpu';
