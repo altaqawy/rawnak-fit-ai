@@ -20,7 +20,7 @@ TOKEN = secrets.token_urlsafe(32)
 def parse_request(payload):
     if not isinstance(payload, dict) or set(payload) != {"person", "garment", "category", "consent"}:
         raise ValueError("Invalid request fields")
-    if payload["consent"] is not True or payload["category"] not in CATEGORIES:
+    if payload["consent"] is not True or not isinstance(payload["category"], str) or payload["category"] not in CATEGORIES:
         raise ValueError("Consent and valid category required")
     return payload["category"], decode_image(payload["person"]), decode_image(payload["garment"])
 
@@ -119,7 +119,10 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < size <= MAX_REQUEST:
                 return self.send_json(413, {"error": "Request too large"})
             self.connection.settimeout(20)
-            payload = json.loads(self.rfile.read(size))
+            body = self.rfile.read(size)
+            if len(body) != size:
+                raise ValueError("Incomplete request")
+            payload = json.loads(body)
             category, person, garment = parse_request(payload)
             result = ENGINE.generate(person, garment, category)
             return self.send_bytes(200, result, "image/png")
