@@ -308,7 +308,7 @@
     if(panelInfo)panelInfo.textContent=state.swapPanelMessage||(panel?'الصورة جاهزة محليًا · '+panel.name:'ارفع صورة الجزء الأمامي للقماش أو استخدم عينة التيشيرت.');
 
     const backendStatus=$('#swap-runtime');
-    if(backendStatus)backendStatus.textContent=state.segmentBackend?state.segmentBackend+' · skipped '+state.swapDropped+' · '+state.processingMs+' ms':'محرك الفصل غير متصل';
+    if(backendStatus)backendStatus.textContent=state.segmentBackend?state.segmentBackend+' · discarded '+state.swapDropped+' · '+state.processingMs+' ms':'محرك الفصل غير متصل';
     const swapStatus=$('#swap-status');
     if(swapStatus) swapStatus.textContent=swapOn
       ? (state.segmentStatus==='loading'?'جاري تحميل نموذج فصل الملابس… الكاميرا مستمرة':
@@ -400,6 +400,7 @@
 
   function invalidateSwap(){
     ++state.swapRevision;state.swapLastPresented=0;state.syncFrameReady=false;
+    if(state.assetMode==='swap'){state.lastPoints=null;state.lastType=null;}
   }
   function resetSegmenter(){
     ++state.segmentRequest;invalidateSwap();
@@ -640,14 +641,23 @@
   }
 
   function smoothing(type, coords) {
-    if (!coords) return null;
+    if (!coords) {
+      if(type==='pose'&&state.assetMode==='swap'){state.lastPoints=null;state.lastType=null;}
+      return null;
+    }
     if (state.lastType !== type || !state.lastPoints || state.lastPoints.length !== coords.length) {
       state.lastType = type;
       state.lastPoints = coords.map((p) => ({ x:p.x, y:p.y, z:p.z, visibility:p.visibility, presence:p.presence }));
     } else {
       coords.forEach((point, i) => {
         // Faster response in both modes; in synchronized mode only tiny jitter is filtered.
-        const alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
+        let alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
+        if(type==='pose'&&state.assetMode==='swap'){
+          // Smooth sub-percent jitter, but follow deliberate motion quickly.
+          const old=state.lastPoints[i],motion=Math.hypot(point.x-old.x,point.y-old.y);
+          const confidenceLost=(old.visibility??1)<.55||(point.visibility??1)<.55;
+          alpha=confidenceLost?1:Math.max(.38,Math.min(1,.38+motion*25));
+        }
         state.lastPoints[i].x += (point.x - state.lastPoints[i].x) * alpha;
         state.lastPoints[i].y += (point.y - state.lastPoints[i].y) * alpha;
         if(Number.isFinite(point.z)) state.lastPoints[i].z = (state.lastPoints[i].z || 0) * (1-alpha) + point.z * alpha;
@@ -1212,7 +1222,8 @@
     if(state.stream&&state.assetMode==='swap')void ensureSegmenter();else updateUI();
   });
   $('#swap-strength')?.addEventListener('input',event=>{
-    state.swapStrength=Math.max(.4,Math.min(1,Number(event.target.value)/100||.9));
+    invalidateSwap();state.swapStrength=Math.max(.4,Math.min(1,Number(event.target.value)/100||.9));
+    state.lastVideoTime=-1;updateUI();
     const output=$('#swap-strength-value');
     if(output) output.textContent=Math.round(state.swapStrength*100)+'%';
   });
