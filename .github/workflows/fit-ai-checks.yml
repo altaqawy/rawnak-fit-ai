@@ -31,6 +31,7 @@ jobs:
           node --check src/fit-clothing-swap.js
           node --check src/fit-garment-segmentation.js
           node --check src/fit-product-transfer.js
+          node --check src/fit-garment-cutout.js
           node --check src/fit-3d-renderer.js
       - name: Check model diagnostics syntax
         run: node --check tests/frame-sync.smoke.mjs
@@ -62,7 +63,7 @@ jobs:
       - name: Test garment motion and same-frame arm overlap
         run: node --test tests/garment-motion.test.mjs
       - name: Test pose-guided same-type clothing color transfer
-        run: node --test tests/clothing-swap.test.mjs tests/garment-segmentation.test.mjs tests/product-transfer.test.mjs
+        run: node --test tests/clothing-swap.test.mjs tests/garment-segmentation.test.mjs tests/product-transfer.test.mjs tests/garment-cutout.test.mjs
       - name: Test rounded garment geometry and interactive sleeve pivots
         run: node --test tests/garment-surface.test.mjs
       - name: Validate actual GLB structure, bones, weights and manifest
