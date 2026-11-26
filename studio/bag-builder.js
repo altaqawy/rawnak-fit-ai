@@ -81,6 +81,7 @@ let photos = [],
   model = null;
 let reconstruction = null;
 let observations = [], suggestions = null;
+// Suggestions are ephemeral; accepted changes enter the existing edit history.
 const suggestionChecks = new Set();
 let dirtyFields = new Set(),
   rebuildTimer = 0,
@@ -350,6 +351,7 @@ function renderReports() {
   ].join('\n');
   $('use-color').hidden = !result.color;
   if(suggestions)renderSuggestions();
+  else if(!$('suggestions-status').textContent)invalidateSuggestions();
   const feedback = current().feedback.filter((f) => f.approval === 'merchant-approved').length;
   const unlinked = photos.filter((p) => !p.url).length;
   $('capture-status').textContent = [
