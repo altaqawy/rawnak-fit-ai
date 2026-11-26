@@ -7,6 +7,7 @@ import {
 } from './bag-spec.js';
 import { editOutline, tracedEnvelope } from './bag-outline.js';
 import { FAMILY_PRESETS } from './bag-patterns.js';
+import { OBSERVATIONS, validObservation, recommendBag, selectedPatch } from './bag-recommendations.js';
 import {
   newProject,
   EditHistory,
@@ -79,6 +80,8 @@ let photos = [],
   viewerModule = null,
   model = null;
 let reconstruction = null;
+let observations = [], suggestions = null;
+const suggestionChecks = new Set();
 let dirtyFields = new Set(),
   rebuildTimer = 0,
   busy = false,
@@ -248,6 +251,76 @@ function fitMessage(result) {
           'Confirm a front or back view. Use a plain background or trace the body in the photograph.',
         );
 }
+function observationSources(){
+  return references().filter(p=>p.source==='merchant'&&p.linked);
+}
+function renderObservationInputs(){
+  const field=$('observation-field'),source=$('observation-source'),value=$('observation-value');
+  const old=field.value;
+  field.replaceChildren(...Object.entries(OBSERVATIONS).map(([key,rule])=>new Option(tr(rule.label,key),key)));
+  if(Object.hasOwn(OBSERVATIONS,old))field.value=old;
+  const rule=OBSERVATIONS[field.value];if(!rule)return;
+  const prior=source.value;
+  const eligible=observationSources().filter(p=>rule.views.includes(p.view));
+  source.replaceChildren(...eligible.map(p=>new Option(p.name+' · '+label(views[p.view]),p.id)));
+  if(eligible.some(p=>p.id===prior))source.value=prior;
+  const priorValue=value.value;
+  const values=rule.values||Array.from({length:rule.max-rule.min+1},(_,i)=>rule.min+i);
+  value.replaceChildren(...values.map(v=>new Option(String(v),String(v))));
+  if(values.some(v=>String(v)===priorValue))value.value=priorValue;
+  $('observation-add').disabled=!eligible.length;
+  $('observation-list').replaceChildren(...observations.map(o=>{
+    const row=el('div'),p=photos.find(p=>p.id===o.photoId),remove=el('button',tr('حذف','Remove'));
+    row.className='readout';remove.type='button';
+    row.append(el('span',tr(OBSERVATIONS[o.key].label,o.key)+': '+o.value+' · '+(p?.name||'')),remove);
+    remove.onclick=()=>{observations=observations.filter(x=>x!==o);invalidateSuggestions();renderObservationInputs();};
+    return row;
+  }));
+}
+function invalidateSuggestions(){
+  suggestions=null;suggestionChecks.clear();
+  $('suggestions-list').replaceChildren();
+  $('suggestions-apply').disabled=true;
+  $('suggestions-status').textContent=tr('حلل المراجع المؤكدة للحصول على اقتراحات.','Analyze confirmed references to get suggestions.');
+}
+function renderSuggestions(){
+  const r=suggestions;if(!r)return;
+  $('suggestions-list').replaceChildren(...r.proposals.map(p=>{
+    const row=el('label'),input=el('input');
+    row.className='field';input.type='checkbox';input.checked=suggestionChecks.has(p.key);
+    input.onchange=()=>{if(input.checked)suggestionChecks.add(p.key);else suggestionChecks.delete(p.key);$('suggestions-apply').disabled=!suggestionChecks.size;};
+    const value=p.key==='style'?label(families[p.value]):String(p.value);
+    row.append(input,el('span',tr(OBSERVATIONS[p.key]?.label||(p.key==='style'?'القالب':'لون الجسم'),p.key)+' → '+value+' · '+tr('مراجع','references')+' '+p.sources.length));
+    return row;
+  }));
+  const ranking=r.ranking.map(p=>label(families[p.style])+' ('+p.error.toFixed(3)+')').join(' / ');
+  $('suggestions-status').textContent=[
+    tr('الترتيب التقريبي (الأقل خطأ أفضل)','Approximate rank (lower error is better)')+': '+(ranking||'—'),
+    r.conflicts.length?tr('تعارض يحتاج مراجعة: ','Conflicts requiring review: ')+r.conflicts.join(', '):'',
+    r.proposals.length?tr('اختر فقط الاقتراحات المناسبة. المقاسات ثابتة.','Select only appropriate suggestions. Measurements are unchanged.'):tr('لا توجد اقتراحات كافية أو مختلفة عن المواصفات الحالية.','No sufficient or different suggestions.')
+  ].filter(Boolean).join('\n');
+  $('suggestions-apply').disabled=!suggestionChecks.size;
+}
+$('observation-field').onchange=renderObservationInputs;
+$('observation-add').onclick=()=>{
+  const key=$('observation-field').value,photoId=$('observation-source').value,rule=OBSERVATIONS[key];
+  if(!rule)return;
+  const value=rule.values?$('observation-value').value:Number($('observation-value').value);
+  if(!validObservation(key,value,observationSources().find(p=>p.id===photoId)))return;
+  observations=observations.filter(o=>!(o.key===key&&o.photoId===photoId));
+  observations.push({key,value,photoId});invalidateSuggestions();renderObservationInputs();
+};
+$('suggestions-run').onclick=()=>{
+  suggestions=recommendBag(current().spec,references(),observations);
+  suggestionChecks.clear();renderSuggestions();
+};
+$('suggestions-apply').onclick=()=>{
+  if(!suggestions||!suggestionChecks.size)return;
+  const r=recommendBag(current().spec,references(),observations);
+  const {patch,sources}=selectedPatch(r,[...suggestionChecks]);
+  if(Object.keys(patch).length)apply(changeStructure(current(),patch,sources),true);
+  invalidateSuggestions();
+};
 function renderReports() {
   const spec = current().spec,
     required = requiredBagViews(spec),
@@ -276,6 +349,7 @@ function renderReports() {
     ),
   ].join('\n');
   $('use-color').hidden = !result.color;
+  if(suggestions)renderSuggestions();
   const feedback = current().feedback.filter((f) => f.approval === 'merchant-approved').length;
   const unlinked = photos.filter((p) => !p.url).length;
   $('capture-status').textContent = [
@@ -296,6 +370,8 @@ function renderReports() {
 }
 function changedReferences(revisedId) {
   reconstruction = null;
+  observations=observations.filter(o=>o.photoId!==revisedId&&validObservation(o.key,o.value,observationSources().find(p=>p.id===o.photoId)));
+  invalidateSuggestions();
   const consistent = results().status !== 'inconsistent-views';
   const assigned = new Set(
     photos
@@ -374,6 +450,7 @@ function renderPhotos() {
     }),
   );
   $('remove-photos').disabled = !photos.length;
+  renderObservationInputs();
   renderReports();
   updateComparison(false);
 }
@@ -662,6 +739,7 @@ function selectPart(id) {
 function apply(next, reframe = false) {
   if (!next || !history.apply(next)) return false;
   reconstruction = null;
+  invalidateSuggestions();
   syncInputs();
   renderReports();
   schedule(reframe);
@@ -750,6 +828,7 @@ function projectRecord() {
     project: current(),
     images: photos.map(sourceMetadata),
     reconstruction,
+    observations: observations.map(o=>({...o})),
     capture: evaluateBagCapture(current().spec, references()),
     stages: STAGES,
     privacy: { imageBytesIncluded: false, trainingConsent: false },
@@ -799,6 +878,8 @@ function readProject(record) {
     if (p.url) URL.revokeObjectURL(p.url);
   });
   photos = saved;
+  // Require a fresh linked reference before old observations can influence geometry.
+  observations=[];invalidateSuggestions();
   history = new EditHistory(project);
   reconstruction = null;
   selection = 'front_panel';
@@ -971,6 +1052,7 @@ for (const [button, action] of [
   $(button).onclick = () => {
     if (history[action]()) {
       reconstruction = null;
+      invalidateSuggestions();
       syncInputs();
       renderReports();
       schedule(true);
