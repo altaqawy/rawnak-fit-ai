@@ -59,7 +59,13 @@ function targetAnchors(pose,w,h,sleeves){
   const normal=point(-d.y,d.x);
   const out=dot(normal,mul(across,side))>=0?normal:mul(normal,-1);
   const half=span*(long?.105:.15);
-  return {outer:add(end,mul(out,half)),inner:add(end,mul(out,-half))};
+  let bend=null;
+  if(long){
+   const axis=unit(add(unit(sub(e,s))||d,unit(sub(end,e))||d))||d;
+   const n=point(-axis.y,axis.x),outside=dot(n,mul(across,side))>=0?n:mul(n,-1);
+   bend={outer:add(e,mul(outside,span*.13)),inner:add(e,mul(outside,-span*.13))};
+  }
+  return {outer:add(end,mul(out,half)),inner:add(end,mul(out,-half)),bend};
  };
  const L=arm(l,-1),R=arm(r,1);if(!L||!R)return null;
  const shoulder=(s,side)=>add(add(s,mul(across,side*span*.065)),mul(down,-span*.055));
@@ -68,20 +74,25 @@ function targetAnchors(pose,w,h,sleeves){
  const out={ls:shoulder(ls,-1),neck:add(mid,mul(down,-span*.09)),rs:shoulder(rs,1),
  la:armpit(ls,lh,-1),ra:armpit(rs,rh,1),lh:hem(lh,-1),rh:hem(rh,1),
  lco:L.outer,lci:L.inner,rco:R.outer,rci:R.inner};
+ if(long){out.leo=L.bend.outer;out.lei=L.bend.inner;out.reo=R.bend.outer;out.rei=R.bend.inner;}
  // Don't render when the product extends beyond the sampled frame.
- if(!names.every(k=>valid(out[k])&&out[k].x>=0&&out[k].x<=w&&out[k].y>=0&&out[k].y<=h))return null;
+ if(!Object.values(out).every(p=>valid(p)&&p.x>=0&&p.x<=w&&p.y>=0&&p.y<=h))return null;
  return out;
 }
-function triangles(a){
+function triangles(a,long){
  const top=[a.ls,a.neck,a.rs],mid=[a.la,mix(a.la,a.ra,.5),a.ra],hem=[a.lh,mix(a.lh,a.rh,.5),a.rh];
  const v=[...top,...mid,...hem,a.lco,a.lci,a.rco,a.rci];
- // 8 torso triangles + 2 per sleeve. Sleeve seams share vertices.
- return {v,tri:[[0,1,4],[0,4,3],[1,2,5],[1,5,4],[3,4,7],[3,7,6],[4,5,8],[4,8,7],[0,9,10],[0,10,3],[2,11,12],[2,12,5]]};
+ const tri=[[0,1,4],[0,4,3],[1,2,5],[1,5,4],[3,4,7],[3,7,6],[4,5,8],[4,8,7]];
+ if(long){
+  v.push(a.leo||mix(a.ls,a.lco,.5),a.lei||mix(a.la,a.lci,.5),a.reo||mix(a.rs,a.rco,.5),a.rei||mix(a.ra,a.rci,.5));
+  tri.push([0,13,14],[0,14,3],[13,9,10],[13,10,14],[2,15,16],[2,16,5],[15,11,12],[15,12,16]);
+ }else tri.push([0,9,10],[0,10,3],[2,11,12],[2,12,5]);
+ return {v,tri};
 }
 function buildMesh(asset,pose,w,h){
  if(!validAnchors(asset?.anchors))return null;
  const dest=targetAnchors(pose,w,h,asset.sleeves);if(!dest)return null;
- const src=triangles(asset.anchors),dst=triangles(dest);
+ const long=asset.sleeves==='long',src=triangles(asset.anchors,long),dst=triangles(dest,long);
  return {uv:src.v,vertices:dst.v,triangles:src.tri};
 }
 function drawCutout(ctx,asset,pose,w,h,{strength=.9}={}){
