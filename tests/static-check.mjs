@@ -29,11 +29,11 @@ assert.ok(app.includes("const MEDIAPIPE_VERSION = '0.10.21'"), 'use pinned versi
 assert.ok(!app.includes('@0.10.22/+esm'), 'remove old broken version import');
 assert.ok(app.includes('faceLandmarks'), 'read face result correctly');
 assert.ok(app.includes('unpkg.com'), 'provide alternate CDN');
-assert.ok(html.includes('ALPHA 1.1'), 'HTML and release version updated');
-assert.ok(html.includes('src="./src/app.js?v=20261118-alpha110"'), 'JS has explicit cache busting version');
-assert.ok(html.includes('href="./src/styles.css?v=20261118-alpha110"'), 'CSS has explicit cache busting version');
+assert.ok(html.includes('ALPHA 1.8'), 'HTML and release version updated');
+assert.ok(html.includes('src="./src/app.js?v=20261127-clothing-swap-b7"'), 'JS has explicit cache busting version');
+assert.ok(html.includes('href="./src/styles.css?v=20261127-clothing-swap-b7"'), 'CSS has explicit cache busting version');
 assert.ok(html.includes('id="runtime-version"'), 'build verification element exists');
-assert.ok(app.includes("const BUILD_ID = '2026.11.18.110'"), 'runtime identifies compiled source');
+assert.ok(app.includes("const BUILD_ID = '2026.11.27.SWAP-B7'"), 'runtime identifies compiled source');
 assert.ok(app.includes('state.inferenceFrames += 1'), 'AI FPS measured independently from render frames');
 assert.ok(html.includes('id="sync-canvas"'), 'frame synchronized output exists');
 assert.ok(html.includes('id="mode-sync"') && html.includes('id="mode-fast"'), 'sync/fast mode selectors exist');
@@ -77,13 +77,13 @@ assert.ok(existsSync(path.join(root,'src/fit-arm-occlusion.js')), 'same-frame fo
 assert.ok(existsSync(path.join(root,'tests/garment-motion.test.mjs')), 'garment motion regressions exist');
 assert.ok(html.includes('id="garment-motion"') && html.includes('id="arm-occlusion"'), 'garment options have real controls');
 assert.ok(html.indexOf('fit-garment-motion.js?v=20261118-alpha110') <
-  html.indexOf('app.js?v=20261118-alpha110'), 'motion loaded before app');
+  html.indexOf('app.js?v=20261127-clothing-swap-b7'), 'motion loaded before app');
 assert.ok(html.indexOf('fit-arm-occlusion.js?v=20261118-alpha110') <
-  html.indexOf('app.js?v=20261118-alpha110'), 'occlusion helper loaded before app');
+  html.indexOf('app.js?v=20261127-clothing-swap-b7'), 'occlusion helper loaded before app');
 assert.ok(app.includes('garmentMotion:state.garmentMotion'), 'garment motion state passed to renderer');
 assert.ok(app.includes('RawnakFitArmOcclusion.restoreArms(ctx,sampleCanvas'), 'occlusion uses same captured frame');
 assert.ok(existsSync(path.join(root,'tests/garment-surface.test.mjs')), 'smooth garment test exists');
-assert.ok(html.includes('ALPHA 1.1'), 'curved-cloth model is the current build');
+assert.ok(html.includes('ALPHA 1.8'), 'curved-cloth model is the current build');
 const garment3D=readFileSync(path.join(root,'src/fit-3d-renderer.js'),'utf8');
 assert.ok(garment3D.includes('function parametricShell('), 'curved fabric surface generator');
 assert.ok(garment3D.includes('function cottonWeaveTexture('), 'small local textile texture');
@@ -97,4 +97,25 @@ assert.ok(app.includes('ensureReferenceGarment()'), 'camera requests reference a
 const loader=readFileSync(path.join(root,'src/fit-glb-assets.js'),'utf8');
 assert.ok(loader.includes("new GLTFLoader()"), 'loader consumes real GLB');
 assert.ok(loader.includes('isSkinnedMesh'), 'GLB must have skinning');
+assert.ok(existsSync(path.join(root,'src/fit-clothing-swap.js')), 'clothing swap engine exists');
+assert.ok(existsSync(path.join(root,'tests/clothing-swap.test.mjs')), 'clothing swap geometry tests exist');
+assert.ok(html.includes('id="clothing-swap-controls"'), 'optional same-type garment controls exist');
+assert.ok(html.indexOf('fit-clothing-swap.js') < html.indexOf('src/app.js'), 'swap helper loaded before runtime');
+assert.ok(app.includes('state.segmenter.apply(ctx,sampleCanvas'), 'swap is rendered onto synchronized frame');
+assert.ok(existsSync(path.join(root,'src/fit-garment-segmentation.js')), 'semantic mask source exists');
+assert.ok(html.indexOf('fit-garment-segmentation.js') < html.indexOf('src/app.js'), 'semantic module loaded before runtime');
+assert.ok(existsSync(path.join(root,'src/fit-product-transfer.js')), 'product texture engine exists');
+assert.ok(html.includes('id="swap-panel-upload"'), 'local image selector exists');
+assert.ok(html.indexOf('fit-product-transfer.js') < html.indexOf('fit-garment-segmentation.js'), 'texture engine loaded before compositor');
+assert.ok(existsSync(path.join(root,'src/fit-garment-cutout.js')), 'articulated cutout engine exists');
+assert.ok(html.includes('id="swap-cutout-preview"'), 'source anchor calibration exists');
+assert.ok(html.indexOf('fit-garment-cutout.js') < html.indexOf('fit-garment-segmentation.js'), 'cutout engine loaded before compositor');
+assert.ok(existsSync(path.join(root,'src/fit-segment-worker.js')), 'background AI worker exists');
+assert.ok(existsSync(path.join(root,'src/fit-segment-worker-client.js')), 'bounded worker client exists');
+assert.ok(html.includes('id="swap-backend"'), 'backend selection exists');
+assert.ok(app.includes('state.segmenter.applyMask(ctx,source,pose'), 'same-frame worker compositor is connected');
+assert.ok(existsSync(path.join(root,'src/fit-cloth-motion-2d.js')), 'cloth motion source exists');
+assert.ok(html.includes('id="swap-cloth-material"'), 'cloth profiles selectable');
+assert.ok(existsSync(path.join(root,'src/fit-garment-lighting.js')), 'lighting module exists');
+assert.ok(html.includes('id="swap-light-strength"'), 'lighting amount selectable');
 console.log('RAWNAK FIT AI static smoke tests passed (not a real-camera test).');

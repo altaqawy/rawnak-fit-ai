@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.18.110';
+  const BUILD_ID = '2026.11.27.SWAP-B7';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, clothMaterial: 'cotton', lightStrength: .45, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', segmentWorker: null, segmentRequest: 0, segmentBackend: '', segmentPreference: 'cpu', segmentForceMain: false, swapJob: null, swapRevision: 0, swapLastPresented: 0, swapDropped: 0, swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
   };
 
   if (isEmbedded) {
@@ -217,7 +217,10 @@
       selectedMark.textContent = item.id === state.selected.id ? '✓' : '○';
       button.append(icon, info, selectedMark);
       button.addEventListener('click', () => {
+        invalidateSwap();
+        if(state.selected.id!==item.id){++state.swapPanelRequest;state.swapPanelMessage='';state.swapPanelMode=Boolean(state.swapPanels[item.id]);}
         state.selected = item;
+        if (state.assetMode === 'swap' && !['tee','jacket'].includes(item.id)) state.assetMode = '3d';
         state.landmarks = null;
         state.lastType = null;
         state.lastPoints = null;
@@ -240,6 +243,25 @@
       productsNode.append(button);
     }
   };
+  function updateCutoutEditor(asset,force=false){
+    const wrap=$('#swap-cutout-editor'),editor=$('#swap-cutout-preview'),select=$('#swap-cutout-anchor');
+    if(wrap)wrap.classList.toggle('hidden',!asset);
+    if(!asset||!editor||!select){state.cutoutEditorAsset=null;state.cutoutEditorFit=null;return;}
+    if(!force&&state.cutoutEditorAsset===asset&&state.cutoutEditorAnchor===select.value)return;
+    const ctx=editor.getContext('2d');if(!ctx)return;
+    const w=editor.width,h=editor.height,tex=asset.canvas;
+    const scale=Math.min((w-24)/tex.width,(h-24)/tex.height);
+    const dw=tex.width*scale,dh=tex.height*scale,x=(w-dw)/2,y=(h-dh)/2;
+    state.cutoutEditorAsset=asset;state.cutoutEditorAnchor=select.value;state.cutoutEditorFit={x,y,w:dw,h:dh};
+    ctx.clearRect(0,0,w,h);ctx.fillStyle='#17222e';ctx.fillRect(0,0,w,h);
+    ctx.drawImage(tex,x,y,dw,dh);
+    for(const [key,p] of Object.entries(asset.anchors)){
+      const active=key===select.value;
+      ctx.beginPath();ctx.arc(x+p.x*dw,y+p.y*dh,active?5:3,0,2*Math.PI);
+      ctx.fillStyle=active?'#f2c46b':'#64e0c2';ctx.fill();
+      ctx.strokeStyle='#081017';ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
   const updateUI = () => {
     const live = Boolean(state.stream);
     $('#stage-placeholder').classList.toggle('hidden', live);
@@ -252,6 +274,10 @@
       state.viewMode === 'fast' && state.engine === 'ready' && state.detected);
     const modeFast = $('#mode-fast');
     const modeSync = $('#mode-sync');
+    if (modeFast) {
+      modeFast.disabled = state.assetMode === 'swap';
+      modeFast.title = state.assetMode === 'swap' ? 'تغيير اللون يحتاج الوضع المتزامن مع الفريم الأصلي' : '';
+    }
     if (modeFast && modeSync) {
       modeFast.classList.toggle('active', state.viewMode === 'fast');
       modeSync.classList.toggle('active', state.viewMode === 'sync');
@@ -263,6 +289,35 @@
     cameraToggle.textContent = live ? 'إيقاف الكاميرا' : state.starting ? 'إلغاء التشغيل' : 'تشغيل الكاميرا';
     indicator.textContent = live ? '● CAMERA LIVE' : state.starting ? 'CONNECTING…' : 'CAMERA OFF';
     indicator.style.color = live ? '#c8ee9b' : '#a5bdac';
+    const swapControls=$('#clothing-swap-controls');
+    const garmentSelected=['tee','jacket'].includes(state.selected.id);
+    if (swapControls) swapControls.classList.toggle('hidden', !garmentSelected);
+    const swapOn=garmentSelected && state.assetMode==='swap';
+    const swapToggle=$('#swap-toggle'),swapBack=$('#swap-back');
+    if (swapToggle) {
+      swapToggle.classList.toggle('selected',swapOn);
+      swapToggle.setAttribute('aria-pressed',String(swapOn));
+      swapToggle.textContent=swapOn?'✓ تجربة الملابس مفعّلة':'جرّب المنتج على لبسك';
+    }
+    if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
+    const panel=state.swapPanels[state.selected.id];
+    updateCutoutEditor(panel?.asset);
+    $('#swap-light-controls')?.classList.toggle('hidden',!panel);
+    $('#swap-cloth-controls')?.classList.toggle('hidden',!panel?.asset);
+    const panelMode=$('#swap-panel-mode'),panelDemo=$('#swap-panel-demo'),panelInfo=$('#swap-panel-info');
+    if(panelMode){panelMode.disabled=!panel;panelMode.textContent=state.swapPanelMode&&panel?(panel.asset?'✓ شكل القطعة مفعّل':'✓ نقشة المنتج مفعّلة'):'تطبيق صورة المنتج';panelMode.setAttribute('aria-pressed',String(Boolean(state.swapPanelMode&&panel)));}
+    if(panelDemo)panelDemo.classList.toggle('hidden',state.selected.id!=='tee');
+    if(panelInfo)panelInfo.textContent=state.swapPanelMessage||(panel?'الصورة جاهزة محليًا · '+panel.name:'ارفع صورة الجزء الأمامي للقماش أو استخدم عينة التيشيرت.');
+
+    const backendStatus=$('#swap-runtime');
+    if(backendStatus)backendStatus.textContent=state.segmentBackend?state.segmentBackend+' · discarded '+state.swapDropped+' · '+state.processingMs+' ms':'محرك الفصل غير متصل';
+    const swapStatus=$('#swap-status');
+    if(swapStatus) swapStatus.textContent=swapOn
+      ? (state.segmentStatus==='loading'?'جاري تحميل نموذج فصل الملابس… الكاميرا مستمرة':
+         state.segmentStatus==='error'?'تعذر فصل الملابس. اضغط إعادة التتبع أو ارجع إلى 3D':
+         state.segmentStatus==='ready'?(state.swapPanelMode&&panel?(panel.asset?'AI MASK + ARTICULATED CUTOUT · معاينة الشكل والأكمام':'AI MASK + PRODUCT PANEL · نقل نقشة الجزء الأمامي'):'AI MASK · تغيير اللون فقط'):
+         'افتح الكاميرا لبدء فصل الملابس')
+      : 'وضع AI تجريبي لنقل اللون أو النقشة. يفضل لبس قطعة من نفس النوع.';
     const garmentControls=$('#garment-controls');
     if (garmentControls) garmentControls.classList.toggle('hidden',
       state.assetMode!=='3d'||!['tee','jacket'].includes(state.selected.id));
@@ -345,6 +400,70 @@
     return state.visionLoading;
   }
 
+  function invalidateSwap(){
+    ++state.swapRevision;state.swapLastPresented=0;state.syncFrameReady=false;state.segmenter?.resetMotion?.();
+    if(state.assetMode==='swap'){state.lastPoints=null;state.lastType=null;}
+  }
+  function resetSegmenter(){
+    ++state.segmentRequest;invalidateSwap();
+    try{state.segmentWorker?.close();}catch(_){}
+    try{state.segmenter?.close();}catch(_){}
+    state.segmentWorker=null;state.segmenter=null;state.segmentLoading=null;state.swapJob=null;
+    state.segmentStatus='idle';state.segmentBackend='';
+  }
+  async function ensureSegmenter() {
+    if(!state.stream||state.assetMode!=='swap')return null;
+    if(state.segmenter)return state.segmenter;
+    if(state.segmentLoading)return state.segmentLoading;
+    const epoch=state.epoch,request=++state.segmentRequest;
+    const current=()=>epoch===state.epoch&&request===state.segmentRequest&&Boolean(state.stream);
+    state.segmentStatus='loading';invalidateSwap();updateUI();
+    const pending=(async()=>{
+      const engine=window.RawnakFitGarmentSegmentation?.GarmentSegmenter;
+      if(!engine)throw Error('Garment compositor unavailable');
+      let segmenter=null;
+      const Client=window.RawnakFitSegmentWorker?.SegmentWorkerClient;
+      if(!state.segmentForceMain&&Client&&typeof Worker==='function'&&typeof OffscreenCanvas==='function'&&typeof createImageBitmap==='function'){
+        let client=null;
+        try{
+          const url=new URL('./src/fit-segment-worker.js?v=20261127-clothing-swap-b7',document.baseURI);
+          client=new Client(new Worker(url));
+          state.segmentWorker=client;
+          const delegate=await client.init(state.segmentPreference);
+          if(!current()){client.close();return null;}
+          segmenter=new engine(null,()=>document.createElement('canvas'));
+          state.segmentBackend='WORKER '+delegate;
+        }catch(error){
+          client?.close();
+          if(!current())return null;
+          state.segmentWorker=null;
+          console.warn('[RAWNAK FIT] Worker unavailable; trying main CPU',error);
+        }
+      }
+      if(!segmenter){
+        const {mod,wasm}=await getVision();
+        if(!current())return null;
+        if(!mod.ImageSegmenter)throw Error('ImageSegmenter unavailable');
+        segmenter=await engine.create(mod,wasm);
+        if(!current()){segmenter.close();return null;}
+        state.segmentBackend='MAIN CPU';
+      }
+      if(!current()){segmenter.close();return null;}
+      state.segmenter=segmenter;state.segmentStatus='ready';state.fitHint='';
+      state.lastInference=0;state.lastVideoTime=-1;updateUI();
+      return segmenter;
+    })().catch(error=>{
+      if(current()){
+        state.segmentWorker?.close();state.segmentWorker=null;
+        console.warn('[RAWNAK FIT] Garment segmentation unavailable; camera remains live',error);
+        state.segmentStatus='error';state.syncFrameReady=false;updateUI();
+      }
+      return null;
+    }).finally(()=>{if(state.segmentLoading===pending)state.segmentLoading=null;});
+    state.segmentLoading=pending;
+    return pending;
+  }
+
   async function loadEngine(type) {
     if (!state.stream) return;
     const epoch = state.epoch;
@@ -422,6 +541,7 @@
     video.pause();
     video.srcObject = null;
     closeModels();
+    resetSegmenter();state.segmentHint='';state.segmentForceMain=false;state.swapDropped=0;
     const ctx = canvas.getContext('2d');
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     const syncContext = syncCanvas.getContext('2d');
@@ -508,6 +628,7 @@
       state.raf = requestAnimationFrame(renderLoop);
       if (state.assetMode === '3d') void ensureThree();
       void loadEngine(sourceType(state.selected.engine)); // model failures do not close stream
+      if(state.assetMode==='swap')void ensureSegmenter();
     } catch (error) {
       if (epoch !== state.epoch) return;
       console.error('[RAWNAK FIT] Camera error:', error);
@@ -522,14 +643,23 @@
   }
 
   function smoothing(type, coords) {
-    if (!coords) return null;
+    if (!coords) {
+      if(type==='pose'&&state.assetMode==='swap'){state.lastPoints=null;state.lastType=null;}
+      return null;
+    }
     if (state.lastType !== type || !state.lastPoints || state.lastPoints.length !== coords.length) {
       state.lastType = type;
       state.lastPoints = coords.map((p) => ({ x:p.x, y:p.y, z:p.z, visibility:p.visibility, presence:p.presence }));
     } else {
       coords.forEach((point, i) => {
         // Faster response in both modes; in synchronized mode only tiny jitter is filtered.
-        const alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
+        let alpha = state.viewMode === 'sync' ? 0.92 : 0.76;
+        if(type==='pose'&&state.assetMode==='swap'){
+          // Smooth sub-percent jitter, but follow deliberate motion quickly.
+          const old=state.lastPoints[i],motion=Math.hypot(point.x-old.x,point.y-old.y);
+          const confidenceLost=(old.visibility??1)<.55||(point.visibility??1)<.55;
+          alpha=confidenceLost?1:Math.max(.38,Math.min(1,.38+motion*25));
+        }
         state.lastPoints[i].x += (point.x - state.lastPoints[i].x) * alpha;
         state.lastPoints[i].y += (point.y - state.lastPoints[i].y) * alpha;
         if(Number.isFinite(point.z)) state.lastPoints[i].z = (state.lastPoints[i].z || 0) * (1-alpha) + point.z * alpha;
@@ -727,12 +857,34 @@
       return true;
     } finally {ctx.restore();}
   }
-  function drawOverlayTo(ctx, w, h) {
+  function drawOverlayTo(ctx, w, h, frameTime) {
     if (!state.detected || !state.landmarks) {
       state.three?.clear();
       return;
     }
     try {
+      if (state.assetMode === 'swap' && ['tee','jacket'].includes(state.selected.id)) {
+        state.three?.clear();
+        if (state.viewMode !== 'sync') {
+          state.fitHint = 'تغيير اللون متاح فقط في الوضع المتزامن';
+          return;
+        }
+        if(!state.segmenter||!Number.isFinite(frameTime))return;
+        try{
+          const output=state.segmenter.apply(ctx,sampleCanvas,state.landmarks,{
+            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,lightStrength:state.lightStrength,
+            texture:state.swapPanelMode&&!state.swapPanels[state.selected.id]?.asset?(state.swapPanels[state.selected.id]?.canvas||null):null,
+            cutout:state.swapPanelMode?(state.swapPanels[state.selected.id]?.asset||null):null
+          });
+          state.fitHint=output.ok?'':output.reason;
+        }catch(error){
+          console.warn('[RAWNAK FIT] semantic mask failed, preserving raw camera',error);
+          try{state.segmenter?.close();}catch(_){}
+          state.segmenter=null;state.segmentStatus='error';state.syncFrameReady=false;
+          state.fitHint='تعذر تحليل الملابس — جرّب إعادة التتبع أو ارجع إلى 3D';
+        }
+        return;
+      }
       if (state.assetMode === '3d') {
         if (!state.three) {
           state.fitHint = state.threeError
@@ -793,12 +945,64 @@
   }
   // The video frame used as the detector input is also the displayed frame.
   // This prevents an old landmark result being drawn on a newer camera image.
+  function swapOptions(w,h,frameTime){
+    const panel=state.swapPanels[state.selected.id];
+    return {width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,lightStrength:state.lightStrength,
+      texture:state.swapPanelMode&&!panel?.asset?(panel?.canvas||null):null,
+      cutout:state.swapPanelMode?(panel?.asset||null):null};
+  }
+  function renderWorkerSwap(frameTime,t0){
+    const worker=state.segmentWorker;
+    if(!worker||state.swapJob||!state.landmarks)return false;
+    const source=document.createElement('canvas'),ratio=Math.min(1,640/Math.max(sampleCanvas.width,sampleCanvas.height));
+    source.width=Math.max(1,Math.round(sampleCanvas.width*ratio));source.height=Math.max(1,Math.round(sampleCanvas.height*ratio));
+    const sourceCtx=source.getContext('2d');if(!sourceCtx)return false;
+    sourceCtx.drawImage(sampleCanvas,0,0,source.width,source.height);
+    const input=document.createElement('canvas'),down=Math.min(1,320/Math.max(source.width,source.height));
+    input.width=Math.max(1,Math.round(source.width*down));input.height=Math.max(1,Math.round(source.height*down));
+    const inputCtx=input.getContext('2d');if(!inputCtx)return false;
+    inputCtx.drawImage(source,0,0,input.width,input.height);
+    const pose=state.landmarks.map(p=>({...p})),job={worker,epoch:state.epoch,request:state.engineRequest,revision:state.swapRevision,started:t0};
+    state.swapJob=job;
+    const valid=()=>state.swapJob===job&&state.segmentWorker===worker&&state.epoch===job.epoch&&state.engineRequest===job.request&&state.swapRevision===job.revision&&state.assetMode==='swap'&&state.viewMode==='sync'&&state.engine==='ready'&&Boolean(state.stream);
+    worker.request(input,frameTime).then(mask=>{
+      if(!valid())return;
+      const elapsed=Math.round(performance.now()-t0);state.processingMs=elapsed;
+      if(elapsed>500){state.swapDropped++;state.syncFrameReady=false;state.fitHint='المعالجة بطيئة؛ الكاميرا الأصلية مستمرة';updateUI();return;}
+      const target=setupSyncCanvas();if(!target)return;
+      const {ctx,w,h}=target,scale=Math.max(w/source.width,h/source.height),dw=source.width*scale,dh=source.height*scale;
+      ctx.drawImage(source,(w-dw)/2,(h-dh)/2,dw,dh);
+      const output=state.segmenter.applyMask(ctx,source,pose,swapOptions(w,h,frameTime),mask);
+      state.fitHint=output.ok?'':output.reason;
+      state.swapLastPresented=performance.now();state.syncFrameReady=true;state.frameCount++;updateUI();
+    }).catch(error=>{
+      // A rejected old-session request must not reset the new session.
+      if(state.segmentWorker!==worker||state.epoch!==job.epoch)return;
+      console.warn('[RAWNAK FIT] Worker failed; preserving camera and using CPU fallback',error);
+      resetSegmenter();state.segmentForceMain=true;
+      if(state.stream&&state.assetMode==='swap')void ensureSegmenter();else updateUI();
+    }).finally(()=>{
+      source.width=source.height=input.width=input.height=1;
+      if(state.swapJob===job)state.swapJob=null;
+    });
+    return false;
+  }
   function renderSynchronizedFrame(frameTime) {
     const type = state.selected.engine;
     const model = state.models[type];
     if (!model || state.engine !== 'ready' || video.readyState < 2 ||
         !video.videoWidth || !video.videoHeight || !sampleContext ||
         frameTime - state.lastInference < SYNC_INTERVAL_MS) return false;
+    // Semantic inference is opt-in and slower; never reuse a mask from an older image.
+    const swapInterval=Math.max(100,Math.min(300,Math.ceil((state.processingMs||0)*1.8)));
+    if(state.assetMode==='swap'){
+      if(!state.segmenter||state.segmentStatus!=='ready')return false;
+      if(state.segmentWorker&&state.swapJob){
+        if(state.syncFrameReady&&frameTime-state.swapLastPresented>500){state.syncFrameReady=false;updateUI();}
+        return false;
+      }
+      if(frameTime-state.lastInference<swapInterval)return false;
+    }
     // Avoid recalculating identical camera frames. The camera timestamp is media time.
     if (video.currentTime === state.lastVideoTime) return false;
     state.lastVideoTime = video.currentTime;
@@ -818,6 +1022,7 @@
       state.landmarks = smoothing(type, raw);
       state.worldLandmarks = result.worldLandmarks?.[0] || null;
       state.detected = Boolean(state.landmarks);
+      if(state.assetMode==='swap'&&state.segmentWorker&&state.landmarks)return renderWorkerSwap(frameTime,t0);
       const target = setupSyncCanvas();
       if (!target) return false;
       const { ctx, w, h } = target;
@@ -826,7 +1031,12 @@
       const displayHeight = sourceHeight * scale;
       // Object-fit cover, exactly matching the coordinates used in project().
       ctx.drawImage(sampleCanvas, (w - displayWidth) / 2, (h - displayHeight) / 2, displayWidth, displayHeight);
-      drawOverlayTo(ctx, w, h);
+      drawOverlayTo(ctx, w, h, frameTime);
+      if(state.assetMode==='swap'){
+        state.swapLastPresented=performance.now();
+        state.processingMs=Math.round(performance.now()-t0);
+        if(state.segmentStatus==='error'){state.syncFrameReady=false;updateUI();return false;}
+      }
       // Same-frame forearm pixels may be composited over shirt geometry. This
       // approximate overlap mask is explicitly opt-in and is NOT segmentation.
       state.occlusionCount=0;
@@ -901,6 +1111,12 @@
 
   function changeViewMode(nextMode) {
     if (!['sync', 'fast'].includes(nextMode) || state.viewMode === nextMode) return;
+    if (nextMode === 'fast' && state.assetMode === 'swap') {
+      state.fitHint='تغيير اللون يحتاج الفريم المتزامن، ارجع لوضع 3D للايف السريع';
+      updateUI();
+      return;
+    }
+    invalidateSwap();
     state.viewMode = nextMode;
     state.lastInference = 0;
     state.lastVideoTime = -1;
@@ -913,6 +1129,115 @@
     state.lastFps = performance.now();
     updateUI();
   }
+  function activatePanel(){
+    invalidateSwap();state.swapPanelMode=true;state.assetMode='swap';changeViewMode('sync');
+    state.syncFrameReady=false;state.lastInference=0;state.lastVideoTime=-1;state.three?.clear();
+    if(state.stream)void ensureSegmenter();updatePhotoControl();updateUI();
+  }
+  async function loadProductPanel(source,{centralCrop=false,cutoutSleeves=null,name='صورة المنتج'}={}){
+    const item=state.selected.id;if(!['tee','jacket'].includes(item))return;
+    const request=++state.swapPanelRequest;
+    state.swapPanelMessage='جاري تجهيز الصورة محليًا…';updateUI();
+    let image=null,url=null;
+    try{
+      if(typeof source==='string'){url=source;}
+      else{
+        if(!source||!['image/png','image/jpeg','image/webp'].includes(source.type)||source.size>10*1024*1024)throw Error('اختر صورة PNG أو JPEG أو WebP بحجم لا يتجاوز 10 MB');
+        url=URL.createObjectURL(source);
+      }
+      image=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(Error('تعذر قراءة صورة المنتج'));i.src=url;});
+      if(request!==state.swapPanelRequest||item!==state.selected.id)return;
+      const engine=window.RawnakFitProductTransfer;if(!engine)throw Error('محرك نقل النقشة غير متاح');
+      const asset=cutoutSleeves?window.RawnakFitGarmentCutout?.prepareCutout(image,{sleeves:cutoutSleeves}):null;
+      if(cutoutSleeves&&!asset)throw Error('محرك شكل القطعة غير متاح');
+      const panel=asset?.canvas||engine.preparePanel(image,{centralCrop});
+      const previous=state.swapPanels[item]?.canvas;if(previous){previous.width=1;previous.height=1;}
+      state.swapPanels[item]={canvas:panel,asset,name:String(name).slice(0,80)};
+      state.swapPanelMessage=asset?'الصورة جاهزة · اضبط نقاط الياقة والكتفين والأكمام عند الحاجة':'الصورة جاهزة · معاينة تقريبية للجزء الأمامي فقط';
+      activatePanel();
+    }catch(error){
+      if(request===state.swapPanelRequest){state.swapPanelMessage=error?.message||'تعذر تجهيز النقشة';updateUI();}
+    }finally{if(url&&typeof source!=='string')URL.revokeObjectURL(url);}
+  }
+  $('#swap-panel-upload')?.addEventListener('change',event=>{
+    const file=event.target.files?.[0];if(!file)return;
+    const kind=$('#swap-panel-crop')?.value;
+    const cutoutSleeves=kind==='cutout-long'?'long':kind==='cutout-short'?'short':null;
+    void loadProductPanel(file,{centralCrop:kind==='center',cutoutSleeves,name:file.name});event.target.value='';
+  });
+  $('#swap-panel-demo')?.addEventListener('click',()=>{
+    if(state.selected.id==='tee'){
+      const kind=$('#swap-panel-crop')?.value,full=kind==='cutout-short'||kind==='cutout-long';
+      void loadProductPanel('./demo/assets/tshirt-cutout.webp',{centralCrop:!full,cutoutSleeves:full?'short':null,name:'عينة تيشيرت تجريبية'});
+    }
+  });
+  $('#swap-cutout-anchor')?.addEventListener('change',()=>updateCutoutEditor(state.swapPanels[state.selected.id]?.asset,true));
+  $('#swap-cutout-preview')?.addEventListener('click',event=>{
+    const asset=state.swapPanels[state.selected.id]?.asset,editor=$('#swap-cutout-preview'),key=$('#swap-cutout-anchor')?.value,fit=state.cutoutEditorFit;
+    if(!asset||!editor||!key||!fit||!Object.hasOwn(asset.anchors,key))return;
+    const rect=editor.getBoundingClientRect();if(!rect.width||!rect.height)return;
+    const x=((event.clientX-rect.left)*editor.width/rect.width-fit.x)/fit.w;
+    const y=((event.clientY-rect.top)*editor.height/rect.height-fit.y)/fit.h;
+    const proposed={...asset.anchors,[key]:{x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))}};
+    if(!window.RawnakFitGarmentCutout?.validAnchors(proposed)){state.swapPanelMessage='النقطة خارج ترتيب القطعة الصحيح؛ اختر موضعًا آخر';updateUI();return;}
+    invalidateSwap();asset.anchors=proposed;state.swapPanelMessage='تم تحديث نقطة شكل القطعة';state.syncFrameReady=false;state.lastVideoTime=-1;
+    updateCutoutEditor(asset,true);updateUI();
+  });
+  $('#swap-cutout-reset')?.addEventListener('click',()=>{
+    const asset=state.swapPanels[state.selected.id]?.asset;if(!asset)return;
+    invalidateSwap();asset.anchors=window.RawnakFitGarmentCutout.defaultAnchors(asset.sleeves);
+    state.swapPanelMessage='تمت إعادة النقاط الافتراضية';state.syncFrameReady=false;state.lastVideoTime=-1;
+    updateCutoutEditor(asset,true);updateUI();
+  });
+  $('#swap-panel-mode')?.addEventListener('click',()=>{
+    if(!state.swapPanels[state.selected.id])return;
+    if(state.swapPanelMode&&state.assetMode==='swap'){invalidateSwap();state.swapPanelMode=false;state.syncFrameReady=false;state.lastVideoTime=-1;updateUI();}
+    else activatePanel();
+  });
+  $('#swap-panel-clear')?.addEventListener('click',()=>{
+    invalidateSwap();++state.swapPanelRequest;const item=state.selected.id,old=state.swapPanels[item]?.canvas;
+    if(old){old.width=1;old.height=1;}delete state.swapPanels[item];state.swapPanelMode=false;
+    state.swapPanelMessage='تم حذف الصورة المحلية';state.syncFrameReady=false;state.lastVideoTime=-1;updateUI();
+  });
+  $('#swap-toggle')?.addEventListener('click',()=>{
+    if (!['tee','jacket'].includes(state.selected.id)) return;
+    invalidateSwap();state.assetMode = state.assetMode === 'swap' ? '3d' : 'swap';
+    if (state.assetMode === 'swap') {
+      changeViewMode('sync');
+      if(state.stream)void ensureSegmenter();
+    }
+    state.three?.clear();
+    state.fitHint='';
+    state.syncFrameReady=false;
+    state.lastInference=0;
+    if (state.assetMode === '3d' && state.stream) void ensureThree();
+    updatePhotoControl(); updateUI();
+  });
+  $('#swap-back')?.addEventListener('click',()=>{
+    invalidateSwap();state.assetMode='3d';state.fitHint='';state.syncFrameReady=false;state.lastInference=0;
+    if (state.stream) void ensureThree();
+    updatePhotoControl();updateUI();
+  });
+  $('#swap-light-strength')?.addEventListener('input',event=>{
+    state.lightStrength=Math.max(0,Math.min(1,Number(event.target.value)/100||0));
+    invalidateSwap();state.lastVideoTime=-1;
+    const out=$('#swap-light-value');if(out)out.textContent=Math.round(state.lightStrength*100)+'%';updateUI();
+  });
+  $('#swap-cloth-material')?.addEventListener('change',event=>{
+    state.clothMaterial=['off','cotton','silk','denim'].includes(event.target.value)?event.target.value:'cotton';
+    invalidateSwap();state.lastVideoTime=-1;updateUI();
+  });
+  $('#swap-backend')?.addEventListener('change',event=>{
+    state.segmentPreference=event.target.value==='gpu'?'gpu':'cpu';
+    state.segmentForceMain=false;resetSegmenter();
+    if(state.stream&&state.assetMode==='swap')void ensureSegmenter();else updateUI();
+  });
+  $('#swap-strength')?.addEventListener('input',event=>{
+    invalidateSwap();state.swapStrength=Math.max(.4,Math.min(1,Number(event.target.value)/100||.9));
+    state.lastVideoTime=-1;updateUI();
+    const output=$('#swap-strength-value');
+    if(output) output.textContent=Math.round(state.swapStrength*100)+'%';
+  });
   $('#mode-fast')?.addEventListener('click', () => changeViewMode('fast'));
   $('#mode-sync')?.addEventListener('click', () => changeViewMode('sync'));
   $('#garment-motion')?.addEventListener('change',event=>{
@@ -935,6 +1260,9 @@
       if (state.assetMode === '3d' && !state.three) void ensureThree();
       state.engine = 'idle';
       void loadEngine(state.selected.engine);
+      if(state.assetMode==='swap'){
+        state.segmentForceMain=false;resetSegmenter();void ensureSegmenter();
+      }
     }
   });
   captureButton.addEventListener('click', saveSnapshot);
