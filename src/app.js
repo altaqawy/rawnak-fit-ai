@@ -1,6 +1,6 @@
 (function fitApp() {
   'use strict';
-  const BUILD_ID = '2026.11.27.SWAP-B6';
+  const BUILD_ID = '2026.11.27.SWAP-B7';
   const fitGeometry = window.RawnakFitCalibration;
   const threePose = window.RawnakFit3DPose;
   const SYNC_INTERVAL_MS = 45; // 22 Hz target, actual rate depends on device speed
@@ -54,7 +54,7 @@
     viewMode: 'sync', syncFrameReady: false, processingMs: 0, lastVideoTime: -1,
     demoImage: null, demoImageReady: false, demoCrop: null, worldLandmarks: null,
     fitHint: '', sizeScale: 1, assetMode: '3d', three: null, threeLoading: null, threeError: '',
-    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, clothMaterial: 'cotton', segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', segmentWorker: null, segmentRequest: 0, segmentBackend: '', segmentPreference: 'cpu', segmentForceMain: false, swapJob: null, swapRevision: 0, swapLastPresented: 0, swapDropped: 0, swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
+    garmentMotion: true, armOcclusion: true, occlusionCount: 0, swapStrength: .9, clothMaterial: 'cotton', lightStrength: .45, segmenter: null, segmentLoading: null, segmentStatus: 'idle', segmentHint: '', segmentWorker: null, segmentRequest: 0, segmentBackend: '', segmentPreference: 'cpu', segmentForceMain: false, swapJob: null, swapRevision: 0, swapLastPresented: 0, swapDropped: 0, swapPanels: {}, swapPanelMode: false, swapPanelRequest: 0, swapPanelMessage: '', cutoutEditorAsset: null, cutoutEditorAnchor: '', cutoutEditorFit: null
   };
 
   if (isEmbedded) {
@@ -302,6 +302,7 @@
     if (swapBack) swapBack.classList.toggle('hidden',!swapOn);
     const panel=state.swapPanels[state.selected.id];
     updateCutoutEditor(panel?.asset);
+    $('#swap-light-controls')?.classList.toggle('hidden',!panel);
     $('#swap-cloth-controls')?.classList.toggle('hidden',!panel?.asset);
     const panelMode=$('#swap-panel-mode'),panelDemo=$('#swap-panel-demo'),panelInfo=$('#swap-panel-info');
     if(panelMode){panelMode.disabled=!panel;panelMode.textContent=state.swapPanelMode&&panel?(panel.asset?'✓ شكل القطعة مفعّل':'✓ نقشة المنتج مفعّلة'):'تطبيق صورة المنتج';panelMode.setAttribute('aria-pressed',String(Boolean(state.swapPanelMode&&panel)));}
@@ -425,7 +426,7 @@
       if(!state.segmentForceMain&&Client&&typeof Worker==='function'&&typeof OffscreenCanvas==='function'&&typeof createImageBitmap==='function'){
         let client=null;
         try{
-          const url=new URL('./src/fit-segment-worker.js?v=20261127-clothing-swap-b5',document.baseURI);
+          const url=new URL('./src/fit-segment-worker.js?v=20261127-clothing-swap-b7',document.baseURI);
           client=new Client(new Worker(url));
           state.segmentWorker=client;
           const delegate=await client.init(state.segmentPreference);
@@ -871,7 +872,7 @@
         if(!state.segmenter||!Number.isFinite(frameTime))return;
         try{
           const output=state.segmenter.apply(ctx,sampleCanvas,state.landmarks,{
-            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,
+            width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,lightStrength:state.lightStrength,
             texture:state.swapPanelMode&&!state.swapPanels[state.selected.id]?.asset?(state.swapPanels[state.selected.id]?.canvas||null):null,
             cutout:state.swapPanelMode?(state.swapPanels[state.selected.id]?.asset||null):null
           });
@@ -946,7 +947,7 @@
   // This prevents an old landmark result being drawn on a newer camera image.
   function swapOptions(w,h,frameTime){
     const panel=state.swapPanels[state.selected.id];
-    return {width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,
+    return {width:w,height:h,color:state.selected.color,strength:state.swapStrength,timestamp:frameTime,clothMaterial:state.clothMaterial,lightStrength:state.lightStrength,
       texture:state.swapPanelMode&&!panel?.asset?(panel?.canvas||null):null,
       cutout:state.swapPanelMode?(panel?.asset||null):null};
   }
@@ -1216,6 +1217,11 @@
     invalidateSwap();state.assetMode='3d';state.fitHint='';state.syncFrameReady=false;state.lastInference=0;
     if (state.stream) void ensureThree();
     updatePhotoControl();updateUI();
+  });
+  $('#swap-light-strength')?.addEventListener('input',event=>{
+    state.lightStrength=Math.max(0,Math.min(1,Number(event.target.value)/100||0));
+    invalidateSwap();state.lastVideoTime=-1;
+    const out=$('#swap-light-value');if(out)out.textContent=Math.round(state.lightStrength*100)+'%';updateUI();
   });
   $('#swap-cloth-material')?.addEventListener('change',event=>{
     state.clothMaterial=['off','cotton','silk','denim'].includes(event.target.value)?event.target.value:'cotton';
